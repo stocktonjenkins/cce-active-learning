@@ -16,6 +16,8 @@ build==1.2.1
     # via pip-tools
 click==8.1.7
     # via pip-tools
+colorama==0.4.6
+    # via pretty-errors
 contourpy==1.2.1
     # via matplotlib
 cycler==0.12.1
@@ -82,6 +84,8 @@ pillow==10.3.0
     # via matplotlib
 pip-tools==7.4.1
     # via -r requirements.in
+pretty-errors==1.2.25
+    # via torchmetrics
 pyparsing==3.1.2
     # via matplotlib
 pyproject-hooks==1.1.0
@@ -94,6 +98,7 @@ pytorch-lightning==2.2.5
     # via lightning
 pyyaml==6.0.1
     # via
+    #   -r requirements.in
     #   lightning
     #   pytorch-lightning
 scikit-learn==1.5.0
@@ -118,8 +123,9 @@ torch==2.3.0
     #   lightning
     #   pytorch-lightning
     #   torchmetrics
-torchmetrics==1.4.0.post0
+torchmetrics==1.4.0
     # via
+    #   -r requirements.in
     #   lightning
     #   pytorch-lightning
 tqdm==4.66.4

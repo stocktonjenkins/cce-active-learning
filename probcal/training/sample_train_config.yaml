@@ -1,0 +1,27 @@
+experiment_name: name_of_experiment_here
+random_seed: 1998
+head_type: gaussian
+dataset:
+  type: tabular
+  path: path/to/dataset.npz
+  input_dim: 1
+training:
+  accelerator: cpu
+  batch_size: 32
+  chkp_dir: path/to/weights/dir
+  chkp_freq: 50
+  num_epochs: 200
+  optimizer:
+    type: adam_w
+    kwargs:
+      lr: 0.001
+      weight_decay: 0.00001
+  lr_scheduler:
+    type: cosine_annealing
+    kwargs:
+      T_max: 200
+      eta_min: 0
+      last_epoch: -1
+evaluation:
+  num_trials: 1
+  log_dir: path/to/log/dir
