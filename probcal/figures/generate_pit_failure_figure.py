@@ -11,7 +11,6 @@ from sklearn.metrics.pairwise import rbf_kernel
 
 from probcal.evaluation.metrics import compute_regression_ece
 from probcal.evaluation.metrics import compute_mcmd
-from probcal.random_variables import DoublePoisson
 
 
 def plot_posterior_predictive(
@@ -157,7 +156,6 @@ def produce_figure(save_path: str | Path):
     variance = cont_x
     gaussian_y = norm.rvs(loc=mean, scale=np.sqrt(variance))
     poisson_y = poisson.rvs(mu=mean)
-    double_poisson_y = DoublePoisson(mean, 1).rvs((1, num_samples)).flatten()
     eps = 1e-1
     nbinom_y = nbinom.rvs(
         n=(mean**2 / (variance + eps - mean)).round(), p=(mean / (variance + eps))
@@ -169,15 +167,12 @@ def produce_figure(save_path: str | Path):
     lambda_hat = mean
     poisson_post_pred = poisson(mu=mean)
 
-    dpo_mu_hat = mean
-    dpo_post_pred = DoublePoisson(mean, mean / variance)
-
     nbinom_mu_hat = mean
     nbinom_post_pred = nbinom(
         n=(mean**2 / (variance + eps - mean)).round(), p=(mean / (variance + eps))
     )
 
-    fig, axs = plt.subplots(4, 4, figsize=(7, 5), sharey="row")
+    fig, axs = plt.subplots(4, 3, figsize=(5.25, 5), sharey="row")
     hist_alpha = 0.6
     hist_rwidth = 0.9
 
@@ -221,47 +216,22 @@ def produce_figure(save_path: str | Path):
 
     plot_posterior_predictive(
         cont_x,
-        double_poisson_y,
-        dpo_mu_hat,
-        dpo_post_pred.ppf(0.025),
-        dpo_post_pred.ppf(0.975),
+        nbinom_y,
+        nbinom_mu_hat,
+        nbinom_post_pred.ppf(0.025),
+        nbinom_post_pred.ppf(0.975),
         ax=axs[0, 2],
         show=False,
         error_color="gray",
     )
     axs[1, 2].hist(
-        dpo_post_pred.cdf(double_poisson_y.reshape(-1, 1).flatten()),
-        density=True,
-        alpha=hist_alpha,
-        rwidth=hist_rwidth,
+        nbinom_post_pred.cdf(nbinom_y), density=True, alpha=hist_alpha, rwidth=hist_rwidth
     )
     axs[1, 2].set_xticks([])
     axs[1, 2].set_yticks([])
-    plot_regression_calibration_curve_cdf(
-        double_poisson_y.flatten(), dpo_post_pred, ax=axs[2, 2], show=False
-    )
+    plot_regression_calibration_curve_cdf(nbinom_y, nbinom_post_pred, ax=axs[2, 2], show=False)
     plot_mcmd_curve(
-        cont_x, double_poisson_y, dpo_post_pred, ax=axs[3, 2], num_samples_from_posterior=10
-    )
-
-    plot_posterior_predictive(
-        cont_x,
-        nbinom_y,
-        nbinom_mu_hat,
-        nbinom_post_pred.ppf(0.025),
-        nbinom_post_pred.ppf(0.975),
-        ax=axs[0, 3],
-        show=False,
-        error_color="gray",
-    )
-    axs[1, 3].hist(
-        nbinom_post_pred.cdf(nbinom_y), density=True, alpha=hist_alpha, rwidth=hist_rwidth
-    )
-    axs[1, 3].set_xticks([])
-    axs[1, 3].set_yticks([])
-    plot_regression_calibration_curve_cdf(nbinom_y, nbinom_post_pred, ax=axs[2, 3], show=False)
-    plot_mcmd_curve(
-        cont_x, nbinom_y, nbinom_post_pred, ax=axs[3, 3], num_samples_from_posterior=20
+        cont_x, nbinom_y, nbinom_post_pred, ax=axs[3, 2], num_samples_from_posterior=20
     )
 
     row_labels = ["Posterior Predictive", "PIT", "Reliability Diagram", "MCMD"]
@@ -278,7 +248,7 @@ def produce_figure(save_path: str | Path):
             rotation=90,
         )
 
-    col_labels = ["Gaussian", "Poisson", "Double Poisson", "Negative Binomial"]
+    col_labels = ["Gaussian", "Poisson", "Negative Binomial"]
     for ax, col in zip(axs[0, :], col_labels):
         ax.annotate(
             col,
