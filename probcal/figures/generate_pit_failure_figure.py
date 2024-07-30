@@ -10,7 +10,7 @@ from scipy.stats import rv_continuous
 from sklearn.metrics.pairwise import rbf_kernel
 
 from probcal.evaluation.metrics import compute_regression_ece
-from probcal.evaluation.metrics import compute_mcmd
+from probcal.evaluation.metrics import compute_mcmd_numpy
 
 
 def plot_posterior_predictive(
@@ -118,7 +118,7 @@ def plot_mcmd_curve(
 ):
     y_prime = np.ravel(posterior_predictive.rvs(size=(num_samples_from_posterior, len(y_true))))
     x_prime = np.tile(x, num_samples_from_posterior)
-    mcmd_vals = compute_mcmd(
+    mcmd_vals = compute_mcmd_numpy(
         grid=x,
         x=x,
         y=y_true,

@@ -7,7 +7,7 @@ from matplotlib.ticker import FuncFormatter
 from matplotlib.ticker import MultipleLocator
 from sklearn.metrics.pairwise import rbf_kernel
 
-from probcal.evaluation.metrics import compute_mcmd
+from probcal.evaluation.metrics import compute_mcmd_numpy
 from probcal.utils.multiple_formatter import multiple_formatter
 
 
@@ -114,7 +114,7 @@ def generate_figure(save_path: str):
         scatter_ax.set_ylim(-7, 7)
         scatter_ax.xaxis.set_major_locator(MultipleLocator(np.pi))
         scatter_ax.xaxis.set_major_formatter(FuncFormatter(multiple_formatter()))
-        mcmd_vals = compute_mcmd(grid, x, y, x_prime, y_prime, x_kernel, y_kernel)
+        mcmd_vals = compute_mcmd_numpy(grid, x, y, x_prime, y_prime, x_kernel, y_kernel)
 
         mcmd_ax.plot(grid, mcmd_vals)
         mcmd_ax.set_ylim(-0.1, 2.5)

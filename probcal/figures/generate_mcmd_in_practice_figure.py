@@ -11,7 +11,7 @@ from scipy.stats import norm
 from scipy.stats import poisson
 from sklearn.metrics.pairwise import rbf_kernel
 
-from probcal.evaluation.metrics import compute_mcmd
+from probcal.evaluation.metrics import compute_mcmd_numpy
 from probcal.evaluation.plotting import plot_posterior_predictive
 from probcal.models import GaussianNN
 from probcal.models import NegBinomNN
@@ -106,7 +106,7 @@ def produce_figure(
         posterior_ax.set_xlabel(None)
         posterior_ax.set_ylabel(None)
 
-        mcmd_vals = compute_mcmd(
+        mcmd_vals = compute_mcmd_numpy(
             grid=X,
             x=X,
             y=y,

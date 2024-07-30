@@ -1,6 +1,8 @@
 from typing import Callable
 
 import numpy as np
+import torch
+from scipy.linalg import cho_factor, cho_solve
 from scipy.stats import rv_continuous
 
 
@@ -50,7 +52,7 @@ def compute_regression_ece(
     return ece
 
 
-def compute_mcmd(
+def compute_mcmd_numpy(
     grid: np.ndarray,
     x: np.ndarray,
     y: np.ndarray,
@@ -63,36 +65,122 @@ def compute_mcmd(
     """Given a ground-truth conditional distribution and samples from a model's approximation of that distribution, compute the maximum conditional mean discrepancy (MCMD) along the provided grid.
 
     Args:
-        grid (np.ndarray): Grid of values (assumed to be drawn from X) to compute MCMD across.
-        x (np.ndarray): The conditioning values that produced y.
-        y (np.ndarray): Ground truth samples from the conditional distribution.
-        x_prime (np.ndarray): The conditioning values that produced y_prime.
-        y_prime (np.ndarray): Samples from a model's approximation of the ground truth conditional distribution.
+        grid (np.ndarray): Grid of values (assumed to be drawn from X) to compute MCMD across. Shape: (k, d) or (k,)
+        x (np.ndarray): The conditioning values that produced y. Shape: (n, d) or (n,).
+        y (np.ndarray): Ground truth samples from the conditional distribution. Shape: (n, 1) or (n,).
+        x_prime (np.ndarray): The conditioning values that produced y_prime. Shape: (m, d) or (m,).
+        y_prime (np.ndarray): Samples from a model's approximation of the ground truth conditional distribution. Shape: (m, 1) or (m,).
         x_kernel (Callable[[np.ndarray, np.ndarray], np.ndarray]): Kernel function to use for the conditioning variable (x).
         y_kernel (Callable[[np.ndarray, np.ndarray], np.ndarray]): Kernel function to use for the output variable (y).
         lmbda (float, optional): Regularization parameter. Defaults to 0.01.
 
     Returns:
-        np.ndarray: MCMD values along the provided grid.
+        np.ndarray: MCMD values along the provided grid. Shape: (k,).
     """
+    if grid.ndim == 1:
+        grid = grid.reshape(-1, 1)
+    if x.ndim == 1:
+        x = x.reshape(-1, 1)
+    if x_prime.ndim == 1:
+        x_prime = x_prime.reshape(-1, 1)
+    if y.ndim == 1:
+        y = y.reshape(-1, 1)
+    if y_prime.ndim == 1:
+        y_prime = y_prime.reshape(-1, 1)
+    
     n = len(x)
     m = len(x_prime)
 
-    K_X = x_kernel(x.reshape(-1, 1), x.reshape(-1, 1))
-    K_X_prime = x_kernel(x_prime.reshape(-1, 1), x_prime.reshape(-1, 1))
+    K_X = x_kernel(x, x)
+    K_X_prime = x_kernel(x_prime, x_prime)
 
-    W_X = np.linalg.inv(K_X + n * lmbda * np.eye(n))
-    W_X_prime = np.linalg.inv(K_X_prime + m * lmbda * np.eye(m))
+    W_X = cho_solve(cho_factor(K_X + n * lmbda * np.eye(n)), np.eye(n))
+    W_X_prime = cho_solve(cho_factor(K_X_prime + m * lmbda * np.eye(m)), np.eye(m))
 
-    K_Y = y_kernel(y.reshape(-1, 1), y.reshape(-1, 1))
-    K_Y_prime = y_kernel(y_prime.reshape(-1, 1), y_prime.reshape(-1, 1))
-    K_Y_Y_prime = y_kernel(y.reshape(-1, 1), y_prime.reshape(-1, 1))
+    K_Y = y_kernel(y, y)
+    K_Y_prime = y_kernel(y_prime, y_prime)
+    K_Y_Y_prime = y_kernel(y, y_prime)
 
-    k_X = x_kernel(x.reshape(-1, 1), grid.reshape(-1, 1))
-    k_X_prime = x_kernel(x_prime.reshape(-1, 1), grid.reshape(-1, 1))
+    k_X = x_kernel(x, grid)
+    k_X_prime = x_kernel(x_prime, grid)
 
-    first_term = np.diag(k_X.T @ W_X @ K_Y @ W_X.T @ k_X)
-    second_term = np.diag(2 * k_X.T @ W_X @ K_Y_Y_prime @ W_X_prime.T @ k_X_prime)
-    third_term = np.diag(k_X_prime.T @ W_X_prime @ K_Y_prime @ W_X_prime.T @ k_X_prime)
+    A_1 = W_X @ K_Y @ W_X.T
+    A_2 = W_X @ K_Y_Y_prime @ W_X_prime.T
+    A_3 = W_X_prime @ K_Y_prime @ W_X_prime.T
+    
+    path = ['einsum_path', (0, 1), (0, 1)]
+    first_term = np.einsum('ij,jk,ki->i', k_X.T, A_1, k_X, optimize=path)
+    second_term = 2 * np.einsum('ij,jk,ki->i', k_X.T, A_2, k_X_prime, optimize=path)
+    third_term = np.einsum('ij,jk,ki->i', k_X_prime.T, A_3, k_X_prime, optimize=path)
+
+    return first_term - second_term + third_term
+
+
+def compute_mcmd_torch(
+    grid: torch.Tensor,
+    x: torch.Tensor,
+    y: torch.Tensor,
+    x_prime: torch.Tensor,
+    y_prime: torch.Tensor,
+    x_kernel: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+    y_kernel: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+    lmbda: float = 0.01,
+) -> torch.Tensor:
+    """Given a ground-truth conditional distribution and samples from a model's approximation of that distribution, compute the maximum conditional mean discrepancy (MCMD) along the provided grid.
+
+    This method works entirely in PyTorch (allowing GPU speedups where applicable).
+
+    Args:
+        grid (torch.Tensor): Grid of values (assumed to be drawn from X) to compute MCMD across. Shape: (k, d) or (k,).
+        x (torch.Tensor): The conditioning values that produced y. Shape: (n, d) or (n,).
+        y (torch.Tensor): Ground truth samples from the conditional distribution. Shape: (n, 1) or (n,).
+        x_prime (torch.Tensor): The conditioning values that produced y_prime. Shape: (m, d) or (m,).
+        y_prime (torch.Tensor): Samples from a model's approximation of the ground truth conditional distribution. Shape: (m, 1) or (m,).
+        x_kernel (Callable[[torch.Tensor, torch.Tensor], torch.Tensor]): Kernel function to use for the conditioning variable (x).
+        y_kernel (Callable[[torch.Tensor, torch.Tensor], torch.Tensor]): Kernel function to use for the output variable (y).
+        lmbda (float, optional): Regularization parameter. Defaults to 0.01.
+
+    Returns:
+        torch.Tensor: MCMD values along the provided grid. Shape: (k,).
+    """
+    if grid.dim() == 1:
+        grid = grid.reshape(-1, 1)
+    if x.dim() == 1:
+        x = x.reshape(-1, 1)
+    if x_prime.dim() == 1:
+        x_prime = x_prime.reshape(-1, 1)
+    if y.dim() == 1:
+        y = y.reshape(-1, 1)
+    if y_prime.dim() == 1:
+        y_prime = y_prime.reshape(-1, 1)
+
+    n = len(x)
+    m = len(x_prime)
+    device = x.device
+    I_n = torch.eye(n, device=device)
+    I_m = torch.eye(m, device=device)
+
+    K_X = x_kernel(x, x)
+    K_X_prime = x_kernel(x_prime, x_prime)
+
+    L = torch.linalg.cholesky(K_X + n * lmbda * I_n)
+    L_prime = torch.linalg.cholesky(K_X_prime + m * lmbda * I_m)
+    W_X = torch.cholesky_inverse(L)
+    W_X_prime = torch.cholesky_inverse(L_prime)
+
+    K_Y = y_kernel(y, y)
+    K_Y_prime = y_kernel(y_prime, y_prime)
+    K_Y_Y_prime = y_kernel(y, y_prime)
+
+    k_X = x_kernel(x, grid)
+    k_X_prime = x_kernel(x_prime, grid)
+
+    A_1 = W_X @ K_Y @ W_X.T
+    A_2 = W_X @ K_Y_Y_prime @ W_X_prime.T
+    A_3 = W_X_prime @ K_Y_prime @ W_X_prime.T
+    
+    first_term = torch.einsum('ij,jk,ki->i', k_X.T, A_1, k_X)
+    second_term = 2 * torch.einsum('ij,jk,ki->i', k_X.T, A_2, k_X_prime)
+    third_term = torch.einsum('ij,jk,ki->i', k_X_prime.T, A_3, k_X_prime)
 
     return first_term - second_term + third_term
