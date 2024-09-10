@@ -12,40 +12,73 @@ async-timeout==4.0.3
     # via aiohttp
 attrs==23.2.0
     # via aiohttp
-build==1.2.1
+build==1.2.2
     # via pip-tools
+certifi==2024.8.30
+    # via requests
+charset-normalizer==3.3.2
+    # via requests
 click==8.1.7
     # via pip-tools
 colorama==0.4.6
     # via pretty-errors
-contourpy==1.2.1
+contourpy==1.3.0
     # via matplotlib
 cycler==0.12.1
     # via matplotlib
+<<<<<<< Updated upstream
 filelock==3.14.0
     # via torch
 fonttools==4.52.4
+=======
+filelock==3.16.0
+    # via
+    #   huggingface-hub
+    #   torch
+    #   transformers
+fonttools==4.53.1
+>>>>>>> Stashed changes
     # via matplotlib
 frozenlist==1.4.1
     # via
     #   aiohttp
     #   aiosignal
+<<<<<<< Updated upstream
 fsspec[http]==2024.5.0
+=======
+fsspec[http]==2024.9.0
+>>>>>>> Stashed changes
     # via
+    #   huggingface-hub
     #   lightning
     #   pytorch-lightning
     #   torch
+<<<<<<< Updated upstream
 idna==3.7
     # via yarl
+=======
+huggingface-hub==0.24.6
+    # via
+    #   tokenizers
+    #   transformers
+idna==3.8
+    # via
+    #   requests
+    #   yarl
+>>>>>>> Stashed changes
 jinja2==3.1.4
     # via torch
 joblib==1.4.2
     # via scikit-learn
-kiwisolver==1.4.5
+kiwisolver==1.4.7
     # via matplotlib
 lightning==2.2.5
     # via -r requirements.in
+<<<<<<< Updated upstream
 lightning-utilities==0.11.2
+=======
+lightning-utilities==0.11.7
+>>>>>>> Stashed changes
     # via
     #   lightning
     #   pytorch-lightning
@@ -56,7 +89,7 @@ matplotlib==3.9.0
     # via -r requirements.in
 mpmath==1.3.0
     # via sympy
-multidict==6.0.5
+multidict==6.1.0
     # via
     #   aiohttp
     #   yarl
@@ -72,16 +105,31 @@ numpy==1.26.4
     #   scikit-learn
     #   scipy
     #   torchmetrics
+<<<<<<< Updated upstream
 packaging==24.0
+=======
+    #   torchvision
+    #   transformers
+packaging==24.1
+>>>>>>> Stashed changes
     # via
     #   build
+    #   huggingface-hub
     #   lightning
     #   lightning-utilities
     #   matplotlib
     #   pytorch-lightning
     #   torchmetrics
+<<<<<<< Updated upstream
 pillow==10.3.0
     # via matplotlib
+=======
+    #   transformers
+pillow==10.4.0
+    # via
+    #   matplotlib
+    #   torchvision
+>>>>>>> Stashed changes
 pip-tools==7.4.1
     # via -r requirements.in
 pretty-errors==1.2.25
@@ -99,8 +147,18 @@ pytorch-lightning==2.2.5
 pyyaml==6.0.1
     # via
     #   -r requirements.in
+    #   huggingface-hub
     #   lightning
     #   pytorch-lightning
+    #   transformers
+regex==2024.7.24
+    # via transformers
+requests==2.32.3
+    # via
+    #   huggingface-hub
+    #   transformers
+safetensors==0.4.5
+    # via transformers
 scikit-learn==1.5.0
     # via -r requirements.in
 scipy==1.13.1
@@ -113,6 +171,8 @@ sympy==1.12
     # via torch
 threadpoolctl==3.5.0
     # via scikit-learn
+tokenizers==0.19.1
+    # via transformers
 tomli==2.0.1
     # via
     #   build
@@ -131,17 +191,33 @@ torchmetrics==1.4.0
 tqdm==4.66.4
     # via
     #   -r requirements.in
+    #   huggingface-hub
     #   lightning
     #   pytorch-lightning
+<<<<<<< Updated upstream
 typing-extensions==4.12.0
+=======
+    #   transformers
+transformers==4.44.2
+    # via -r requirements.in
+typing-extensions==4.12.2
+>>>>>>> Stashed changes
     # via
+    #   huggingface-hub
     #   lightning
     #   lightning-utilities
+    #   multidict
     #   pytorch-lightning
     #   torch
+<<<<<<< Updated upstream
 wheel==0.43.0
+=======
+urllib3==2.2.2
+    # via requests
+wheel==0.44.0
+>>>>>>> Stashed changes
     # via pip-tools
-yarl==1.9.4
+yarl==1.11.1
     # via aiohttp
 
 # The following packages are considered to be unsafe in a requirements file:
