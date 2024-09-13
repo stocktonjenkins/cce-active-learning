@@ -61,7 +61,7 @@ def get_datamodule(
             dataset_path=dataset_spec,
             batch_size=batch_size,
             num_workers=num_workers,
-            persistent_workers=True,
+            persistent_workers=True if num_workers > 0 else False,
         )
     elif dataset_type == DatasetType.IMAGE:
         if dataset_spec == ImageDatasetName.MNIST:
@@ -71,7 +71,7 @@ def get_datamodule(
                 root_dir=os.path.join(global_data_dir, "coco_people"),
                 batch_size=batch_size,
                 num_workers=num_workers,
-                persistent_workers=True,
+                persistent_workers=True if num_workers > 0 else False,
             )
     elif dataset_type == DatasetType.TEXT:
         if dataset_spec == TextDatasetName.REVIEWS:
