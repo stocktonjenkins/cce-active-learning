@@ -29,7 +29,9 @@ class DatasetType(Enum):
     IMAGE = "image"
     TEXT = "text"
 
-
 class ImageDatasetName(Enum):
     MNIST = "mnist"
     COCO_PEOPLE = "coco_people"
+
+class TextDatasetName(Enum):
+    REVIEWS = "reviews"

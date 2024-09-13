@@ -7,5 +7,8 @@ datamodule = get_datamodule(
         ImageDatasetName.COCO_PEOPLE,
         1
     )
+datamodule.prepare_data()
+datamodule.setup("test")
 
+test_loader = datamodule.test_dataloader()
 
