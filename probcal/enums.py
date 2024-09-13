@@ -26,3 +26,10 @@ class LRSchedulerType(Enum):
 
 class DatasetType(Enum):
     TABULAR = "tabular"
+    IMAGE = "image"
+    TEXT = "text"
+
+
+class ImageDatasetName(Enum):
+    MNIST = "mnist"
+    COCO_PEOPLE = "coco_people"
