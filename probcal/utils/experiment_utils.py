@@ -1,14 +1,15 @@
 import random
 from pathlib import Path
-from typing import Type
+from typing import Type, Optional
+import os
 
 import lightning as L
 import numpy as np
 import torch
 from lightning.pytorch.callbacks import ModelCheckpoint
 
-from probcal.data_modules import TabularDataModule
-from probcal.enums import DatasetType
+from probcal.data_modules import TabularDataModule, COCOPeopleDataModule
+from probcal.enums import DatasetType, ImageDatasetName, TextDatasetName
 from probcal.enums import HeadType
 from probcal.models import GaussianNN
 from probcal.models import NegBinomNN
@@ -16,6 +17,8 @@ from probcal.models import PoissonNN
 from probcal.models.backbones import MLP
 from probcal.models.discrete_regression_nn import DiscreteRegressionNN
 from probcal.utils.configs import TrainingConfig
+
+GLOBAL_DATA_DIR = 'data'
 
 
 def get_model(config: TrainingConfig, return_initializer: bool = False) -> DiscreteRegressionNN:
@@ -49,15 +52,31 @@ def get_model(config: TrainingConfig, return_initializer: bool = False) -> Discr
 
 
 def get_datamodule(
-    dataset_type: DatasetType, dataset_path: Path, batch_size: int
+    dataset_type: DatasetType,
+    dataset_spec: Path | ImageDatasetName,
+    batch_size: int,
+    num_workers: Optional[int] = 8
 ) -> L.LightningDataModule:
     if dataset_type == DatasetType.TABULAR:
         return TabularDataModule(
-            dataset_path=dataset_path,
+            dataset_path=dataset_spec,
             batch_size=batch_size,
-            num_workers=9,
-            persistent_workers=True,
+            num_workers=num_workers,
+            persistent_workers=True if num_workers > 0 else False,
         )
+    elif dataset_type == DatasetType.IMAGE:
+        if dataset_spec == ImageDatasetName.MNIST:
+            return ValueError("MNIST not supported.")
+        elif dataset_spec == ImageDatasetName.COCO_PEOPLE:
+            return COCOPeopleDataModule(
+                root_dir=os.path.join(GLOBAL_DATA_DIR, "coco_people"),
+                batch_size=batch_size,
+                num_workers=num_workers,
+                persistent_workers=True if num_workers > 0 else False,
+            )
+    elif dataset_type == DatasetType.TEXT:
+        if dataset_spec == TextDatasetName.REVIEWS:
+            return ValueError("Reviews not supported.")
 
 
 def fix_random_seed(random_seed: int | None):

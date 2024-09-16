@@ -1,5 +1,11 @@
+.DS_store
+*.log
+.idea
 __pycache__
 logs
 .vscode
 chkp/
 ignore/
+*/mnist
+*/coco_people
+
