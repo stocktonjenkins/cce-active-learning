@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from lightning.pytorch.callbacks import ModelCheckpoint
 
-from probcal.data_modules import TabularDataModule, COCOPeopleDataModule, global_data_dir
+from probcal.data_modules import TabularDataModule, COCOPeopleDataModule
 from probcal.enums import DatasetType, ImageDatasetName, TextDatasetName
 from probcal.enums import HeadType
 from probcal.models import GaussianNN
@@ -18,6 +18,7 @@ from probcal.models.backbones import MLP
 from probcal.models.discrete_regression_nn import DiscreteRegressionNN
 from probcal.utils.configs import TrainingConfig
 
+GLOBAL_DATA_DIR = 'data'
 
 
 def get_model(config: TrainingConfig, return_initializer: bool = False) -> DiscreteRegressionNN:
@@ -68,7 +69,7 @@ def get_datamodule(
             return ValueError("MNIST not supported.")
         elif dataset_spec == ImageDatasetName.COCO_PEOPLE:
             return COCOPeopleDataModule(
-                root_dir=os.path.join(global_data_dir, "coco_people"),
+                root_dir=os.path.join(GLOBAL_DATA_DIR, "coco_people"),
                 batch_size=batch_size,
                 num_workers=num_workers,
                 persistent_workers=True if num_workers > 0 else False,
