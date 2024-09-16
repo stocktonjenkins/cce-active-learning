@@ -32,6 +32,7 @@ class DatasetType(Enum):
 class ImageDatasetName(Enum):
     MNIST = "mnist"
     COCO_PEOPLE = "coco_people"
+    OOD_COCO_PEOPLE = "ood_coco_people"
 
 class TextDatasetName(Enum):
     REVIEWS = "reviews"

@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from lightning.pytorch.callbacks import ModelCheckpoint
 
-from probcal.data_modules import TabularDataModule, COCOPeopleDataModule
+from probcal.data_modules import TabularDataModule, COCOPeopleDataModule, OodCocoPeopleDataModule
 from probcal.enums import DatasetType, ImageDatasetName, TextDatasetName
 from probcal.enums import HeadType
 from probcal.models import GaussianNN
@@ -69,6 +69,13 @@ def get_datamodule(
             return ValueError("MNIST not supported.")
         elif dataset_spec == ImageDatasetName.COCO_PEOPLE:
             return COCOPeopleDataModule(
+                root_dir=os.path.join(GLOBAL_DATA_DIR, "coco_people"),
+                batch_size=batch_size,
+                num_workers=num_workers,
+                persistent_workers=True if num_workers > 0 else False,
+            )
+        elif dataset_spec == ImageDatasetName.OOD_COCO_PEOPLE:
+            return OodCocoPeopleDataModule(
                 root_dir=os.path.join(GLOBAL_DATA_DIR, "coco_people"),
                 batch_size=batch_size,
                 num_workers=num_workers,

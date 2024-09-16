@@ -9,6 +9,7 @@ from torchvision.transforms import Compose
 from torchvision.transforms import Normalize
 from torchvision.transforms import Resize
 from torchvision.transforms import ToTensor
+from torchvision.transforms import GaussianBlur
 
 from probcal.custom_datasets import COCOPeopleDataset
 from probcal.custom_datasets import ImageDatasetWrapper
@@ -96,4 +97,44 @@ class COCOPeopleDataModule(L.LightningDataModule):
             shuffle=False,
             num_workers=self.num_workers,
             persistent_workers=self.persistent_workers,
+        )
+
+
+class OodCocoPeopleDataModule(COCOPeopleDataModule):
+
+    def __init__(
+            self,
+            root_dir: str | Path,
+            batch_size: int,
+            num_workers: int,
+            persistent_workers: bool,
+            surface_image_path: bool = False,
+    ):
+        super().__init__(root_dir, batch_size, num_workers, persistent_workers, surface_image_path)
+
+
+    def setup(self, stage):
+        if stage != "test":
+            raise ValueError(f"Invalid stage: {stage}. Only 'test' is supported for OOD class")
+
+        resize = Resize((self.IMG_SIZE, self.IMG_SIZE))
+        blur = GaussianBlur(kernel_size=(5, 9), sigma=(10.0, 10.0))
+        normalize = Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+        to_tensor = ToTensor()
+        inference_transforms = Compose([resize, blur, to_tensor, normalize])
+
+        full_dataset = COCOPeopleDataset(
+            self.root_dir,
+            surface_image_path=self.surface_image_path,
+        )
+        num_instances = len(full_dataset)
+        generator = np.random.default_rng(seed=1998)
+        shuffled_indices = generator.permutation(np.arange(num_instances))
+        num_train = int(0.7 * num_instances)
+        num_val = int(0.1 * num_instances)
+        test_indices = shuffled_indices[num_train + num_val:]
+
+        self.test = ImageDatasetWrapper(
+            base_dataset=Subset(full_dataset, test_indices),
+            transforms=inference_transforms,
         )
