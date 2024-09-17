@@ -107,7 +107,6 @@ class NegBinomNN(DiscreteRegressionNN):
         self, x: torch.Tensor, y_hat: torch.Tensor, y: torch.Tensor
     ):
         dist = self._convert_output_to_dist(y_hat)
-        var = dist.variance
         targets = y.flatten()
         target_probs = torch.exp(dist.log_prob(targets))
 

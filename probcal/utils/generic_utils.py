@@ -1,5 +1,5 @@
-from re import sub
 from functools import partialmethod
+from re import sub
 
 import yaml
 
@@ -16,6 +16,7 @@ def to_snake_case(string: str) -> str:
     return "_".join(
         sub("([A-Z][a-z]+)", r" \1", sub("([A-Z]+)", r" \1", string.replace("-", " "))).split()
     ).lower()
+
 
 def partialclass(cls, *args, **kwargs):
     """Return a class constructor, partially-initialized with the given args and kwargs."""

@@ -1,6 +1,9 @@
 from typing import Type
 
+import matplotlib.pyplot as plt
+import numpy as np
 import torch
+from matplotlib.figure import Figure
 from torchmetrics import Metric
 
 from probcal.evaluation.metrics import compute_regression_ece
@@ -98,6 +101,7 @@ class AverageNLL(Metric):
         eps = torch.tensor(1e-5, device=all_target_probs.device)
         nll = -torch.maximum(all_target_probs, eps).log().mean()
         return nll
+
 
 class MedianPrecision(Metric):
     """A custom `torchmetric` for computing the median precision (1 / variance) of posterior predictive distributions."""

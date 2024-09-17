@@ -1,6 +1,6 @@
 import warnings
-import torch
 
+import torch
 
 
 def double_poisson_nll(
@@ -45,6 +45,7 @@ def double_poisson_nll(
         losses = torch.pow(phi.detach(), -beta) * losses
 
     return losses.mean()
+
 
 def gaussian_nll(
     outputs: torch.Tensor, targets: torch.Tensor, beta: float | None = None

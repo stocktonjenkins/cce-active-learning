@@ -1,11 +1,9 @@
-import torch
-import numpy as np
-import matplotlib.pyplot as plt
 from typing import List
 
+import matplotlib.pyplot as plt
+import numpy as np
+import torch
 import torchvision.transforms.functional as F
-
-
 
 
 def img_show(imgs: List[torch.Tensor]):
@@ -19,5 +17,3 @@ def img_show(imgs: List[torch.Tensor]):
         axs[0, i].imshow(np.asarray(img))
         axs[0, i].set(xticklabels=[], yticklabels=[], xticks=[], yticks=[])
     plt.show()
-
-

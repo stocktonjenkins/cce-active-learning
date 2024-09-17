@@ -9,8 +9,8 @@ from scipy.stats import poisson
 from scipy.stats import rv_continuous
 from sklearn.metrics.pairwise import rbf_kernel
 
-from probcal.evaluation.metrics import compute_regression_ece
 from probcal.evaluation.metrics import compute_mcmd_numpy
+from probcal.evaluation.metrics import compute_regression_ece
 
 
 def plot_posterior_predictive(
@@ -46,7 +46,12 @@ def plot_posterior_predictive(
     ax.scatter(x[order], y[order], alpha=0.1, label="Test Data", s=3)
     ax.plot(x[order], mu[order])
     ax.fill_between(
-        x[order], lower[order], upper[order], color=error_color, alpha=error_alpha, label="95% CI"
+        x[order],
+        lower[order],
+        upper[order],
+        color=error_color,
+        alpha=error_alpha,
+        label="95% CI",
     )
     ax.set_title(title)
     ax.set_ylim(y.min() - 5, y.max() + 5)
@@ -137,7 +142,9 @@ def plot_mcmd_curve(
     ax.set_xticks([])
     ax.set_yticks([])
     ax.annotate(
-        f"Mean MCMD: {np.mean(mcmd_vals).item():4f}", xy=(1, ax.get_ylim()[1] * 0.8), fontsize=6
+        f"Mean MCMD: {np.mean(mcmd_vals).item():4f}",
+        xy=(1, ax.get_ylim()[1] * 0.8),
+        fontsize=6,
     )
 
 
@@ -186,13 +193,20 @@ def produce_figure(save_path: str | Path):
         error_color="gray",
     )
     axs[1, 0].hist(
-        gaussian_post_pred.cdf(gaussian_y), density=True, alpha=hist_alpha, rwidth=hist_rwidth
+        gaussian_post_pred.cdf(gaussian_y),
+        density=True,
+        alpha=hist_alpha,
+        rwidth=hist_rwidth,
     )
     axs[1, 0].set_xticks([])
     axs[1, 0].set_yticks([])
     plot_regression_calibration_curve_cdf(gaussian_y, gaussian_post_pred, ax=axs[2, 0], show=False)
     plot_mcmd_curve(
-        cont_x, gaussian_y, gaussian_post_pred, ax=axs[3, 0], num_samples_from_posterior=10
+        cont_x,
+        gaussian_y,
+        gaussian_post_pred,
+        ax=axs[3, 0],
+        num_samples_from_posterior=10,
     )
 
     plot_posterior_predictive(
@@ -205,13 +219,20 @@ def produce_figure(save_path: str | Path):
         error_color="gray",
     )
     axs[1, 1].hist(
-        poisson_post_pred.cdf(poisson_y), density=True, alpha=hist_alpha, rwidth=hist_rwidth
+        poisson_post_pred.cdf(poisson_y),
+        density=True,
+        alpha=hist_alpha,
+        rwidth=hist_rwidth,
     )
     axs[1, 1].set_xticks([])
     axs[1, 1].set_yticks([])
     plot_regression_calibration_curve_cdf(poisson_y, poisson_post_pred, ax=axs[2, 1], show=False)
     plot_mcmd_curve(
-        cont_x, poisson_y, poisson_post_pred, ax=axs[3, 1], num_samples_from_posterior=10
+        cont_x,
+        poisson_y,
+        poisson_post_pred,
+        ax=axs[3, 1],
+        num_samples_from_posterior=10,
     )
 
     plot_posterior_predictive(
@@ -225,7 +246,10 @@ def produce_figure(save_path: str | Path):
         error_color="gray",
     )
     axs[1, 2].hist(
-        nbinom_post_pred.cdf(nbinom_y), density=True, alpha=hist_alpha, rwidth=hist_rwidth
+        nbinom_post_pred.cdf(nbinom_y),
+        density=True,
+        alpha=hist_alpha,
+        rwidth=hist_rwidth,
     )
     axs[1, 2].set_xticks([])
     axs[1, 2].set_yticks([])

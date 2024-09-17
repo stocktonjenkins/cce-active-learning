@@ -2,7 +2,8 @@ from typing import Callable
 
 import numpy as np
 import torch
-from scipy.linalg import cho_factor, cho_solve
+from scipy.linalg import cho_factor
+from scipy.linalg import cho_solve
 from scipy.stats import rv_continuous
 
 
@@ -87,7 +88,7 @@ def compute_mcmd_numpy(
         y = y.reshape(-1, 1)
     if y_prime.ndim == 1:
         y_prime = y_prime.reshape(-1, 1)
-    
+
     n = len(x)
     m = len(x_prime)
 
@@ -107,11 +108,11 @@ def compute_mcmd_numpy(
     A_1 = W_X @ K_Y @ W_X.T
     A_2 = W_X @ K_Y_Y_prime @ W_X_prime.T
     A_3 = W_X_prime @ K_Y_prime @ W_X_prime.T
-    
-    path = ['einsum_path', (0, 1), (0, 1)]
-    first_term = np.einsum('ij,jk,ki->i', k_X.T, A_1, k_X, optimize=path)
-    second_term = 2 * np.einsum('ij,jk,ki->i', k_X.T, A_2, k_X_prime, optimize=path)
-    third_term = np.einsum('ij,jk,ki->i', k_X_prime.T, A_3, k_X_prime, optimize=path)
+
+    path = ["einsum_path", (0, 1), (0, 1)]
+    first_term = np.einsum("ij,jk,ki->i", k_X.T, A_1, k_X, optimize=path)
+    second_term = 2 * np.einsum("ij,jk,ki->i", k_X.T, A_2, k_X_prime, optimize=path)
+    third_term = np.einsum("ij,jk,ki->i", k_X_prime.T, A_3, k_X_prime, optimize=path)
 
     return first_term - second_term + third_term
 
@@ -178,9 +179,9 @@ def compute_mcmd_torch(
     A_1 = W_X @ K_Y @ W_X.T
     A_2 = W_X @ K_Y_Y_prime @ W_X_prime.T
     A_3 = W_X_prime @ K_Y_prime @ W_X_prime.T
-    
-    first_term = torch.einsum('ij,jk,ki->i', k_X.T, A_1, k_X)
-    second_term = 2 * torch.einsum('ij,jk,ki->i', k_X.T, A_2, k_X_prime)
-    third_term = torch.einsum('ij,jk,ki->i', k_X_prime.T, A_3, k_X_prime)
+
+    first_term = torch.einsum("ij,jk,ki->i", k_X.T, A_1, k_X)
+    second_term = 2 * torch.einsum("ij,jk,ki->i", k_X.T, A_2, k_X_prime)
+    third_term = torch.einsum("ij,jk,ki->i", k_X_prime.T, A_3, k_X_prime)
 
     return first_term - second_term + third_term

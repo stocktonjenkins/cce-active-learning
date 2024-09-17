@@ -1,4 +1,5 @@
-from typing import Type, Optional
+from typing import Optional
+from typing import Type
 
 import torch
 from scipy.stats import norm

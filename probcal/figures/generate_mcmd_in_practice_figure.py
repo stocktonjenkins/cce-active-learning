@@ -119,7 +119,8 @@ def produce_figure(
         mcmd_ax.plot(X[sorted_indices], mcmd_vals[sorted_indices])
         mcmd_ax.set_ylim(-0.01, 0.75)
         mcmd_ax.annotate(
-            f"Mean MCMD: {np.mean(mcmd_vals):.4f}", (X.min() + 0.1, mcmd_ax.get_ylim()[1] * 0.8)
+            f"Mean MCMD: {np.mean(mcmd_vals):.4f}",
+            (X.min() + 0.1, mcmd_ax.get_ylim()[1] * 0.8),
         )
 
     fig.tight_layout()
