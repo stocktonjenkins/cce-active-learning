@@ -14,6 +14,7 @@ from probcal.enums import HeadType
 from probcal.models import GaussianNN
 from probcal.models import NegBinomNN
 from probcal.models import PoissonNN
+from probcal.models import DoublePoissonNN
 from probcal.models.backbones import MLP, ViT, MNISTCNN
 from probcal.models.discrete_regression_nn import DiscreteRegressionNN
 from probcal.utils.configs import TrainingConfig, TestConfig
@@ -37,51 +38,18 @@ def get_model(config: Union[TrainingConfig, TestConfig], return_initializer: boo
             )
         else:
             initializer = GaussianNN
-    elif config.head_type == HeadType.FAITHFUL_GAUSSIAN:
-        #initializer = FaithfulGaussianNN
-        raise NotImplementedError("Faithful Gaussian not implemented.")
-    elif config.head_type == HeadType.NATURAL_GAUSSIAN:
-        #initializer = NaturalGaussianNN
-        raise NotImplementedError("Natural Gaussian not implemented.")
-    elif config.head_type in (HeadType.POISSON, HeadType.POISSON_GLM):
+    elif config.head_type == HeadType.POISSON:
         initializer = PoissonNN
-    elif config.head_type in (HeadType.DOUBLE_POISSON, HeadType.DOUBLE_POISSON_GLM):
-        raise NotImplementedError("Double Poisson not implemented.")
-        """if config.beta_scheduler_type is not None:
-            initializer = partialclass(
-                DoublePoissonNN,
-                beta_scheduler_type=config.beta_scheduler_type,
-                beta_scheduler_kwargs=config.beta_scheduler_kwargs,
-            )
-        else:
-            initializer = DoublePoissonNN"""
-    elif config.head_type in (HeadType.NEGATIVE_BINOMIAL, HeadType.NEGATIVE_BINOMIAL_GLM):
+    elif config.head_type == HeadType.DOUBLE_POISSON:
+        initializer = DoublePoissonNN
+    elif config.head_type == HeadType.NEGATIVE_BINOMIAL:
         initializer = NegBinomNN
-    elif config.head_type == HeadType.MULTI_CLASS:
-        if config.dataset_type == DatasetType.IMAGE:
-            if config.dataset_spec != ImageDatasetName.MNIST:
-                raise ValueError("Can only train MultiClassNN on MNIST or Reviews.")
-            else:
-                discrete_values = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-        elif config.dataset_type == DatasetType.TEXT:
-            # Must be Amazon Reviews.
-            discrete_values = [1, 2, 3, 4, 5]
-        else:
-            raise ValueError("Can only train MultiClassNN on MNIST or Reviews.")
-
-        initializer = partialclass(
-            MultiClassNN,
-            discrete_values=discrete_values,
-        )
+    else:
+        raise ValueError(f"Head type {config.head_type} not recognized.")
 
     if config.dataset_type == DatasetType.TABULAR:
-        if config.head_type in (
-            HeadType.POISSON_GLM,
-            HeadType.NEGATIVE_BINOMIAL_GLM,
-            HeadType.DOUBLE_POISSON_GLM,
-        ):
-            backbone_type = Identity
-        elif "collision" in str(config.dataset_spec):
+
+        if "collision" in str(config.dataset_spec):
             backbone_type = LargerMLP
         else:
             backbone_type = MLP
@@ -97,6 +65,7 @@ def get_model(config: Union[TrainingConfig, TestConfig], return_initializer: boo
         else:
             backbone_type = MobileNetV3
         backbone_kwargs = {}
+
     backbone_kwargs["output_dim"] = config.hidden_dim
 
     if isinstance(config, TrainingConfig):
