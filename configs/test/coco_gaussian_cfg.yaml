@@ -1,0 +1,8 @@
+experiment_name: coco_gaussian
+random_seed: 1998
+head_type: gaussian
+dataset:
+  type: image
+  spec: coco_people
+test:
+  chkp_dir: weights/mnist_gaussian

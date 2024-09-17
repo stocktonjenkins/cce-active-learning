@@ -9,11 +9,67 @@ from probcal.enums import DatasetType
 from probcal.enums import HeadType
 from probcal.enums import LRSchedulerType
 from probcal.enums import OptimizerType
+from probcal.enums import ImageDatasetName
 from probcal.utils.generic_utils import get_yaml
 from probcal.utils.generic_utils import to_snake_case
 
 
-class TrainingConfig:
+class BaseConfig(object):
+
+    def __init__(
+            self,
+            experiment_name: str,
+            head_type: HeadType,
+            dataset_type: DatasetType,
+            dataset_path_or_spec: Path | ImageDatasetName,
+            source_dict: dict,
+            hidden_dim: int
+    ):
+        self.experiment_name = experiment_name
+        self.head_type = head_type
+        self.dataset_type = dataset_type
+        self.dataset_path_or_spec = dataset_path_or_spec
+        self.source_dict = source_dict
+        self.hidden_dim = hidden_dim
+
+
+
+    def to_yaml(self, filepath: str | Path):
+        """Save this config as a .yaml file at the given filepath.
+
+        Args:
+            filepath (str | Path): The filepath to save this config at.
+        """
+        with open(filepath, "w") as f:
+            yaml.dump(self.source_dict, f)
+
+    @staticmethod
+    def from_yaml(config_path: str | Path) -> TrainingConfig:
+        """Factory method to construct an TrainingConfig from a .yaml file.
+
+        Args:
+            config_path (str | Path): Path to the .yaml file with config options.
+
+        Returns:
+            TrainingConfig: The specified config.
+        """
+        raise NotImplementedError("This method should be implemented in a subclass of BaseConfig.")
+
+    @staticmethod
+    def get_dataset_path_or_spec(dataset_cfg: dict):
+        if 'path' in dataset_cfg:
+            return Path(dataset_cfg["path"])
+        else:
+            type = DatasetType(dataset_cfg["type"])
+            spec = dataset_cfg["spec"]
+            if type == DatasetType.TABULAR:
+                return Path(dataset_cfg["path"])
+            if type == DatasetType.IMAGE:
+                return ImageDatasetName(spec)
+            else:
+                return Path(spec)
+
+class TrainingConfig(BaseConfig):
     """Class with configuration options for training a model.
 
     Attributes:
@@ -52,7 +108,7 @@ class TrainingConfig:
         lr_scheduler_type: LRSchedulerType | None,
         lr_scheduler_kwargs: dict | None,
         dataset_type: DatasetType,
-        dataset_path: Path,
+        dataset_path_or_spec: Path | ImageDatasetName,
         num_trials: int,
         log_dir: Path,
         source_dict: dict,
@@ -61,9 +117,15 @@ class TrainingConfig:
         precision: str | None = None,
         random_seed: int | None = None,
     ):
-        self.experiment_name = experiment_name
+        super(TrainingConfig, self).__init__(
+            experiment_name=experiment_name,
+            head_type=head_type,
+            dataset_type=dataset_type,
+            source_dict=source_dict,
+            dataset_path_or_spec=dataset_path_or_spec,
+            hidden_dim=hidden_dim
+        )
         self.accelerator_type = accelerator_type
-        self.head_type = head_type
         self.chkp_dir = chkp_dir
         self.chkp_freq = chkp_freq
         self.batch_size = batch_size
@@ -72,13 +134,9 @@ class TrainingConfig:
         self.optim_kwargs = optim_kwargs
         self.lr_scheduler_type = lr_scheduler_type
         self.lr_scheduler_kwargs = lr_scheduler_kwargs
-        self.dataset_type = dataset_type
-        self.dataset_path = dataset_path
         self.num_trials = num_trials
         self.log_dir = log_dir
-        self.source_dict = source_dict
         self.input_dim = input_dim
-        self.hidden_dim = hidden_dim
         self.precision = precision
         self.random_seed = random_seed
 
@@ -115,8 +173,9 @@ class TrainingConfig:
             lr_scheduler_kwargs = None
 
         dataset_type = DatasetType(config_dict["dataset"]["type"])
-        if dataset_type == DatasetType.TABULAR:
-            dataset_path = Path(config_dict["dataset"]["path"])
+        dataset_path_or_spec = TrainingConfig.get_dataset_path_or_spec(
+            config_dict["dataset"]
+        )
 
         num_trials = eval_dict["num_trials"]
         log_dir = Path(eval_dict["log_dir"])
@@ -137,7 +196,7 @@ class TrainingConfig:
             lr_scheduler_type=lr_scheduler_type,
             lr_scheduler_kwargs=lr_scheduler_kwargs,
             dataset_type=dataset_type,
-            dataset_path=dataset_path,
+            dataset_path_or_spec=dataset_path_or_spec,
             num_trials=num_trials,
             log_dir=log_dir,
             source_dict=config_dict,
@@ -147,11 +206,53 @@ class TrainingConfig:
             random_seed=random_seed,
         )
 
-    def to_yaml(self, filepath: str | Path):
-        """Save this config as a .yaml file at the given filepath.
+
+class TestConfig(BaseConfig):
+    """Class with configuration options for testing a model"""
+
+    def __init__(
+        self,
+        experiment_name: str,
+        head_type: HeadType,
+        dataset_type: DatasetType,
+        source_dict: dict,
+        dataset_path_or_spec: Path | ImageDatasetName,
+        hidden_dim
+    ):
+        super(TestConfig, self).__init__(
+            experiment_name=experiment_name,
+            head_type=head_type,
+            dataset_type=dataset_type,
+            source_dict=source_dict,
+            dataset_path_or_spec=dataset_path_or_spec,
+            hidden_dim=hidden_dim
+        )
+
+    @staticmethod
+    def from_yaml(config_path: str | Path) -> TestConfig:
+        """Factory method to construct an TestConfig from a .yaml file.
 
         Args:
-            filepath (str | Path): The filepath to save this config at.
+            config_path (str | Path): Path to the .yaml file with config options.
+
+        Returns:
+            TestConfig: The specified config.
         """
-        with open(filepath, "w") as f:
-            yaml.dump(self.source_dict, f)
+        config_dict = get_yaml(config_path)
+        experiment_name = to_snake_case(config_dict["experiment_name"])
+        head_type = HeadType(config_dict["head_type"])
+        dataset_type = DatasetType(config_dict["dataset"]["type"])
+        hidden_dim = config_dict.get("hidden_dim", 64)
+        dataset_path_or_spec = TrainingConfig.get_dataset_path_or_spec(
+            config_dict["dataset"]
+        )
+
+        return TestConfig(
+            experiment_name=experiment_name,
+            head_type=head_type,
+            dataset_type=dataset_type,
+            source_dict=config_dict,
+            dataset_path_or_spec=dataset_path_or_spec,
+            hidden_dim=hidden_dim
+        )
+

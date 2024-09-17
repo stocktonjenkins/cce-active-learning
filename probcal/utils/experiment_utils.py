@@ -1,6 +1,6 @@
 import random
 from pathlib import Path
-from typing import Type, Optional
+from typing import Type, Optional, Union
 import os
 
 import lightning as L
@@ -8,43 +8,83 @@ import numpy as np
 import torch
 from lightning.pytorch.callbacks import ModelCheckpoint
 
-from probcal.data_modules import TabularDataModule, COCOPeopleDataModule
+from probcal.data_modules import TabularDataModule, COCOPeopleDataModule, OodCocoPeopleDataModule
 from probcal.enums import DatasetType, ImageDatasetName, TextDatasetName
 from probcal.enums import HeadType
 from probcal.models import GaussianNN
 from probcal.models import NegBinomNN
 from probcal.models import PoissonNN
-from probcal.models.backbones import MLP
+from probcal.models import DoublePoissonNN
+from probcal.models.backbones import MLP, ViT, MNISTCNN
 from probcal.models.discrete_regression_nn import DiscreteRegressionNN
-from probcal.utils.configs import TrainingConfig
+from probcal.utils.configs import TrainingConfig, TestConfig
+from probcal.utils.generic_utils import partialclass
 
 GLOBAL_DATA_DIR = 'data'
 
 
-def get_model(config: TrainingConfig, return_initializer: bool = False) -> DiscreteRegressionNN:
+def get_model(config: Union[TrainingConfig, TestConfig], return_initializer: bool = False) -> DiscreteRegressionNN:
 
     initializer: Type[DiscreteRegressionNN]
 
-    if config.head_type == HeadType.GAUSSIAN:
-        initializer = GaussianNN
+    if config.head_type == HeadType.MEAN:
+        initializer = MeanNN
+    elif config.head_type == HeadType.GAUSSIAN:
+        if hasattr(config, "beta_scheduler_type") and config.beta_scheduler_type is not None:
+            initializer = partialclass(
+                GaussianNN,
+                beta_scheduler_type=config.beta_scheduler_type,
+                beta_scheduler_kwargs=config.beta_scheduler_kwargs,
+            )
+        else:
+            initializer = GaussianNN
     elif config.head_type == HeadType.POISSON:
         initializer = PoissonNN
+    elif config.head_type == HeadType.DOUBLE_POISSON:
+        initializer = DoublePoissonNN
     elif config.head_type == HeadType.NEGATIVE_BINOMIAL:
         initializer = NegBinomNN
+    else:
+        raise ValueError(f"Head type {config.head_type} not recognized.")
 
     if config.dataset_type == DatasetType.TABULAR:
-        backbone_type = MLP
+
+        if "collision" in str(config.dataset_spec):
+            backbone_type = LargerMLP
+        else:
+            backbone_type = MLP
         backbone_kwargs = {"input_dim": config.input_dim}
+    elif config.dataset_type == DatasetType.TEXT:
+        backbone_type = DistilBert
+        backbone_kwargs = {}
+    elif config.dataset_type == DatasetType.IMAGE:
+        if config.dataset_path_or_spec == ImageDatasetName.MNIST:
+            backbone_type = MNISTCNN
+        elif config.dataset_path_or_spec == ImageDatasetName.COCO_PEOPLE:
+            backbone_type = ViT
+        else:
+            backbone_type = MobileNetV3
+        backbone_kwargs = {}
+
     backbone_kwargs["output_dim"] = config.hidden_dim
 
-    model = initializer(
-        backbone_type=backbone_type,
-        backbone_kwargs=backbone_kwargs,
-        optim_type=config.optim_type,
-        optim_kwargs=config.optim_kwargs,
-        lr_scheduler_type=config.lr_scheduler_type,
-        lr_scheduler_kwargs=config.lr_scheduler_kwargs,
-    )
+    if isinstance(config, TrainingConfig):
+        model = initializer(
+            backbone_type=backbone_type,
+            backbone_kwargs=backbone_kwargs,
+            optim_type=config.optim_type,
+            optim_kwargs=config.optim_kwargs,
+            lr_scheduler_type=config.lr_scheduler_type,
+            lr_scheduler_kwargs=config.lr_scheduler_kwargs,
+        )
+    elif isinstance(config, TestConfig):
+        model = initializer(
+            backbone_type=backbone_type,
+            backbone_kwargs=backbone_kwargs,
+        )
+    else:
+        raise ValueError("Config must be either TrainingConfig or TestConfig.")
+
     if return_initializer:
         return model, initializer
     else:
@@ -53,29 +93,36 @@ def get_model(config: TrainingConfig, return_initializer: bool = False) -> Discr
 
 def get_datamodule(
     dataset_type: DatasetType,
-    dataset_spec: Path | ImageDatasetName,
+    dataset_path_or_spec: Path | ImageDatasetName,
     batch_size: int,
     num_workers: Optional[int] = 8
 ) -> L.LightningDataModule:
     if dataset_type == DatasetType.TABULAR:
         return TabularDataModule(
-            dataset_path=dataset_spec,
+            dataset_path=dataset_path_or_spec,
             batch_size=batch_size,
             num_workers=num_workers,
             persistent_workers=True if num_workers > 0 else False,
         )
     elif dataset_type == DatasetType.IMAGE:
-        if dataset_spec == ImageDatasetName.MNIST:
+        if dataset_path_or_spec == ImageDatasetName.MNIST:
             return ValueError("MNIST not supported.")
-        elif dataset_spec == ImageDatasetName.COCO_PEOPLE:
+        elif dataset_path_or_spec == ImageDatasetName.COCO_PEOPLE:
             return COCOPeopleDataModule(
                 root_dir=os.path.join(GLOBAL_DATA_DIR, "coco_people"),
                 batch_size=batch_size,
                 num_workers=num_workers,
                 persistent_workers=True if num_workers > 0 else False,
             )
+        elif dataset_path_or_spec == ImageDatasetName.OOD_COCO_PEOPLE:
+            return OodCocoPeopleDataModule(
+                root_dir=os.path.join(GLOBAL_DATA_DIR, "coco_people"),
+                batch_size=batch_size,
+                num_workers=num_workers,
+                persistent_workers=True if num_workers > 0 else False,
+            )
     elif dataset_type == DatasetType.TEXT:
-        if dataset_spec == TextDatasetName.REVIEWS:
+        if dataset_path_or_spec == TextDatasetName.REVIEWS:
             return ValueError("Reviews not supported.")
 
 

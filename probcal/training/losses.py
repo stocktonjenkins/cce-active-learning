@@ -1,7 +1,50 @@
 import warnings
-
 import torch
 
+
+
+def double_poisson_nll(
+    output: torch.Tensor, targets: torch.Tensor, beta: float | None = None
+) -> torch.Tensor:
+    """Compute the mean double poisson negative log likelihood over the given targets.
+
+    Args:
+        output (torch.Tensor): The (n, 2) output from a DoublePoissonNN. Dims along last axis are assumed to be (logmu, logphi).
+        targets (torch.Tensor): Regression targets for the DoublePoissonNN. Shape: (n, 1).
+        beta (float | None, optional): If specified, the power to raise (1 / `phi`) to for re-scaling the final loss (for gradient disentanglement). Must be between 0 and 1. Defaults to None (no re-scaling).
+
+    Returns:
+        torch.Tensor: Avg. loss across all targets. Zero-dimensional tensor (torch.Size([])).
+    """
+    if targets.size(1) != 1:
+        warnings.warn(
+            f"Targets tensor for `double_poisson_nll` expected to be of shape (n, 1) but got shape {targets.shape}. This may result in unexpected training behavior."
+        )
+    if beta is not None:
+        if beta < 0 or beta > 1:
+            raise ValueError(f"Invalid value of beta specified. Must be in [0, 1]. Got {beta}")
+
+    logmu, logphi = torch.split(output, [1, 1], dim=-1)
+
+    # Clamp logmu and logphi so the implied mu/phi ratio isn't too small (leading to stability issues).
+    ln10 = torch.tensor(10.0, device=logmu.device).log()
+    logmu_clamped = torch.clamp(logmu, min=-6.0 * ln10)
+    logvar = torch.clamp(logmu_clamped - logphi, min=-4.0 * ln10)
+    logphi_clamped = logmu_clamped - logvar
+
+    mu = torch.exp(logmu_clamped)
+    phi = torch.exp(logphi_clamped)
+
+    losses = (
+        (-0.5 * logphi_clamped)
+        + phi * mu
+        - phi * (targets + torch.xlogy(targets, mu) - torch.xlogy(targets, targets))
+    )
+
+    if beta is not None and beta != 0:
+        losses = torch.pow(phi.detach(), -beta) * losses
+
+    return losses.mean()
 
 def gaussian_nll(
     outputs: torch.Tensor, targets: torch.Tensor, beta: float | None = None
