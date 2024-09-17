@@ -85,7 +85,12 @@ def generate_figure(save_path: str):
     y_kernel = partial(rbf_kernel, gamma=gamma)
 
     fig, axs = plt.subplots(
-        2, 6, figsize=(12, 4), sharey="row", sharex="col", gridspec_kw={"height_ratios": [2, 1]}
+        nrows=2,
+        ncols=6,
+        figsize=(12, 4),
+        sharey="row",
+        sharex="col",
+        gridspec_kw={"height_ratios": [2, 1]},
     )
     for i, ((x_prime, y_prime), title) in enumerate(
         zip(
@@ -114,7 +119,9 @@ def generate_figure(save_path: str):
         mcmd_ax.plot(grid, mcmd_vals)
         mcmd_ax.set_ylim(-0.1, 2.5)
         mcmd_ax.annotate(
-            f"Mean MCMD: {np.mean(mcmd_vals):.4f}", (0.1, 0.8 * mcmd_ax.get_ylim()[1]), fontsize=8
+            f"Mean MCMD: {np.mean(mcmd_vals):.4f}",
+            (0.1, 0.8 * mcmd_ax.get_ylim()[1]),
+            fontsize=8,
         )
 
     fig.tight_layout()
@@ -122,7 +129,5 @@ def generate_figure(save_path: str):
 
 
 if __name__ == "__main__":
-    save_path = (
-        "probcal/figures/artifacts/homoscedastic_behavior.pdf"
-    )
+    save_path = "probcal/figures/artifacts/homoscedastic_behavior.pdf"
     generate_figure(save_path)

@@ -40,7 +40,12 @@ def plot_posterior_predictive(
     ax.scatter(x[order], y[order], alpha=0.1, label="Test Data")
     ax.plot(x[order], mu[order])
     ax.fill_between(
-        x[order], lower[order], upper[order], color=error_color, alpha=error_alpha, label="95% CI"
+        x[order],
+        lower[order],
+        upper[order],
+        color=error_color,
+        alpha=error_alpha,
+        label="95% CI",
     )
     ax.set_xlabel("x")
     ax.set_ylabel("y")

@@ -129,7 +129,5 @@ def generate_figure(save_path: str):
 
 
 if __name__ == "__main__":
-    save_path = (
-        "probcal/figures/artifacts/heteroscedastic_behavior.pdf"
-    )
+    save_path = "probcal/figures/artifacts/heteroscedastic_behavior.pdf"
     generate_figure(save_path)

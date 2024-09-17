@@ -9,7 +9,11 @@ from torch.utils.data import TensorDataset
 
 class TabularDataModule(L.LightningDataModule):
     def __init__(
-        self, dataset_path: str | Path, batch_size: int, num_workers: int, persistent_workers: bool
+        self,
+        dataset_path: str | Path,
+        batch_size: int,
+        num_workers: int,
+        persistent_workers: bool,
     ):
         super().__init__()
         self.dataset_path = dataset_path

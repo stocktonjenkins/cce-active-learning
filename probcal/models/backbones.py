@@ -1,6 +1,11 @@
 import torch
 from torch import nn
+from torchvision.models.mobilenet import mobilenet_v3_large
+from torchvision.models.mobilenet import MobileNet_V3_Large_Weights
+from transformers import BatchEncoding
+from transformers import DistilBertModel
 from transformers import ViTModel
+from transformers.modeling_outputs import BaseModelOutput
 from transformers.modeling_outputs import BaseModelOutputWithPooling
 
 
@@ -35,6 +40,44 @@ class MLP(Backbone):
 
         self.layers = nn.Sequential(
             nn.Linear(input_dim, 128),
+            nn.ReLU(),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, output_dim),
+            nn.ReLU(),
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.layers(x)
+
+
+class LargerMLP(Backbone):
+    """A larger MLP feature extractor for (N, d) input data.
+
+    Attributes:
+        layers (nn.Sequential): The layers of this MLP.
+    """
+
+    def __init__(self, input_dim: int = 1, output_dim: int = 64):
+        """Instantiate an MLP backbone.
+
+        Args:
+            input_dim (int, optional): Dimension of input feature vectors. Defaults to 1.
+            output_dim (int, optional): Dimension of output feature vectors. Defaults to 64.
+        """
+        self.input_dim = input_dim
+        super(LargerMLP, self).__init__(output_dim=output_dim)
+
+        self.layers = nn.Sequential(
+            nn.Linear(input_dim, 512),
+            nn.ReLU(),
+            nn.Linear(512, 256),
+            nn.ReLU(),
+            nn.Linear(256, 256),
+            nn.ReLU(),
+            nn.Linear(256, 128),
             nn.ReLU(),
             nn.Linear(128, 128),
             nn.ReLU(),
@@ -100,6 +143,59 @@ class ViT(Backbone):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         outputs: BaseModelOutputWithPooling = self.backbone(pixel_values=x)
         h = outputs.pooler_output
+        h = self.relu(self.projection_1(h))
+        h = self.relu(self.projection_2(h))
+        return h
+
+
+class MobileNetV3(Backbone):
+    """A MobileNetV3 feature extractor for 3x224x224 image tensors.
+
+    Attributes:
+        output_dim (int): Dimension of output feature vectors.
+    """
+
+    def __init__(self, output_dim: int = 64):
+        """Initialize a MobileNetV3 feature extractor.
+
+        Args:
+            output_dim (int, optional): Dimension of output feature vectors. Defaults to 64.
+        """
+        super(MobileNetV3, self).__init__(output_dim=output_dim)
+
+        self.backbone = mobilenet_v3_large(weights=MobileNet_V3_Large_Weights.DEFAULT).features
+        self.avg_pool = nn.AdaptiveAvgPool2d(output_size=(1, 1))
+        self.flatten = nn.Flatten(start_dim=2)
+        self.conv1d = nn.Conv1d(in_channels=960, out_channels=self.output_dim, kernel_size=1)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        h = self.flatten(self.avg_pool(self.backbone(x)))
+        h = self.conv1d(h).squeeze(-1)
+        return h
+
+
+class DistilBert(Backbone):
+    """A DistilBert feature extractor for text sequences.
+
+    Attributes:
+        output_dim (int): Dimension of output feature vectors.
+    """
+
+    def __init__(self, output_dim: int = 64):
+        """Initialize a DistilBert text feature extractor.
+
+        Args:
+            output_dim (int, optional): Dimension of output feature vectors. Defaults to 64.
+        """
+        super(DistilBert, self).__init__(output_dim=output_dim)
+        self.backbone = DistilBertModel.from_pretrained("distilbert-base-cased")
+        self.projection_1 = nn.Linear(768, 384)
+        self.projection_2 = nn.Linear(384, self.output_dim)
+        self.relu = nn.ReLU()
+
+    def forward(self, x: BatchEncoding) -> torch.Tensor:
+        outputs: BaseModelOutput = self.backbone(**x)
+        h = outputs.last_hidden_state[:, 0]
         h = self.relu(self.projection_1(h))
         h = self.relu(self.projection_2(h))
         return h

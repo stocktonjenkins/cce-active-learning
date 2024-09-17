@@ -1,5 +1,6 @@
 from typing import Callable
-from typing import Type, Optional
+from typing import Optional
+from typing import Type
 
 import lightning as L
 import torch

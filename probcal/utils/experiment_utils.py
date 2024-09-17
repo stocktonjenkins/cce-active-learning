@@ -1,35 +1,47 @@
+import os
 import random
 from pathlib import Path
-from typing import Type, Optional, Union
-import os
+from typing import Optional
+from typing import Type
+from typing import Union
 
 import lightning as L
 import numpy as np
 import torch
 from lightning.pytorch.callbacks import ModelCheckpoint
 
-from probcal.data_modules import TabularDataModule, COCOPeopleDataModule, OodCocoPeopleDataModule
-from probcal.enums import DatasetType, ImageDatasetName, TextDatasetName
+from probcal.data_modules import COCOPeopleDataModule
+from probcal.data_modules import OodCocoPeopleDataModule
+from probcal.data_modules import TabularDataModule
+from probcal.enums import DatasetType
 from probcal.enums import HeadType
+from probcal.enums import ImageDatasetName
+from probcal.enums import TextDatasetName
+from probcal.models import DoublePoissonNN
 from probcal.models import GaussianNN
 from probcal.models import NegBinomNN
 from probcal.models import PoissonNN
-from probcal.models import DoublePoissonNN
-from probcal.models.backbones import MLP, ViT, MNISTCNN
+from probcal.models.backbones import DistilBert
+from probcal.models.backbones import LargerMLP
+from probcal.models.backbones import MLP
+from probcal.models.backbones import MNISTCNN
+from probcal.models.backbones import MobileNetV3
+from probcal.models.backbones import ViT
 from probcal.models.discrete_regression_nn import DiscreteRegressionNN
-from probcal.utils.configs import TrainingConfig, TestConfig
+from probcal.utils.configs import TestConfig
+from probcal.utils.configs import TrainingConfig
 from probcal.utils.generic_utils import partialclass
 
-GLOBAL_DATA_DIR = 'data'
+GLOBAL_DATA_DIR = "data"
 
 
-def get_model(config: Union[TrainingConfig, TestConfig], return_initializer: bool = False) -> DiscreteRegressionNN:
+def get_model(
+    config: Union[TrainingConfig, TestConfig], return_initializer: bool = False
+) -> DiscreteRegressionNN:
 
     initializer: Type[DiscreteRegressionNN]
 
-    if config.head_type == HeadType.MEAN:
-        initializer = MeanNN
-    elif config.head_type == HeadType.GAUSSIAN:
+    if config.head_type == HeadType.GAUSSIAN:
         if hasattr(config, "beta_scheduler_type") and config.beta_scheduler_type is not None:
             initializer = partialclass(
                 GaussianNN,
@@ -49,7 +61,7 @@ def get_model(config: Union[TrainingConfig, TestConfig], return_initializer: boo
 
     if config.dataset_type == DatasetType.TABULAR:
 
-        if "collision" in str(config.dataset_spec):
+        if "collision" in str(config.dataset_path_or_spec):
             backbone_type = LargerMLP
         else:
             backbone_type = MLP
@@ -95,7 +107,7 @@ def get_datamodule(
     dataset_type: DatasetType,
     dataset_path_or_spec: Path | ImageDatasetName,
     batch_size: int,
-    num_workers: Optional[int] = 8
+    num_workers: Optional[int] = 8,
 ) -> L.LightningDataModule:
     if dataset_type == DatasetType.TABULAR:
         return TabularDataModule(

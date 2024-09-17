@@ -5,25 +5,25 @@ from pathlib import Path
 import yaml
 
 from probcal.enums import AcceleratorType
+from probcal.enums import BetaSchedulerType
 from probcal.enums import DatasetType
 from probcal.enums import HeadType
+from probcal.enums import ImageDatasetName
 from probcal.enums import LRSchedulerType
 from probcal.enums import OptimizerType
-from probcal.enums import ImageDatasetName
 from probcal.utils.generic_utils import get_yaml
 from probcal.utils.generic_utils import to_snake_case
 
 
 class BaseConfig(object):
-
     def __init__(
-            self,
-            experiment_name: str,
-            head_type: HeadType,
-            dataset_type: DatasetType,
-            dataset_path_or_spec: Path | ImageDatasetName,
-            source_dict: dict,
-            hidden_dim: int
+        self,
+        experiment_name: str,
+        head_type: HeadType,
+        dataset_type: DatasetType,
+        dataset_path_or_spec: Path | ImageDatasetName,
+        source_dict: dict,
+        hidden_dim: int,
     ):
         self.experiment_name = experiment_name
         self.head_type = head_type
@@ -31,8 +31,6 @@ class BaseConfig(object):
         self.dataset_path_or_spec = dataset_path_or_spec
         self.source_dict = source_dict
         self.hidden_dim = hidden_dim
-
-
 
     def to_yaml(self, filepath: str | Path):
         """Save this config as a .yaml file at the given filepath.
@@ -57,7 +55,7 @@ class BaseConfig(object):
 
     @staticmethod
     def get_dataset_path_or_spec(dataset_cfg: dict):
-        if 'path' in dataset_cfg:
+        if "path" in dataset_cfg:
             return Path(dataset_cfg["path"])
         else:
             type = DatasetType(dataset_cfg["type"])
@@ -68,6 +66,7 @@ class BaseConfig(object):
                 return ImageDatasetName(spec)
             else:
                 return Path(spec)
+
 
 class TrainingConfig(BaseConfig):
     """Class with configuration options for training a model.
@@ -84,7 +83,7 @@ class TrainingConfig(BaseConfig):
         lr_scheduler_type (LRSchedulerType | None): If specified, the type of learning rate scheduler to use during training, e.g. "cosine_annealing".
         lr_scheduler_kwargs (dict | None): If specified, key-value argument specifications for the chosen lr scheduler, e.g. {"T_max": 500}.
         dataset_type (DatasetType): Type of dataset to use in this experiment.
-        dataset_path (Path): Path to the dataset .npz file to use.
+        dataset_path_or_spec (Path | ImageDatasetName): If specifying a tabular dataset, path to the dataset .npz file to use. Otherwise, the name of the dataset.
         num_trials (int): Number of trials to run for this experiment.
         log_dir (Path): Directory to log results to.
         source_dict (dict): Dictionary from which config was constructed.
@@ -107,6 +106,8 @@ class TrainingConfig(BaseConfig):
         optim_kwargs: dict,
         lr_scheduler_type: LRSchedulerType | None,
         lr_scheduler_kwargs: dict | None,
+        beta_scheduler_type: BetaSchedulerType | None,
+        beta_scheduler_kwargs: dict | None,
         dataset_type: DatasetType,
         dataset_path_or_spec: Path | ImageDatasetName,
         num_trials: int,
@@ -123,7 +124,7 @@ class TrainingConfig(BaseConfig):
             dataset_type=dataset_type,
             source_dict=source_dict,
             dataset_path_or_spec=dataset_path_or_spec,
-            hidden_dim=hidden_dim
+            hidden_dim=hidden_dim,
         )
         self.accelerator_type = accelerator_type
         self.chkp_dir = chkp_dir
@@ -134,6 +135,8 @@ class TrainingConfig(BaseConfig):
         self.optim_kwargs = optim_kwargs
         self.lr_scheduler_type = lr_scheduler_type
         self.lr_scheduler_kwargs = lr_scheduler_kwargs
+        self.beta_scheduler_type = beta_scheduler_type
+        self.beta_scheduler_kwargs = beta_scheduler_kwargs
         self.num_trials = num_trials
         self.log_dir = log_dir
         self.input_dim = input_dim
@@ -172,10 +175,17 @@ class TrainingConfig(BaseConfig):
             lr_scheduler_type = None
             lr_scheduler_kwargs = None
 
+        if "beta_scheduler" in training_dict:
+            beta_scheduler_type = BetaSchedulerType(training_dict["beta_scheduler"]["type"])
+            beta_scheduler_kwargs = training_dict["beta_scheduler"]["kwargs"]
+            if beta_scheduler_kwargs.get("last_epoch", None) == -1:
+                beta_scheduler_kwargs["last_epoch"] = num_epochs
+        else:
+            beta_scheduler_type = None
+            beta_scheduler_kwargs = None
+
         dataset_type = DatasetType(config_dict["dataset"]["type"])
-        dataset_path_or_spec = TrainingConfig.get_dataset_path_or_spec(
-            config_dict["dataset"]
-        )
+        dataset_path_or_spec = TrainingConfig.get_dataset_path_or_spec(config_dict["dataset"])
 
         num_trials = eval_dict["num_trials"]
         log_dir = Path(eval_dict["log_dir"])
@@ -195,6 +205,8 @@ class TrainingConfig(BaseConfig):
             optim_kwargs=optim_kwargs,
             lr_scheduler_type=lr_scheduler_type,
             lr_scheduler_kwargs=lr_scheduler_kwargs,
+            beta_scheduler_type=beta_scheduler_type,
+            beta_scheduler_kwargs=beta_scheduler_kwargs,
             dataset_type=dataset_type,
             dataset_path_or_spec=dataset_path_or_spec,
             num_trials=num_trials,
@@ -217,7 +229,7 @@ class TestConfig(BaseConfig):
         dataset_type: DatasetType,
         source_dict: dict,
         dataset_path_or_spec: Path | ImageDatasetName,
-        hidden_dim
+        hidden_dim,
     ):
         super(TestConfig, self).__init__(
             experiment_name=experiment_name,
@@ -225,7 +237,7 @@ class TestConfig(BaseConfig):
             dataset_type=dataset_type,
             source_dict=source_dict,
             dataset_path_or_spec=dataset_path_or_spec,
-            hidden_dim=hidden_dim
+            hidden_dim=hidden_dim,
         )
 
     @staticmethod
@@ -243,9 +255,7 @@ class TestConfig(BaseConfig):
         head_type = HeadType(config_dict["head_type"])
         dataset_type = DatasetType(config_dict["dataset"]["type"])
         hidden_dim = config_dict.get("hidden_dim", 64)
-        dataset_path_or_spec = TrainingConfig.get_dataset_path_or_spec(
-            config_dict["dataset"]
-        )
+        dataset_path_or_spec = TrainingConfig.get_dataset_path_or_spec(config_dict["dataset"])
 
         return TestConfig(
             experiment_name=experiment_name,
@@ -253,6 +263,5 @@ class TestConfig(BaseConfig):
             dataset_type=dataset_type,
             source_dict=config_dict,
             dataset_path_or_spec=dataset_path_or_spec,
-            hidden_dim=hidden_dim
+            hidden_dim=hidden_dim,
         )
-
