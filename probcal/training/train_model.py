@@ -18,7 +18,7 @@ def main(config: TrainingConfig):
 
     datamodule = get_datamodule(
         config.dataset_type,
-        config.dataset_path,
+        config.dataset_path_or_spec,
         config.batch_size,
     )
 
