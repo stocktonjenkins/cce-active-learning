@@ -60,6 +60,8 @@ idna==3.10
     # via
     #   requests
     #   yarl
+imgdl==2.0.1
+    # via -r requirements.in
 jinja2==3.1.4
     # via torch
 joblib==1.4.2
@@ -76,7 +78,9 @@ lightning-utilities==0.11.7
 markupsafe==2.1.5
     # via jinja2
 matplotlib==3.9.0
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   pycocotools
 mpmath==1.3.0
     # via sympy
 multidict==6.1.0
@@ -92,6 +96,7 @@ numpy==1.26.4
     #   -r requirements.in
     #   contourpy
     #   matplotlib
+    #   pycocotools
     #   scikit-learn
     #   scipy
     #   torchmetrics
@@ -107,8 +112,9 @@ packaging==24.1
     #   pytorch-lightning
     #   torchmetrics
     #   transformers
-pillow==10.4.0
+pillow==9.5.0
     # via
+    #   imgdl
     #   matplotlib
     #   torchvision
 pip-tools==7.4.1
@@ -119,6 +125,10 @@ pre-commit==3.8.0
     # via -r requirements.in
 pretty-errors==1.2.25
     # via torchmetrics
+pycocotools==2.0.8
+    # via -r requirements.in
+pydantic==1.10.18
+    # via imgdl
 pyparsing==3.1.4
     # via matplotlib
 pyproject-hooks==1.1.0
@@ -127,6 +137,8 @@ pyproject-hooks==1.1.0
     #   pip-tools
 python-dateutil==2.9.0.post0
     # via matplotlib
+python-json-logger==2.0.7
+    # via imgdl
 pytorch-lightning==2.4.0
     # via lightning
 pyyaml==6.0.1
@@ -142,6 +154,7 @@ regex==2024.9.11
 requests==2.32.3
     # via
     #   huggingface-hub
+    #   imgdl
     #   transformers
 safetensors==0.4.5
     # via transformers
@@ -181,6 +194,7 @@ tqdm==4.66.4
     # via
     #   -r requirements.in
     #   huggingface-hub
+    #   imgdl
     #   lightning
     #   pytorch-lightning
     #   transformers
@@ -192,12 +206,15 @@ typing-extensions==4.12.2
     #   lightning
     #   lightning-utilities
     #   multidict
+    #   pydantic
     #   pytorch-lightning
     #   torch
 urllib3==2.2.3
     # via requests
 virtualenv==20.26.4
     # via pre-commit
+wget==3.2
+    # via -r requirements.in
 wheel==0.44.0
     # via pip-tools
 yarl==1.11.1
