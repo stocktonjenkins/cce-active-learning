@@ -5,8 +5,7 @@ from typing import List
 
 import torchvision.transforms.functional as F
 
-IMAGE_NET_MEAN = [0.485, 0.456, 0.406]
-IMAGE_NET_STD = [0.229, 0.224, 0.225]
+
 
 
 def img_show(imgs: List[torch.Tensor]):
@@ -22,12 +21,3 @@ def img_show(imgs: List[torch.Tensor]):
     plt.show()
 
 
-def denormalize(tensor):
-    # Clone the tensor so the original stays unmodified
-    tensor = tensor.clone()
-
-    # De-normalize by multiplying by the std and then adding the mean
-    for t, m, s in zip(tensor, IMAGE_NET_MEAN, IMAGE_NET_STD):
-        t.mul_(s).add_(m)
-
-    return tensor

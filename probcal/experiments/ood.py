@@ -29,7 +29,7 @@ imgs_to_show = []
 
 for i, (x, y) in enumerate(test_loader):
     print(x.shape, y.shape)
-    img = denormalize(x)
+    img = datamodule.denormalize(x)
     img = img.squeeze(0).permute(1, 2, 0).detach()
     plt.imshow(img)
     plt.show()

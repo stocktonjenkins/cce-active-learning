@@ -18,6 +18,8 @@ from probcal.custom_datasets import ImageDatasetWrapper
 class COCOPeopleDataModule(L.LightningDataModule):
 
     IMG_SIZE = 224
+    IMAGE_NET_MEAN = [0.485, 0.456, 0.406]
+    IMAGE_NET_STD = [0.229, 0.224, 0.225]
 
     def __init__(
         self,
@@ -98,6 +100,17 @@ class COCOPeopleDataModule(L.LightningDataModule):
             num_workers=self.num_workers,
             persistent_workers=self.persistent_workers,
         )
+
+    @classmethod
+    def denormalize(cls, tensor):
+        # Clone the tensor so the original stays unmodified
+        tensor = tensor.clone()
+
+        # De-normalize by multiplying by the std and then adding the mean
+        for t, m, s in zip(tensor, cls.IMAGE_NET_MEAN, cls.IMAGE_NET_STD):
+            t.mul_(s).add_(m)
+
+        return tensor
 
 
 class OodCocoPeopleDataModule(COCOPeopleDataModule):
