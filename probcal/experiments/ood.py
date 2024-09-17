@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 
 from probcal.utils.experiment_utils import get_model, get_datamodule
 from probcal.utils.configs import TestConfig
-from probcal.utils.img_utils import denormalize
 from probcal.enums import DatasetType, ImageDatasetName, HeadType
 
 

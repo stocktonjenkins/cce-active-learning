@@ -1,5 +1,5 @@
 from typing import Callable
-from typing import Type
+from typing import Type, Optional
 
 import lightning as L
 import torch
@@ -29,10 +29,10 @@ class DiscreteRegressionNN(L.LightningModule):
         loss_fn: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
         backbone_type: Type[Backbone],
         backbone_kwargs: dict,
-        optim_type: OptimizerType,
-        optim_kwargs: dict,
-        lr_scheduler_type: LRSchedulerType | None = None,
-        lr_scheduler_kwargs: dict | None = None,
+        optim_type: Optional[OptimizerType] = None,
+        optim_kwargs: Optional[dict] = None,
+        lr_scheduler_type: Optional[LRSchedulerType] = None,
+        lr_scheduler_kwargs: Optional[dict] = None,
     ):
         """Instantiate a regression NN.
 
@@ -62,6 +62,8 @@ class DiscreteRegressionNN(L.LightningModule):
         self.test_mae = MeanAbsoluteError()
 
     def configure_optimizers(self) -> dict:
+        if self.optim_type is None:
+            raise ValueError("Must specify an optimizer type.")
         if self.optim_type == OptimizerType.ADAM:
             optim_class = torch.optim.Adam
         elif self.optim_type == OptimizerType.ADAM_W:
