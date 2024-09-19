@@ -215,7 +215,9 @@ class CalibrationEvaluator:
             y.append(targets.to(model.device))
             inputs = inputs.to(model.device)
             y_hat = model.predict(inputs)
-            x_prime.append(torch.repeat_interleave(x[-1], repeats=5, dim=0))
+            x_prime.append(
+                torch.repeat_interleave(x[-1], repeats=self.settings.mcmd_num_samples, dim=0)
+            )
             y_prime.append(
                 model.sample(y_hat, num_samples=self.settings.mcmd_num_samples).flatten()
             )
