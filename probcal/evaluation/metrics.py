@@ -1,4 +1,5 @@
 from typing import Callable
+from typing import TypeAlias
 
 import numpy as np
 import torch
@@ -6,10 +7,26 @@ from scipy.linalg import cho_factor
 from scipy.linalg import cho_solve
 from scipy.stats import rv_continuous
 
+from probcal.random_variables.discrete_random_variable import DiscreteRandomVariable
+
+
+def _compute_discrete_torch_dist_cdf(
+    dist: torch.distributions.Poisson | torch.distributions.NegativeBinomial,
+    y_vals: torch.Tensor,
+    max_val: int = 2000,
+) -> torch.Tensor:
+    support = torch.arange(max_val, device=y_vals.device).unsqueeze(0).repeat(len(y_vals), 1)
+    probs_over_support: torch.Tensor = dist.log_prob(support).exp()
+    probs_over_support *= support <= y_vals.view(-1, 1)
+    cdf = probs_over_support.sum(dim=1)
+    return cdf
+
 
 def compute_regression_ece(
     y_true: np.ndarray,
-    posterior_predictive: rv_continuous,
+    posterior_predictive: rv_continuous
+    | DiscreteRandomVariable
+    | torch.distributions.Distribution,
     num_bins: int = 100,
     weights: str = "uniform",
     alpha: float = 1.0,
@@ -26,7 +43,7 @@ def compute_regression_ece(
 
     Args:
         y_true (np.ndarray): The true values of the regression targets.
-        posterior_predictive (RandomVariable): Random variable representing the posterior predictive distribution over the targets.
+        posterior_predictive (rv_continuous | DiscreteRandomVariable | torch.distributions.Distribution): Random variable representing the posterior predictive distribution over the targets.
         num_bins (int): The number of bins to use for the ECE. Defaults to 100.
         weights (str, optional): Strategy for choosing the weights in the ECE sum. Must be either "uniform" or "frequency" (terms are weighted by the numerator of q_j). Defaults to "uniform".
         alpha (float, optional): Controls how severely we penalize the model for the distance between p_j and q_j. Defaults to 1 (error term is |p_j - q_j|).
@@ -34,9 +51,44 @@ def compute_regression_ece(
     Returns:
         float: The expected calibration error.
     """
+    TorchDistribution: TypeAlias = torch.distributions.Distribution | DiscreteRandomVariable
     eps = 1e-5
     p_j = np.linspace(eps, 1 - eps, num=num_bins)
-    cdf_less_than_p = posterior_predictive.cdf(y_true) <= p_j.reshape(-1, 1)
+
+    if isinstance(posterior_predictive, TorchDistribution):
+        if isinstance(posterior_predictive, torch.distributions.Distribution):
+            device = None
+            for param in posterior_predictive.__dict__.values():
+                if isinstance(param, torch.Tensor) and str(param.device) != "cpu":
+                    device = param.device
+            device = device or torch.device("cpu")
+        elif isinstance(posterior_predictive, DiscreteRandomVariable):
+            device = posterior_predictive.device
+        y_true_torch = torch.tensor(y_true, device=device)
+        p_j_torch = torch.tensor(p_j, device=device).reshape(-1, 1)
+
+        # CDF is not currently implemented for the Poisson or Negative Binomial in PyTorch, so we approximate it.
+        if isinstance(posterior_predictive, torch.distributions.Poisson):
+            cdf = _compute_discrete_torch_dist_cdf(
+                dist=torch.distributions.Poisson(posterior_predictive.rate.view(-1, 1)),
+                y_vals=y_true_torch,
+            )
+        elif isinstance(posterior_predictive, torch.distributions.NegativeBinomial):
+            cdf = _compute_discrete_torch_dist_cdf(
+                dist=torch.distributions.NegativeBinomial(
+                    total_count=posterior_predictive.total_count.view(-1, 1),
+                    probs=posterior_predictive.probs.view(-1, 1),
+                ),
+                y_vals=y_true_torch,
+            )
+        else:
+            cdf = posterior_predictive.cdf(y_true_torch)
+
+        cdf_less_than_p = cdf <= p_j_torch
+        cdf_less_than_p = cdf_less_than_p.detach().cpu().numpy()
+    else:
+        cdf_less_than_p = posterior_predictive.cdf(y_true) <= p_j.reshape(-1, 1)
+
     q_j = cdf_less_than_p.mean(axis=1)
 
     if weights == "uniform":

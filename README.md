@@ -52,8 +52,44 @@ All regression models should inherit from the `DiscreteRegressionNN` class (foun
 
 - `_forward_impl` (defines a forward pass through the network)
 - `_predict_impl` (defines how to make predictions with the network, including any transformations on the output of the forward pass)
-- `_point_prediction` (defines how to interpret network output as a single point prediction for a regression target)
+- `_sample_impl` (defines how to sample from the network's learned posterior predictive distribution for a given input)
+- `_posterior_predictive_impl` (defines how to produce a posterior predictive distribution from network output)
+- `_point_prediction_impl` (defines how to interpret network output as a single point prediction for a regression target)
 - `_addl_test_metrics_dict` (defines any metrics beyond rmse/mae that are computed during model evaluation)
 - `_update_addl_test_metrics_batch` (defines how to update additional metrics beyond rmse/mae for each test batch).
 
 See existing model classes like `GaussianNN` (found [here](probcal/models/gaussian_nn.py)) for an example of these steps.
+
+## Measuring Calibration
+
+Once a `DiscreteRegressionNN` subclass is trained, its calibration can be measured on a dataset via the `CalibrationEvaluator`. Example usage:
+
+```python
+from probcal.data_modules import COCOPeopleDataModule
+from probcal.enums import DatasetType
+from probcal.evaluation import CalibrationEvaluator
+from probcal.evaluation import CalibrationEvaluatorSettings
+from probcal.models import GaussianNN
+
+
+# You can customize the settings for the MCMD / ECE computation.
+settings = CalibrationEvaluatorSettings(
+    dataset_type=DatasetType.IMAGE,
+    mcmd_input_kernel="polynomial",
+    mcmd_output_kernel="rbf",
+    mcmd_lmbda=0.1,
+    mcmd_num_samples=5,
+    ece_bins=50,
+    ece_weights="frequency",
+    ece_alpha=1,
+)
+evaluator = CalibrationEvaluator(settings)
+
+model = GaussianNN.load_from_checkpoint("path/to/model.ckpt")
+
+# You can use any lightning data module (preferably, the one with the dataset the model was trained on).
+data_module = COCOPeopleDataModule(root_dir="data", batch_size=4, num_workers=0, persistent_workers=False)
+calibration_results = evaluator(model=model, data_module=data_module)
+```
+
+Invoking the `CalibrationEvaluator`'s `__call__` method (as above) kicks off an extensive evaluation wherein MCMD and ECE are computed for the specified model. This passes back a `CalibrationResults` object, which will contain the computed metrics and other helpful variables for further analysis.

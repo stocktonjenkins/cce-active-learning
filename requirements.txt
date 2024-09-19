@@ -50,8 +50,12 @@ fsspec[http]==2024.9.0
     #   lightning
     #   pytorch-lightning
     #   torch
+ftfy==6.2.3
+    # via open-clip-torch
 huggingface-hub==0.25.0
     # via
+    #   open-clip-torch
+    #   timm
     #   tokenizers
     #   transformers
 identify==2.6.1
@@ -102,6 +106,8 @@ numpy==1.26.4
     #   torchmetrics
     #   torchvision
     #   transformers
+open-clip-torch==2.26.1
+    # via -r requirements.in
 packaging==24.1
     # via
     #   build
@@ -148,16 +154,21 @@ pyyaml==6.0.1
     #   lightning
     #   pre-commit
     #   pytorch-lightning
+    #   timm
     #   transformers
 regex==2024.9.11
-    # via transformers
+    # via
+    #   open-clip-torch
+    #   transformers
 requests==2.32.3
     # via
     #   huggingface-hub
     #   imgdl
     #   transformers
 safetensors==0.4.5
-    # via transformers
+    # via
+    #   timm
+    #   transformers
 scikit-learn==1.5.0
     # via -r requirements.in
 scipy==1.13.1
@@ -170,6 +181,8 @@ sympy==1.13.2
     # via torch
 threadpoolctl==3.5.0
     # via scikit-learn
+timm==1.0.9
+    # via open-clip-torch
 tokenizers==0.19.1
     # via transformers
 tomli==2.0.1
@@ -180,7 +193,9 @@ torch==2.4.0
     # via
     #   -r requirements.in
     #   lightning
+    #   open-clip-torch
     #   pytorch-lightning
+    #   timm
     #   torchmetrics
     #   torchvision
 torchmetrics==1.4.0
@@ -189,13 +204,17 @@ torchmetrics==1.4.0
     #   lightning
     #   pytorch-lightning
 torchvision==0.19.0
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   open-clip-torch
+    #   timm
 tqdm==4.66.4
     # via
     #   -r requirements.in
     #   huggingface-hub
     #   imgdl
     #   lightning
+    #   open-clip-torch
     #   pytorch-lightning
     #   transformers
 transformers==4.44.2
@@ -211,8 +230,10 @@ typing-extensions==4.12.2
     #   torch
 urllib3==2.2.3
     # via requests
-virtualenv==20.26.4
+virtualenv==20.26.5
     # via pre-commit
+wcwidth==0.2.13
+    # via ftfy
 wget==3.2
     # via -r requirements.in
 wheel==0.44.0

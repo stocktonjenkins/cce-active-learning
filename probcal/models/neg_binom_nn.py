@@ -94,33 +94,26 @@ class NegBinomNN(DiscreteRegressionNN):
         self.backbone.train()
         return y_hat
 
-    def _point_prediction(self, y_hat: torch.Tensor, training: bool) -> torch.Tensor:
-        dist = self._convert_output_to_dist(y_hat)
-        return dist.mode
-
-    def _addl_test_metrics_dict(self) -> dict[str, Metric]:
-        return {
-            "nll": self.nll,
-        }
-
-    def _update_addl_test_metrics_batch(
-        self, x: torch.Tensor, y_hat: torch.Tensor, y: torch.Tensor
-    ):
-        dist = self._convert_output_to_dist(y_hat)
-        targets = y.flatten()
-        target_probs = torch.exp(dist.log_prob(targets))
-
-        self.nll.update(target_probs)
-
-    def _convert_output_to_dist(self, y_hat: torch.Tensor) -> torch.distributions.NegativeBinomial:
-        """Convert a network output to the implied negative binomial distribution.
+    def _sample_impl(
+        self, y_hat: torch.Tensor, training: bool = False, num_samples: int = 1
+    ) -> torch.Tensor:
+        """Sample from this network's posterior predictive distributions for a batch of data (as specified by y_hat).
 
         Args:
-            y_hat (torch.Tensor): Output from a `NegBinomNN` (nbinom parameters for the predicted distribution over y).
+            y_hat (torch.Tensor): Output tensor from a regression network, with shape (N, ...).
+            training (bool, optional): Boolean indicator specifying if `y_hat` is a training output or not. This particularly matters when outputs are in log space during training, for example. Defaults to False.
+            num_samples (int, optional): Number of samples to take from each posterior predictive. Defaults to 1.
 
         Returns:
-            torch.distributions.NegativeBinomial: The implied negative binomial distribution over y.
+            torch.Tensor: Batched sample tensor, with shape (N, num_samples).
         """
+        dist = self.posterior_predictive(y_hat, training)
+        sample = dist.sample((num_samples,)).view(num_samples, -1).T
+        return sample
+
+    def _posterior_predictive_impl(
+        self, y_hat: torch.Tensor, training: bool = False
+    ) -> torch.distributions.NegativeBinomial:
         mu, alpha = torch.split(y_hat, [1, 1], dim=-1)
         mu = mu.flatten()
         alpha = alpha.flatten()
@@ -135,3 +128,21 @@ class NegBinomNN(DiscreteRegressionNN):
         n = mu**2 / torch.maximum(var - mu, eps)
         dist = torch.distributions.NegativeBinomial(total_count=n, probs=failure_prob)
         return dist
+
+    def _point_prediction_impl(self, y_hat: torch.Tensor, training: bool) -> torch.Tensor:
+        dist = self.posterior_predictive(y_hat, training)
+        return dist.mode
+
+    def _addl_test_metrics_dict(self) -> dict[str, Metric]:
+        return {
+            "nll": self.nll,
+        }
+
+    def _update_addl_test_metrics_batch(
+        self, x: torch.Tensor, y_hat: torch.Tensor, y: torch.Tensor
+    ):
+        dist = self.posterior_predictive(y_hat, training=False)
+        targets = y.flatten()
+        target_probs = torch.exp(dist.log_prob(targets))
+
+        self.nll.update(target_probs)

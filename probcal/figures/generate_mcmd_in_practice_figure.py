@@ -57,7 +57,7 @@ def produce_figure(
         mcmd_ax: plt.Axes = axs[1, i]
 
         if isinstance(model, GaussianNN):
-            y_hat = model._predict_impl(torch.tensor(X).unsqueeze(1))
+            y_hat = model.predict(torch.tensor(X).unsqueeze(1))
             mu, var = torch.split(y_hat, [1, 1], dim=-1)
             mu = mu.flatten().detach().numpy()
             std = var.sqrt().flatten().detach().numpy()
@@ -65,13 +65,13 @@ def produce_figure(
             nll = np.mean(-np.log(dist.cdf(y + 0.5) - dist.cdf(y - 0.5)))
 
         elif isinstance(model, PoissonNN):
-            y_hat = model._predict_impl(torch.tensor(X).unsqueeze(1))
+            y_hat = model.predict(torch.tensor(X).unsqueeze(1))
             mu = y_hat.detach().numpy().flatten()
             dist = poisson(mu)
             nll = np.mean(-dist.logpmf(y))
 
         elif isinstance(model, NegBinomNN):
-            y_hat = model._predict_impl(torch.tensor(X).unsqueeze(1))
+            y_hat = model.predict(torch.tensor(X).unsqueeze(1))
             mu, alpha = torch.split(y_hat, [1, 1], dim=-1)
             mu = mu.flatten().detach().numpy()
             alpha = alpha.flatten().detach().numpy()
@@ -83,7 +83,7 @@ def produce_figure(
             dist = nbinom(n=n, p=p)
             nll = np.mean(-dist.logpmf(y))
 
-        pred = model._point_prediction(y_hat, training=False).detach().flatten().numpy()
+        pred = model.point_prediction(y_hat, training=False).detach().flatten().numpy()
         mae = np.abs(pred - y).mean()
         lower, upper = dist.ppf(0.025), dist.ppf(0.975)
         plot_posterior_predictive(

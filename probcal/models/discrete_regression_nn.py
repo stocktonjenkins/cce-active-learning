@@ -11,6 +11,7 @@ from torchmetrics import Metric
 from probcal.enums import LRSchedulerType
 from probcal.enums import OptimizerType
 from probcal.models.backbones import Backbone
+from probcal.random_variables.discrete_random_variable import DiscreteRandomVariable
 
 
 class DiscreteRegressionNN(L.LightningModule):
@@ -82,56 +83,7 @@ class DiscreteRegressionNN(L.LightningModule):
 
         return optim_dict
 
-    def training_step(self, batch: torch.Tensor) -> torch.Tensor:
-        x, y = batch
-        y_hat = self._forward_impl(x)
-        loss = self.loss_fn(y_hat, y.view(-1, 1).float())
-        self.log("train_loss", loss, prog_bar=True, on_epoch=True)
-
-        with torch.no_grad():
-            point_predictions = self._point_prediction(y_hat, training=True).flatten()
-            self.train_rmse.update(point_predictions, y.flatten().float())
-            self.train_mae.update(point_predictions, y.flatten().float())
-            self.log("train_rmse", self.train_rmse, on_epoch=True)
-            self.log("train_mae", self.train_mae, on_epoch=True)
-
-        return loss
-
-    def validation_step(self, batch: torch.Tensor) -> torch.Tensor:
-        x, y = batch
-        y_hat = self._forward_impl(x)
-        loss = self.loss_fn(y_hat, y.view(-1, 1).float())
-        self.log("val_loss", loss, prog_bar=True, on_epoch=True, sync_dist=True)
-
-        # Since we use _forward_impl, we specify training=True to get the proper transforms.
-        point_predictions = self._point_prediction(y_hat, training=True).flatten()
-        self.val_rmse.update(point_predictions, y.flatten().float())
-        self.val_mae.update(point_predictions, y.flatten().float())
-        self.log("val_rmse", self.val_rmse, on_epoch=True)
-        self.log("val_mae", self.val_mae, on_epoch=True)
-
-        return loss
-
-    def test_step(self, batch: torch.Tensor):
-        x, y = batch
-        y_hat = self._predict_impl(x)
-        point_predictions = self._point_prediction(y_hat, training=False).flatten()
-        self.test_rmse.update(point_predictions, y.flatten().float())
-        self.test_mae.update(point_predictions, y.flatten().float())
-        self._update_addl_test_metrics_batch(x, y_hat, y.view(-1, 1).float())
-
-        self.log("test_rmse", self.test_rmse, on_epoch=True)
-        self.log("test_mae", self.test_mae, on_epoch=True)
-        for name, metric_tracker in self._addl_test_metrics_dict().items():
-            self.log(name, metric_tracker, on_epoch=True)
-
-    def predict_step(self, batch: torch.Tensor) -> torch.Tensor:
-        x, _ = batch
-        y_hat = self._predict_impl(x)
-
-        return y_hat
-
-    def _forward_impl(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Make a forward pass through the network.
 
         Args:
@@ -140,12 +92,12 @@ class DiscreteRegressionNN(L.LightningModule):
         Returns:
             torch.Tensor: Batched output tensor, with shape (N, D_out)
         """
-        raise NotImplementedError("Should be implemented by subclass.")
+        return self._forward_impl(x)
 
-    def _predict_impl(self, x: torch.Tensor) -> torch.Tensor:
+    def predict(self, x: torch.Tensor) -> torch.Tensor:
         """Make a prediction with the network.
 
-        This method will often differ from `_forward_impl` in cases where
+        This method will often differ from `forward` in cases where
         the output used for training is in log (or some other modified)
         space for numerical convenience.
 
@@ -155,9 +107,38 @@ class DiscreteRegressionNN(L.LightningModule):
         Returns:
             torch.Tensor: Batched output tensor, with shape (N, D_out)
         """
-        raise NotImplementedError("Should be implemented by subclass.")
+        return self._predict_impl(x)
 
-    def _point_prediction(self, y_hat: torch.Tensor, training: bool) -> torch.Tensor:
+    def sample(
+        self, y_hat: torch.Tensor, training: bool = False, num_samples: int = 1
+    ) -> torch.Tensor:
+        """Sample from this network's posterior predictive distributions for a batch of data (as specified by y_hat).
+
+        Args:
+            y_hat (torch.Tensor): Output tensor from a regression network, with shape (N, ...).
+            training (bool, optional): Boolean indicator specifying if `y_hat` is a training output or not. This particularly matters when outputs are in log space during training, for example. Defaults to False.
+            num_samples (int, optional): Number of samples to take from each posterior predictive. Defaults to 1.
+
+        Returns:
+            torch.Tensor: Batched sample tensor, with shape (N, num_samples).
+        """
+        return self._sample_impl(y_hat, training, num_samples)
+
+    def posterior_predictive(
+        self, y_hat: torch.Tensor, training: bool = False
+    ) -> torch.distributions.Distribution | DiscreteRandomVariable:
+        """Transform the network's outputs into the implied posterior predictive distribution.
+
+        Args:
+            y_hat (torch.Tensor): Output tensor from a regression network, with shape (N, ...).
+            training (bool, optional): Boolean indicator specifying if `y_hat` is a training output or not. This particularly matters when outputs are in log space during training, for example. Defaults to False.
+
+        Returns:
+            torch.distributions.Distribution | DiscreteRandomVariable: The posterior predictive distribution.
+        """
+        return self._posterior_predictive_impl(y_hat, training)
+
+    def point_prediction(self, y_hat: torch.Tensor, training: bool) -> torch.Tensor:
         """Transform the network's output into a single discrete point prediction.
 
         This method will vary depending on the type of regression head (probabilistic vs. deterministic).
@@ -170,6 +151,73 @@ class DiscreteRegressionNN(L.LightningModule):
         Returns:
             torch.Tensor: Point predictions for the true regression target, with shape (N, 1).
         """
+        return self._point_prediction_impl(y_hat, training)
+
+    def training_step(self, batch: torch.Tensor) -> torch.Tensor:
+        x, y = batch
+        y_hat = self(x)
+        loss = self.loss_fn(y_hat, y.view(-1, 1).float())
+        self.log("train_loss", loss, prog_bar=True, on_epoch=True)
+
+        with torch.no_grad():
+            point_predictions = self.point_prediction(y_hat, training=True).flatten()
+            self.train_rmse.update(point_predictions, y.flatten().float())
+            self.train_mae.update(point_predictions, y.flatten().float())
+            self.log("train_rmse", self.train_rmse, on_epoch=True)
+            self.log("train_mae", self.train_mae, on_epoch=True)
+
+        return loss
+
+    def validation_step(self, batch: torch.Tensor) -> torch.Tensor:
+        x, y = batch
+        y_hat = self(x)
+        loss = self.loss_fn(y_hat, y.view(-1, 1).float())
+        self.log("val_loss", loss, prog_bar=True, on_epoch=True, sync_dist=True)
+
+        # Since we used the model's forward method, we specify training=True to get the proper transforms.
+        point_predictions = self.point_prediction(y_hat, training=True).flatten()
+        self.val_rmse.update(point_predictions, y.flatten().float())
+        self.val_mae.update(point_predictions, y.flatten().float())
+        self.log("val_rmse", self.val_rmse, on_epoch=True)
+        self.log("val_mae", self.val_mae, on_epoch=True)
+
+        return loss
+
+    def test_step(self, batch: torch.Tensor):
+        x, y = batch
+        y_hat = self.predict(x)
+        point_predictions = self.point_prediction(y_hat, training=False).flatten()
+        self.test_rmse.update(point_predictions, y.flatten().float())
+        self.test_mae.update(point_predictions, y.flatten().float())
+        self._update_addl_test_metrics_batch(x, y_hat, y.view(-1, 1).float())
+
+        self.log("test_rmse", self.test_rmse, on_epoch=True)
+        self.log("test_mae", self.test_mae, on_epoch=True)
+        for name, metric_tracker in self._addl_test_metrics_dict().items():
+            self.log(name, metric_tracker, on_epoch=True)
+
+    def predict_step(self, batch: torch.Tensor) -> torch.Tensor:
+        x, _ = batch
+        y_hat = self.predict(x)
+        return y_hat
+
+    def _forward_impl(self, x: torch.Tensor) -> torch.Tensor:
+        raise NotImplementedError("Should be implemented by subclass.")
+
+    def _predict_impl(self, x: torch.Tensor) -> torch.Tensor:
+        raise NotImplementedError("Should be implemented by subclass.")
+
+    def _sample_impl(
+        self, y_hat: torch.Tensor, training: bool = False, num_samples: int = 1
+    ) -> torch.Tensor:
+        raise NotImplementedError("Should be implemented by subclass.")
+
+    def _posterior_predictive_impl(
+        self, y_hat: torch.Tensor, training: bool = False
+    ) -> torch.distributions.Distribution | DiscreteRandomVariable:
+        raise NotImplementedError("Should be implemented by subclass.")
+
+    def _point_prediction_impl(self, y_hat: torch.Tensor, training: bool) -> torch.Tensor:
         raise NotImplementedError("Should be implemented by subclass.")
 
     def _addl_test_metrics_dict(self) -> dict[str, Metric]:
