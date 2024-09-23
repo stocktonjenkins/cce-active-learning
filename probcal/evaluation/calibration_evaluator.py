@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from functools import partial
+from pathlib import Path
 from typing import Callable
 from typing import Literal
 from typing import Sequence
@@ -32,6 +35,29 @@ class CalibrationResults:
     mcmd_vals: np.ndarray
     mean_mcmd: float
     ece: float
+
+    def save(self, filepath: str | Path):
+        if not str(filepath).endswith(".npz"):
+            raise ValueError("Filepath must have a .npz extension.")
+        np.savez(
+            filepath,
+            input_grid_2d=self.input_grid_2d,
+            regression_targets=self.regression_targets,
+            mcmd_vals=self.mcmd_vals,
+            mean_mcmd=self.mean_mcmd,
+            ece=self.ece,
+        )
+
+    @staticmethod
+    def load(filepath: str | Path) -> CalibrationResults:
+        data: dict[str, np.ndarray] = np.load(filepath)
+        return CalibrationResults(
+            input_grid_2d=data["input_grid_2d"],
+            regression_targets=data["regression_targets"],
+            mcmd_vals=data["mcmd_vals"],
+            mean_mcmd=data["mean_mcmd"].item(),
+            ece=data["ece"].item(),
+        )
 
 
 KernelFunction: TypeAlias = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]

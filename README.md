@@ -90,6 +90,7 @@ model = GaussianNN.load_from_checkpoint("path/to/model.ckpt")
 # You can use any lightning data module (preferably, the one with the dataset the model was trained on).
 data_module = COCOPeopleDataModule(root_dir="data", batch_size=4, num_workers=0, persistent_workers=False)
 calibration_results = evaluator(model=model, data_module=data_module)
+calibration_results.save("path/to/results.npz")
 ```
 
 Invoking the `CalibrationEvaluator`'s `__call__` method (as above) kicks off an extensive evaluation wherein MCMD and ECE are computed for the specified model. This passes back a `CalibrationResults` object, which will contain the computed metrics and other helpful variables for further analysis.
