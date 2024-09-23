@@ -15,7 +15,6 @@ from probcal.utils.experiment_utils import get_model
 def main(config: TrainingConfig):
 
     fix_random_seed(config.random_seed)
-
     datamodule = get_datamodule(
         config.dataset_type,
         config.dataset_path_or_spec,

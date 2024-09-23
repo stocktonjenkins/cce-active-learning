@@ -10,6 +10,7 @@ import numpy as np
 import torch
 from lightning.pytorch.callbacks import ModelCheckpoint
 
+from probcal.data_modules import AAFDataModule
 from probcal.data_modules import COCOPeopleDataModule
 from probcal.data_modules import OodCocoPeopleDataModule
 from probcal.data_modules import TabularDataModule
@@ -74,6 +75,8 @@ def get_model(
             backbone_type = MNISTCNN
         elif config.dataset_path_or_spec == ImageDatasetName.COCO_PEOPLE:
             backbone_type = ViT
+        elif config.dataset_path_or_spec == ImageDatasetName.AAF:
+            backbone_type = MobileNetV3
         else:
             backbone_type = MobileNetV3
         backbone_kwargs = {}
@@ -126,9 +129,16 @@ def get_datamodule(
                 num_workers=num_workers,
                 persistent_workers=True if num_workers > 0 else False,
             )
+        elif dataset_path_or_spec == ImageDatasetName.AAF:
+            return AAFDataModule(
+                root_dir=os.path.join(GLOBAL_DATA_DIR, "aaf"),
+                batch_size=batch_size,
+                num_workers=num_workers,
+                persistent_workers=True if num_workers > 0 else False,
+            )
         elif dataset_path_or_spec == ImageDatasetName.OOD_COCO_PEOPLE:
             return OodCocoPeopleDataModule(
-                root_dir=os.path.join(GLOBAL_DATA_DIR, "coco_people"),
+                root_dir=os.path.join(GLOBAL_DATA_DIR, "ood_coco_people"),
                 batch_size=batch_size,
                 num_workers=num_workers,
                 persistent_workers=True if num_workers > 0 else False,
