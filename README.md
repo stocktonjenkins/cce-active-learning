@@ -60,6 +60,20 @@ All regression models should inherit from the `DiscreteRegressionNN` class (foun
 
 See existing model classes like `GaussianNN` (found [here](probcal/models/gaussian_nn.py)) for an example of these steps.
 
+## Evaluating Models
+
+To obtain evaluation metrics for a given model, first fill out a config (using [this config](probcal/evaluation/sample_eval_config.yaml) as a template).
+Then, run the following command:
+
+```bash
+python probcal/evaluation/eval_model.py --config path/to/eval/config.yaml
+```
+
+Two results files will be saved to the `log_dir` you specify in your config:
+
+- A `test_metrics.yaml` with metrics like MAE, RMSE, etc.
+- A `calibration_results.npz` file which can be loaded into a `CalibrationResults` object to see MCMD and ECE results.
+
 ## Measuring Calibration
 
 Once a `DiscreteRegressionNN` subclass is trained, its calibration can be measured on a dataset via the `CalibrationEvaluator`. Example usage:
