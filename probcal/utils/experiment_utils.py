@@ -3,7 +3,6 @@ import random
 from pathlib import Path
 from typing import Optional
 from typing import Type
-from typing import Union
 
 import lightning as L
 import numpy as np
@@ -29,7 +28,7 @@ from probcal.models.backbones import MNISTCNN
 from probcal.models.backbones import MobileNetV3
 from probcal.models.backbones import ViT
 from probcal.models.discrete_regression_nn import DiscreteRegressionNN
-from probcal.utils.configs import TestConfig
+from probcal.utils.configs import EvaluationConfig
 from probcal.utils.configs import TrainingConfig
 from probcal.utils.generic_utils import partialclass
 
@@ -37,7 +36,7 @@ GLOBAL_DATA_DIR = "data"
 
 
 def get_model(
-    config: Union[TrainingConfig, TestConfig], return_initializer: bool = False
+    config: TrainingConfig | EvaluationConfig, return_initializer: bool = False
 ) -> DiscreteRegressionNN:
 
     initializer: Type[DiscreteRegressionNN]
@@ -92,7 +91,7 @@ def get_model(
             lr_scheduler_type=config.lr_scheduler_type,
             lr_scheduler_kwargs=config.lr_scheduler_kwargs,
         )
-    elif isinstance(config, TestConfig):
+    elif isinstance(config, EvaluationConfig):
         model = initializer(
             backbone_type=backbone_type,
             backbone_kwargs=backbone_kwargs,

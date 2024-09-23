@@ -68,7 +68,7 @@ class CalibrationEvaluatorSettings:
     dataset_type: DatasetType = DatasetType.IMAGE
     mcmd_input_kernel: Literal["polynomial"] | KernelFunction = "polynomial"
     mcmd_output_kernel: Literal["rbf", "laplacian"] | KernelFunction = "rbf"
-    mcmd_lmbda: float = 0.1
+    mcmd_lambda: float = 0.1
     mcmd_num_samples: int = 5
     ece_bins: int = 50
     ece_weights: Literal["uniform", "frequency"] = "frequency"
@@ -142,7 +142,7 @@ class CalibrationEvaluator:
             y_prime=y_prime,
             x_kernel=x_kernel,
             y_kernel=y_kernel,
-            lmbda=self.settings.mcmd_lmbda,
+            lmbda=self.settings.mcmd_lambda,
         )
         return_obj = [mcmd_vals]
         if return_grid:

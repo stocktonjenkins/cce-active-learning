@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Literal
 
 import yaml
 
@@ -24,6 +25,9 @@ class BaseConfig(object):
         dataset_path_or_spec: Path | ImageDatasetName,
         source_dict: dict,
         hidden_dim: int,
+        batch_size: int,
+        accelerator_type: AcceleratorType,
+        log_dir: Path,
     ):
         self.experiment_name = experiment_name
         self.head_type = head_type
@@ -31,6 +35,9 @@ class BaseConfig(object):
         self.dataset_path_or_spec = dataset_path_or_spec
         self.source_dict = source_dict
         self.hidden_dim = hidden_dim
+        self.batch_size = batch_size
+        self.accelerator_type = accelerator_type
+        self.log_dir = log_dir
 
     def to_yaml(self, filepath: str | Path):
         """Save this config as a .yaml file at the given filepath.
@@ -125,11 +132,12 @@ class TrainingConfig(BaseConfig):
             source_dict=source_dict,
             dataset_path_or_spec=dataset_path_or_spec,
             hidden_dim=hidden_dim,
+            batch_size=batch_size,
+            accelerator_type=accelerator_type,
+            log_dir=log_dir,
         )
-        self.accelerator_type = accelerator_type
         self.chkp_dir = chkp_dir
         self.chkp_freq = chkp_freq
-        self.batch_size = batch_size
         self.num_epochs = num_epochs
         self.optim_type = optim_type
         self.optim_kwargs = optim_kwargs
@@ -138,7 +146,6 @@ class TrainingConfig(BaseConfig):
         self.beta_scheduler_type = beta_scheduler_type
         self.beta_scheduler_kwargs = beta_scheduler_kwargs
         self.num_trials = num_trials
-        self.log_dir = log_dir
         self.input_dim = input_dim
         self.precision = precision
         self.random_seed = random_seed
@@ -219,8 +226,8 @@ class TrainingConfig(BaseConfig):
         )
 
 
-class TestConfig(BaseConfig):
-    """Class with configuration options for testing a model"""
+class EvaluationConfig(BaseConfig):
+    """Class with configuration options for testing a model."""
 
     def __init__(
         self,
@@ -229,19 +236,39 @@ class TestConfig(BaseConfig):
         dataset_type: DatasetType,
         source_dict: dict,
         dataset_path_or_spec: Path | ImageDatasetName,
-        hidden_dim,
+        hidden_dim: int,
+        batch_size: int,
+        accelerator_type: AcceleratorType,
+        log_dir: Path,
+        model_ckpt_path: Path,
+        mcmd_output_kernel: Literal["rbf", "laplacian"],
+        mcmd_lambda: float,
+        mcmd_num_samples: int,
+        ece_bins: int,
+        ece_weights: Literal["uniform", "frequency"],
+        ece_alpha: float,
     ):
-        super(TestConfig, self).__init__(
+        super(EvaluationConfig, self).__init__(
             experiment_name=experiment_name,
             head_type=head_type,
             dataset_type=dataset_type,
             source_dict=source_dict,
             dataset_path_or_spec=dataset_path_or_spec,
             hidden_dim=hidden_dim,
+            batch_size=batch_size,
+            accelerator_type=accelerator_type,
+            log_dir=log_dir,
         )
+        self.model_ckpt_path = model_ckpt_path
+        self.mcmd_output_kernel = mcmd_output_kernel
+        self.mcmd_lambda = mcmd_lambda
+        self.mcmd_num_samples = mcmd_num_samples
+        self.ece_bins = ece_bins
+        self.ece_weights = ece_weights
+        self.ece_alpha = ece_alpha
 
     @staticmethod
-    def from_yaml(config_path: str | Path) -> TestConfig:
+    def from_yaml(config_path: str | Path) -> EvaluationConfig:
         """Factory method to construct an TestConfig from a .yaml file.
 
         Args:
@@ -252,16 +279,44 @@ class TestConfig(BaseConfig):
         """
         config_dict = get_yaml(config_path)
         experiment_name = to_snake_case(config_dict["experiment_name"])
+
+        # Required arguments.
         head_type = HeadType(config_dict["head_type"])
         dataset_type = DatasetType(config_dict["dataset"]["type"])
-        hidden_dim = config_dict.get("hidden_dim", 64)
+        log_dir = Path(config_dict["log_dir"])
+        model_ckpt_path = Path(config_dict["model_ckpt_path"])
         dataset_path_or_spec = TrainingConfig.get_dataset_path_or_spec(config_dict["dataset"])
 
-        return TestConfig(
+        # Optional arguments.
+        hidden_dim = config_dict.get("hidden_dim", 64)
+        batch_size = config_dict.get("batch_size", 1)
+        accelerator_type = AcceleratorType(config_dict.get("accelerator", "cpu"))
+        mcmd_output_kernel = config_dict.get("mcmd_output_kernel", "rbf")
+        if mcmd_output_kernel not in ("rbf", "laplacian"):
+            raise ValueError("mcmd_output_kernel must be either 'rbf' or 'laplacian'.")
+        mcmd_lambda = config_dict.get("mcmd_lambda", 0.1)
+        mcmd_num_samples = config_dict.get("mcmd_num_samples", 5)
+        ece_bins = config_dict.get("ece_bins", 50)
+        ece_weights = config_dict.get("ece_weights", "frequency")
+        if ece_weights not in ("frequency", "uniform"):
+            raise ValueError("ece_weights must be either 'frequency' or 'uniform'.")
+        ece_alpha = config_dict.get("ece_alpha", 1.0)
+
+        return EvaluationConfig(
             experiment_name=experiment_name,
             head_type=head_type,
             dataset_type=dataset_type,
             source_dict=config_dict,
             dataset_path_or_spec=dataset_path_or_spec,
             hidden_dim=hidden_dim,
+            batch_size=batch_size,
+            accelerator_type=accelerator_type,
+            log_dir=log_dir,
+            model_ckpt_path=model_ckpt_path,
+            mcmd_output_kernel=mcmd_output_kernel,
+            mcmd_lambda=mcmd_lambda,
+            mcmd_num_samples=mcmd_num_samples,
+            ece_bins=ece_bins,
+            ece_weights=ece_weights,
+            ece_alpha=ece_alpha,
         )
