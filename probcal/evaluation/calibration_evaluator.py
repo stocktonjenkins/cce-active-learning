@@ -98,8 +98,11 @@ class CalibrationEvaluator:
             model, test_dataloader, return_grid=True, return_targets=True
         )
 
-        print("Running TSNE to project grid to 2d...")
-        grid_2d = TSNE().fit_transform(grid.detach().cpu().numpy())
+        if self.settings.dataset_type == DatasetType.TABULAR:
+            grid_2d = np.array([])
+        else:
+            print("Running TSNE to project grid to 2d...")
+            grid_2d = TSNE().fit_transform(grid.detach().cpu().numpy())
 
         print("Computing ECE...")
         ece = self.compute_ece(model, test_dataloader)

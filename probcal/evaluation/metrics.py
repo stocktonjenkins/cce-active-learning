@@ -82,7 +82,7 @@ def compute_regression_ece(
                 y_vals=y_true_torch,
             )
         else:
-            cdf = posterior_predictive.cdf(y_true_torch)
+            cdf = posterior_predictive.cdf(y_true_torch.flatten().long())
 
         cdf_less_than_p = cdf <= p_j_torch
         cdf_less_than_p = cdf_less_than_p.detach().cpu().numpy()
