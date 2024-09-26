@@ -10,6 +10,8 @@ class AcceleratorType(Enum):
 
 class HeadType(Enum):
     GAUSSIAN = "gaussian"
+    FAITHFUL_GAUSSIAN = "faithful_gaussian"
+    NATURAL_GAUSSIAN = "natural_gaussian"
     POISSON = "poisson"
     DOUBLE_POISSON = "double_poisson"
     NEGATIVE_BINOMIAL = "negative_binomial"

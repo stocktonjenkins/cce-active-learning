@@ -1,28 +1,29 @@
-from functools import partial
 from typing import Type
 
 import torch
+from scipy.stats import norm
 from torch import nn
-from torch.nn.functional import poisson_nll_loss
 from torchmetrics import Metric
 
 from probcal.enums import LRSchedulerType
 from probcal.enums import OptimizerType
 from probcal.evaluation.custom_torchmetrics import AverageNLL
+from probcal.evaluation.custom_torchmetrics import RegressionECE
 from probcal.models.backbones import Backbone
 from probcal.models.discrete_regression_nn import DiscreteRegressionNN
+from probcal.training.losses import faithful_gaussian_nll
 
 
-class PoissonNN(DiscreteRegressionNN):
-    """A neural network that learns the parameters of a Poisson distribution over each regression target (conditioned on the input).
+class FaithfulGaussianNN(DiscreteRegressionNN):
+    """Implementation of https://arxiv.org/abs/2212.09184.
 
     Attributes:
         backbone (Backbone): Backbone to use for feature extraction.
         loss_fn (Callable): The loss function to use for training this NN.
         optim_type (OptimizerType): The type of optimizer to use for training the network, e.g. "adam", "sgd", etc.
         optim_kwargs (dict): Key-value argument specifications for the chosen optimizer, e.g. {"lr": 1e-3, "weight_decay": 1e-5}.
-        lr_scheduler_type (LRSchedulerType | None): If specified, the type of learning rate scheduler to use during training, e.g. "cosine_annealing". Defaults to None.
-        lr_scheduler_kwargs (dict | None): If specified, key-value argument specifications for the chosen lr scheduler, e.g. {"T_max": 500}. Defaults to None.
+        lr_scheduler_type (LRSchedulerType | None): If specified, the type of learning rate scheduler to use during training, e.g. "cosine_annealing".
+        lr_scheduler_kwargs (dict | None): If specified, key-value argument specifications for the chosen lr scheduler, e.g. {"T_max": 500}.
     """
 
     def __init__(
@@ -34,7 +35,7 @@ class PoissonNN(DiscreteRegressionNN):
         lr_scheduler_type: LRSchedulerType | None = None,
         lr_scheduler_kwargs: dict | None = None,
     ):
-        """Instantiate a PoissonNN.
+        """Instantiate a FaithfulGaussianNN.
 
         Args:
             backbone_type (Type[Backbone]): Type of backbone to use for feature extraction (can be initialized with backbone_type()).
@@ -44,8 +45,8 @@ class PoissonNN(DiscreteRegressionNN):
             lr_scheduler_type (LRSchedulerType | None): If specified, the type of learning rate scheduler to use during training, e.g. "cosine_annealing".
             lr_scheduler_kwargs (dict | None): If specified, key-value argument specifications for the chosen lr scheduler, e.g. {"T_max": 500}.
         """
-        super(PoissonNN, self).__init__(
-            loss_fn=partial(poisson_nll_loss, log_input=True),
+        super(FaithfulGaussianNN, self).__init__(
+            loss_fn=faithful_gaussian_nll,
             backbone_type=backbone_type,
             backbone_kwargs=backbone_kwargs,
             optim_type=optim_type,
@@ -53,8 +54,14 @@ class PoissonNN(DiscreteRegressionNN):
             lr_scheduler_type=lr_scheduler_type,
             lr_scheduler_kwargs=lr_scheduler_kwargs,
         )
-        self.head = nn.Linear(self.backbone.output_dim, 1)
+        self.mu_head = nn.Linear(self.backbone.output_dim, 1)
+        self.logvar_head = nn.Linear(self.backbone.output_dim, 1)
+
         self.nll = AverageNLL()
+        self.ece = RegressionECE(
+            param_list=["loc", "scale"],
+            rv_class_type=norm,
+        )
 
         self.save_hyperparameters()
 
@@ -65,10 +72,14 @@ class PoissonNN(DiscreteRegressionNN):
             x (torch.Tensor): Batched input tensor with shape (N, ...).
 
         Returns:
-            torch.Tensor: Output tensor, with shape (N, 1).
+            torch.Tensor: Output tensor, with shape (N, 2).
+
+        If viewing outputs as (mu, logvar), use `torch.split(y_hat, [1, 1], dim=-1)` to separate.
         """
-        h = self.backbone(x)
-        y_hat = self.head(h)  # Interpreted as log(mu)
+        h: torch.Tensor = self.backbone(x)
+        mu = self.mu_head(h)
+        logvar = self.logvar_head(h.detach())
+        y_hat = torch.cat((mu, logvar), dim=-1)
         return y_hat
 
     def _predict_impl(self, x: torch.Tensor) -> torch.Tensor:
@@ -78,13 +89,20 @@ class PoissonNN(DiscreteRegressionNN):
             x (torch.Tensor): Batched input tensor with shape (N, ...).
 
         Returns:
-            torch.Tensor: Output tensor, with shape (N, 1).
+            torch.Tensor: Output tensor, with shape (N, 2).
+
+        If viewing outputs as (mu, var), use `torch.split(y_hat, [1, 1], dim=-1)` to separate.
         """
         self.backbone.eval()
-        y_hat = self._forward_impl(x)  # Interpreted as log(mu)
+        y_hat = self._forward_impl(x)
         self.backbone.train()
 
-        return torch.exp(y_hat)
+        # Apply torch.exp to the logvar dimension.
+        output_shape = y_hat.shape
+        reshaped = y_hat.view(-1, 2)
+        y_hat = torch.stack([reshaped[:, 0], torch.exp(reshaped[:, 1])], dim=1).view(*output_shape)
+
+        return y_hat
 
     def _sample_impl(
         self, y_hat: torch.Tensor, training: bool = False, num_samples: int = 1
@@ -105,26 +123,38 @@ class PoissonNN(DiscreteRegressionNN):
 
     def _posterior_predictive_impl(
         self, y_hat: torch.Tensor, training: bool = False
-    ) -> torch.distributions.Poisson:
-        lmbda = y_hat.exp() if training else y_hat
-        dist = torch.distributions.Poisson(lmbda.squeeze())
+    ) -> torch.distributions.Normal:
+        if training:
+            mu, logvar = torch.split(y_hat, [1, 1], dim=-1)
+            var = logvar.exp()
+        else:
+            mu, var = torch.split(y_hat, [1, 1], dim=-1)
+
+        dist = torch.distributions.Normal(loc=mu.squeeze(), scale=var.sqrt().squeeze())
         return dist
 
     def _point_prediction_impl(self, y_hat: torch.Tensor, training: bool) -> torch.Tensor:
-        lmbda = y_hat.exp() if training else y_hat
-        return lmbda.floor()
+        mu, _ = torch.split(y_hat, [1, 1], dim=-1)
+        return mu.round()
 
     def _addl_test_metrics_dict(self) -> dict[str, Metric]:
         return {
+            "regression_ece": self.ece,
             "nll": self.nll,
         }
 
     def _update_addl_test_metrics_batch(
         self, x: torch.Tensor, y_hat: torch.Tensor, y: torch.Tensor
     ):
-        lmbda = y_hat.flatten()
-        dist = torch.distributions.Poisson(lmbda)
+        mu, var = torch.split(y_hat, [1, 1], dim=-1)
+        mu = mu.flatten()
+        var = var.flatten()
+        std = torch.sqrt(var)
         targets = y.flatten()
-        target_probs = torch.exp(dist.log_prob(targets))
 
+        self.ece.update({"loc": mu, "scale": std}, targets)
+
+        # We compute "probability" with the continuity correction (probability of +- 0.5 of the value).
+        dist = torch.distributions.Normal(loc=mu, scale=std)
+        target_probs = dist.cdf(targets + 0.5) - dist.cdf(targets - 0.5)
         self.nll.update(target_probs)
