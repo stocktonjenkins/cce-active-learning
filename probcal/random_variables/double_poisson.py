@@ -82,3 +82,7 @@ class DoublePoisson(DiscreteRandomVariable):
                 - torch.lgamma(x + 1)
                 + self.phi * (x + torch.xlogy(x, self.mu) - torch.xlogy(x, x))
             )
+
+    def log_prob(self, x: int | np.ndarray | torch.Tensor) -> float | np.ndarray | torch.Tensor:
+        """Helper function for compatibility with PyTorch distributions."""
+        return self._logpmf(x)

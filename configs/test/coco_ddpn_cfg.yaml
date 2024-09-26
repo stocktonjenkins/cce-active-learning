@@ -1,0 +1,9 @@
+experiment_name: coco_ddpn
+random_seed: 1998
+log_dir: logs
+head_type: double_poisson
+model_ckpt_path: weights/coco_people_ddpn/version_0/state_dict_best_mae.ckpt
+hidden_dim: 256
+dataset:
+  type: image
+  spec: coco_people

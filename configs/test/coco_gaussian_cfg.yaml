@@ -1,6 +1,9 @@
 experiment_name: coco_gaussian
 random_seed: 1998
 head_type: gaussian
+hidden_dim: 256
+log_dir: logs
+model_ckpt_path: weights/coco_people_gaussian/version_0/state_dict_best_mae.ckpt
 dataset:
   type: image
   spec: coco_people

@@ -7,11 +7,14 @@ from typing import Type
 import lightning as L
 import numpy as np
 import torch
+import yaml
 from lightning.pytorch.callbacks import ModelCheckpoint
 
 from probcal.data_modules import AAFDataModule
 from probcal.data_modules import COCOPeopleDataModule
-from probcal.data_modules import OodCocoPeopleDataModule
+from probcal.data_modules import OodBlurCocoPeopleDataModule
+from probcal.data_modules import OodLabelNoiseCocoPeopleDataModule
+from probcal.data_modules import OodMixupCocoPeopleDataModule
 from probcal.data_modules import TabularDataModule
 from probcal.enums import DatasetType
 from probcal.enums import HeadType
@@ -134,16 +137,27 @@ def get_datamodule(
                 num_workers=num_workers,
                 persistent_workers=True if num_workers > 0 else False,
             )
-        elif dataset_path_or_spec == ImageDatasetName.AAF:
-            return AAFDataModule(
-                root_dir=os.path.join(GLOBAL_DATA_DIR, "aaf"),
+        elif dataset_path_or_spec == ImageDatasetName.OOD_BLUR_COCO_PEOPLE:
+            return OodBlurCocoPeopleDataModule(
+                root_dir=os.path.join(GLOBAL_DATA_DIR, "coco_people"),
                 batch_size=batch_size,
                 num_workers=num_workers,
                 persistent_workers=True if num_workers > 0 else False,
             )
-        elif dataset_path_or_spec == ImageDatasetName.OOD_COCO_PEOPLE:
-            return OodCocoPeopleDataModule(
-                root_dir=os.path.join(GLOBAL_DATA_DIR, "ood_coco_people"),
+        elif dataset_path_or_spec == ImageDatasetName.OOD_MIXUP_COCO_PEOPLE:
+            return OodMixupCocoPeopleDataModule(
+                root_dir=os.path.join(GLOBAL_DATA_DIR, "coco_people"),
+                batch_size=batch_size,
+                num_workers=num_workers,
+                persistent_workers=True if num_workers > 0 else False,
+            )
+        elif dataset_path_or_spec == ImageDatasetName.OOD_LABEL_NOISE_COCO_PEOPLE:
+            return OodLabelNoiseCocoPeopleDataModule(
+                root_dir=os.path.join(GLOBAL_DATA_DIR, "coco_people")
+            )
+        elif dataset_path_or_spec == ImageDatasetName.AAF:
+            return AAFDataModule(
+                root_dir=os.path.join(GLOBAL_DATA_DIR, "aaf"),
                 batch_size=batch_size,
                 num_workers=num_workers,
                 persistent_workers=True if num_workers > 0 else False,
@@ -189,3 +203,8 @@ def get_chkp_callbacks(chkp_dir: Path, chkp_freq: int) -> list[ModelCheckpoint]:
         best_loss_checkpoint_callback,
         best_mae_checkpoint_callback,
     ]
+
+
+def from_yaml(fpath):
+    with open(fpath, "r") as f:
+        return yaml.safe_load(f)

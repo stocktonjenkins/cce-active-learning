@@ -1,0 +1,17 @@
+exp:
+  name: ood_gaussian_coco_people_gaussian
+  log_dir: logs
+model:
+  weights: weights/coco_people_gaussian/version_0/state_dict_best_mae.ckpt
+  test_cfg: configs/test/coco_gaussian_cfg.yaml
+data:
+  test_examples: 100
+  n_samples: 5
+  perturb: 0.25
+  module: ood_mixup_coco_people # {ood_blur_coco_people, ood_mixup_coco_people, coco_people}
+hyperparams:
+  lmbda: 0.01
+  y_kernel_gamma: 'auto' # {'auto', float}
+plot:
+  gen_fig: True
+  num_img_to_plot: 4
