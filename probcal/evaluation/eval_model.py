@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Type
 
 import lightning as L
+import torch
 import yaml
 
 from probcal.evaluation.calibration_evaluator import CalibrationEvaluator
@@ -42,6 +43,7 @@ def main(config_path: Path):
 
     calibration_eval_settings = CalibrationEvaluatorSettings(
         dataset_type=config.dataset_type,
+        device=torch.device(config.accelerator_type.value),
         mcmd_input_kernel="polynomial",
         mcmd_output_kernel=config.mcmd_output_kernel,
         mcmd_lambda=config.mcmd_lambda,

@@ -66,6 +66,7 @@ KernelFunction: TypeAlias = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
 @dataclass
 class CalibrationEvaluatorSettings:
     dataset_type: DatasetType = DatasetType.IMAGE
+    device: torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     mcmd_input_kernel: Literal["polynomial"] | KernelFunction = "polynomial"
     mcmd_output_kernel: Literal["rbf", "laplacian"] | KernelFunction = "rbf"
     mcmd_lambda: float = 0.1
@@ -80,7 +81,7 @@ class CalibrationEvaluator:
 
     def __init__(self, settings: CalibrationEvaluatorSettings):
         self.settings = settings
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = settings.device
         self._clip_model = None
         self._image_preprocess = None
         self._tokenizer = None
@@ -89,6 +90,7 @@ class CalibrationEvaluator:
     def __call__(
         self, model: DiscreteRegressionNN, data_module: L.LightningDataModule
     ) -> CalibrationResults:
+        model.to(self.device)
         data_module.prepare_data()
         data_module.setup("test")
         test_dataloader = data_module.test_dataloader()
@@ -172,8 +174,8 @@ class CalibrationEvaluator:
         for inputs, targets in tqdm(
             data_loader, desc="Getting posterior predictive dists for MCMD..."
         ):
-            all_outputs.append(model.predict(inputs.to(model.device)))
-            all_targets.append(targets.to(model.device))
+            all_outputs.append(model.predict(inputs.to(self.device)))
+            all_targets.append(targets.to(self.device))
 
         all_targets = torch.cat(all_targets).detach().cpu().numpy()
         all_outputs = torch.cat(all_outputs, dim=0)
@@ -241,9 +243,8 @@ class CalibrationEvaluator:
                 x.append(self.clip_model.encode_image(inputs.to(self.device), normalize=True))
             elif self.settings.dataset_type == DatasetType.TEXT:
                 x.append(self.clip_model.encode_text(inputs.to(self.device), normalize=True))
-            y.append(targets.to(model.device))
-            inputs = inputs.to(model.device)
-            y_hat = model.predict(inputs)
+            y.append(targets.to(self.device))
+            y_hat = model.predict(inputs.to(self.device))
             x_prime.append(
                 torch.repeat_interleave(x[-1], repeats=self.settings.mcmd_num_samples, dim=0)
             )
