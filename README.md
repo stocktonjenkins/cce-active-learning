@@ -71,8 +71,8 @@ python probcal/evaluation/eval_model.py --config path/to/eval/config.yaml
 
 Two results files will be saved to the `log_dir` you specify in your config:
 
-- A `test_metrics.yaml` with metrics like MAE, RMSE, etc.
-- A `calibration_results.npz` file which can be loaded into a `CalibrationResults` object to see MCMD and ECE results.
+- A `test_metrics.yaml` with metrics like MAE, RMSE, etc. and a summary of the calibration results (such as the mean MCMDs for each specified trial)
+- A `calibration_results.npz` file which can be loaded into a `CalibrationResults` object to see granular MCMD and ECE results.
 
 ## Measuring Calibration
 
@@ -96,6 +96,7 @@ settings = CalibrationEvaluatorSettings(
     ece_bins=50,
     ece_weights="frequency",
     ece_alpha=1,
+    # etc.
 )
 evaluator = CalibrationEvaluator(settings)
 

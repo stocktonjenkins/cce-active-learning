@@ -8,3 +8,7 @@ batch_size: 4
 accelerator: cpu
 log_dir: path/to/log/dir
 model_ckpt_path: path/to/model.ckpt
+mcmd_num_trials: 5
+mcmd_input_kernel: polynomial
+mcmd_output_kernel: laplacian
+mcmd_lambda: 0.1
