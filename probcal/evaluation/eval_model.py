@@ -62,6 +62,7 @@ def main(config_path: Path):
         ece_alpha=config.ece_alpha,
     )
     calibration_evaluator = CalibrationEvaluator(settings=calibration_eval_settings)
+    print("Evaluating model calibration...")
     results = calibration_evaluator(model=model, data_module=datamodule)
 
     metrics.update(

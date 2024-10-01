@@ -162,6 +162,9 @@ class DoublePoissonNN(DiscreteRegressionNN):
         targets = y.flatten()
         target_probs = dist.pmf(targets.long())
 
+        if not isinstance(target_probs, torch.Tensor):
+            target_probs = torch.tensor(target_probs, device=self.device)
+
         self.nll.update(target_probs)
         self.mp.update(precision)
 
