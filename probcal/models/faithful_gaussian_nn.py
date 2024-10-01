@@ -1,14 +1,12 @@
 from typing import Type
 
 import torch
-from scipy.stats import norm
 from torch import nn
 from torchmetrics import Metric
 
 from probcal.enums import LRSchedulerType
 from probcal.enums import OptimizerType
 from probcal.evaluation.custom_torchmetrics import AverageNLL
-from probcal.evaluation.custom_torchmetrics import RegressionECE
 from probcal.models.backbones import Backbone
 from probcal.models.discrete_regression_nn import DiscreteRegressionNN
 from probcal.training.losses import faithful_gaussian_nll
@@ -58,10 +56,6 @@ class FaithfulGaussianNN(DiscreteRegressionNN):
         self.logvar_head = nn.Linear(self.backbone.output_dim, 1)
 
         self.nll = AverageNLL()
-        self.ece = RegressionECE(
-            param_list=["loc", "scale"],
-            rv_class_type=norm,
-        )
 
         self.save_hyperparameters()
 
@@ -138,10 +132,7 @@ class FaithfulGaussianNN(DiscreteRegressionNN):
         return mu.round()
 
     def _addl_test_metrics_dict(self) -> dict[str, Metric]:
-        return {
-            "regression_ece": self.ece,
-            "nll": self.nll,
-        }
+        return {"nll": self.nll}
 
     def _update_addl_test_metrics_batch(
         self, x: torch.Tensor, y_hat: torch.Tensor, y: torch.Tensor
@@ -151,8 +142,6 @@ class FaithfulGaussianNN(DiscreteRegressionNN):
         var = var.flatten()
         std = torch.sqrt(var)
         targets = y.flatten()
-
-        self.ece.update({"loc": mu, "scale": std}, targets)
 
         # We compute "probability" with the continuity correction (probability of +- 0.5 of the value).
         dist = torch.distributions.Normal(loc=mu, scale=std)

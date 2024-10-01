@@ -14,6 +14,7 @@ import open_clip
 import torch
 from matplotlib import pyplot as plt
 from open_clip import CLIP
+from scipy.interpolate import griddata
 from sklearn.manifold import TSNE
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose
@@ -29,33 +30,57 @@ from probcal.models.discrete_regression_nn import DiscreteRegressionNN
 
 
 @dataclass
+class MCMDResult:
+    mcmd_vals: np.ndarray
+    mean_mcmd: float
+
+
+@dataclass
 class CalibrationResults:
     input_grid_2d: np.ndarray
     regression_targets: np.ndarray
-    mcmd_vals: np.ndarray
-    mean_mcmd: float
+    mcmd_results: list[MCMDResult]
     ece: float
 
     def save(self, filepath: str | Path):
         if not str(filepath).endswith(".npz"):
             raise ValueError("Filepath must have a .npz extension.")
-        np.savez(
-            filepath,
-            input_grid_2d=self.input_grid_2d,
-            regression_targets=self.regression_targets,
-            mcmd_vals=self.mcmd_vals,
-            mean_mcmd=self.mean_mcmd,
-            ece=self.ece,
+        save_dict = {
+            "input_grid_2d": self.input_grid_2d,
+            "regression_targets": self.regression_targets,
+            "ece": self.ece,
+        }
+        save_dict.update(
+            {
+                f"mcmd_vals_{i}": self.mcmd_results[i].mcmd_vals
+                for i in range(len(self.mcmd_results))
+            }
         )
+        save_dict.update(
+            {
+                f"mean_mcmd_{i}": self.mcmd_results[i].mean_mcmd
+                for i in range(len(self.mcmd_results))
+            }
+        )
+        np.savez(filepath, **save_dict)
 
     @staticmethod
     def load(filepath: str | Path) -> CalibrationResults:
         data: dict[str, np.ndarray] = np.load(filepath)
+        num_trials = max(
+            int(k.split("mean_mcmd_")[-1]) + 1 for k in data.keys() if k.startswith("mean_mcmd_")
+        )
+        mcmd_results = [
+            MCMDResult(
+                mcmd_vals=data[f"mcmd_vals_{i}"],
+                mean_mcmd=data[f"mean_mcmd_{i}"],
+            )
+            for i in range(num_trials)
+        ]
         return CalibrationResults(
             input_grid_2d=data["input_grid_2d"],
             regression_targets=data["regression_targets"],
-            mcmd_vals=data["mcmd_vals"],
-            mean_mcmd=data["mean_mcmd"].item(),
+            mcmd_results=mcmd_results,
             ece=data["ece"].item(),
         )
 
@@ -67,6 +92,7 @@ KernelFunction: TypeAlias = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
 class CalibrationEvaluatorSettings:
     dataset_type: DatasetType = DatasetType.IMAGE
     device: torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    mcmd_num_trials: int = 5
     mcmd_input_kernel: Literal["polynomial"] | KernelFunction = "polynomial"
     mcmd_output_kernel: Literal["rbf", "laplacian"] | KernelFunction = "rbf"
     mcmd_lambda: float = 0.1
@@ -95,25 +121,36 @@ class CalibrationEvaluator:
         data_module.setup("test")
         test_dataloader = data_module.test_dataloader()
 
-        print("Computing MCMD...")
-        mcmd_vals, grid, targets = self.compute_mcmd(
-            model, test_dataloader, return_grid=True, return_targets=True
-        )
+        print(f"Running {self.settings.mcmd_num_trials} MCMD computation(s)...")
+        mcmd_results = []
+        for i in range(self.settings.mcmd_num_trials):
+            mcmd_vals, grid, targets = self.compute_mcmd(
+                model, test_dataloader, return_grid=True, return_targets=True
+            )
 
-        if self.settings.dataset_type == DatasetType.TABULAR:
-            grid_2d = np.array([])
-        else:
-            print("Running TSNE to project grid to 2d...")
-            grid_2d = TSNE().fit_transform(grid.detach().cpu().numpy())
+            # We only need to save the input grid / regression targets once.
+            if i == 0:
+                if self.settings.dataset_type == DatasetType.TABULAR:
+                    grid_2d = np.array([])
+                else:
+                    print("Running TSNE to project grid to 2d...")
+                    grid_2d = TSNE().fit_transform(grid.detach().cpu().numpy())
+                regression_targets = targets.detach().cpu().numpy()
+
+            mcmd_results.append(
+                MCMDResult(
+                    mcmd_vals=mcmd_vals.detach().cpu().numpy(),
+                    mean_mcmd=mcmd_vals.mean().item(),
+                )
+            )
 
         print("Computing ECE...")
         ece = self.compute_ece(model, test_dataloader)
 
         return CalibrationResults(
             input_grid_2d=grid_2d,
-            regression_targets=targets.detach().cpu().numpy(),
-            mcmd_vals=mcmd_vals.detach().cpu().numpy(),
-            mean_mcmd=mcmd_vals.mean().item(),
+            regression_targets=regression_targets,
+            mcmd_results=mcmd_results,
             ece=ece,
         )
 
@@ -193,7 +230,8 @@ class CalibrationEvaluator:
     def plot_mcmd_results(
         self,
         calibration_results: CalibrationResults,
-        gridsize: int = 15,
+        gridsize: int = 100,
+        trial_index: int = 0,
         show: bool = False,
     ) -> plt.Figure:
         """Given a set of calibration results and an existing axes, plot the MCMD values against their 2d input projections on a hexbin grid.
@@ -201,27 +239,35 @@ class CalibrationEvaluator:
         Args:
             calibration_results (CalibrationResults): Calibration results from a CalibrationEvaluator.
             ax (plt.Axes): The axes to draw the plot on.
-            gridsize (int, optional): Gridsize parameter for the hexbin plot. Defaults to 15.
+            gridsize (int, optional): Determines the granularity of the contour plot (higher numbers are more granular). Defaults to 100.
+            trial_index (int, optional): Which MCMD computation to use for the plot (since multiple trials are possible). Defaults to 0 (the first).
             show (bool, optional): Whether/not to show the resultant figure with plt.show(). Defaults to False.
 
         Returns:
             Figure: Matplotlib figure with the visualized MCMD values.
         """
+        mcmd_vals = calibration_results.mcmd_results[trial_index].mcmd_vals
+        mean_mcmd = calibration_results.mcmd_results[trial_index].mean_mcmd
+        input_grid_2d = calibration_results.input_grid_2d
+
         fig, axs = plt.subplots(1, 2, figsize=(10, 4))
         axs: Sequence[plt.Axes]
-        axs[0].set_title("Data")
-        hb1 = axs[0].hexbin(
-            *calibration_results.input_grid_2d.T,
-            calibration_results.regression_targets,
-            gridsize=gridsize,
-        )
-        fig.colorbar(hb1, ax=axs[0])
+        grid_x, grid_y = np.mgrid[
+            min(input_grid_2d[:, 0]) : max(input_grid_2d[:, 0]) : complex(gridsize),
+            min(input_grid_2d[:, 1]) : max(input_grid_2d[:, 1]) : complex(gridsize),
+        ]
 
-        axs[1].set_title(f"Mean MCMD: {calibration_results.mean_mcmd:.4f}")
-        hb2 = axs[1].hexbin(
-            *calibration_results.input_grid_2d.T, calibration_results.mcmd_vals, gridsize=gridsize
+        axs[0].set_title("Data")
+        grid_data = griddata(
+            input_grid_2d, calibration_results.regression_targets, (grid_x, grid_y), method="cubic"
         )
-        fig.colorbar(hb2, ax=axs[1])
+        mappable_0 = axs[0].contourf(grid_x, grid_y, grid_data, levels=20, cmap="viridis")
+        fig.colorbar(mappable_0, ax=axs[0])
+
+        axs[1].set_title(f"Mean MCMD: {mean_mcmd:.4f}")
+        grid_mcmd = griddata(input_grid_2d, mcmd_vals, (grid_x, grid_y), method="cubic")
+        mappable_1 = axs[1].contourf(grid_x, grid_y, grid_mcmd, levels=20, cmap="viridis")
+        fig.colorbar(mappable_1, ax=axs[1])
 
         fig.tight_layout()
 
@@ -257,6 +303,11 @@ class CalibrationEvaluator:
         x_prime = torch.cat(x_prime, dim=0)
         y_prime = torch.cat(y_prime).float()
 
+        # Ensure feature vectors are normalized so the polynomial kernel is bounded.
+        if self.settings.mcmd_input_kernel == "polynomial" and x.ndim > 1:
+            x = x / torch.norm(x, dim=-1, keepdim=True)
+            x_prime = x_prime / torch.norm(x_prime, dim=-1, keepdim=True)
+
         return x, y, x_prime, y_prime
 
     def _get_kernel_functions(self, y: torch.Tensor) -> tuple[KernelFunction, KernelFunction]:
@@ -266,9 +317,9 @@ class CalibrationEvaluator:
             x_kernel = self.settings.mcmd_input_kernel
 
         if self.settings.mcmd_output_kernel == "rbf":
-            y_kernel = partial(rbf_kernel, gamma=(1 / (2 * y.float().var())))
+            y_kernel = partial(rbf_kernel, gamma=(1 / (2 * y.float().var())).item())
         elif self.settings.mcmd_output_kernel == "laplacian":
-            y_kernel = partial(laplacian_kernel, gamma=(1 / (2 * y.float().var())))
+            y_kernel = partial(laplacian_kernel, gamma=(1 / (2 * y.float().var())).item())
 
         return x_kernel, y_kernel
 

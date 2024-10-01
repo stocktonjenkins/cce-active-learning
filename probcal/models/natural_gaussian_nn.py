@@ -2,14 +2,12 @@ from typing import Type
 
 import torch
 import torch.nn.functional as F
-from scipy.stats import norm
 from torch import nn
 from torchmetrics import Metric
 
 from probcal.enums import LRSchedulerType
 from probcal.enums import OptimizerType
 from probcal.evaluation.custom_torchmetrics import AverageNLL
-from probcal.evaluation.custom_torchmetrics import RegressionECE
 from probcal.models.backbones import Backbone
 from probcal.models.discrete_regression_nn import DiscreteRegressionNN
 from probcal.training.losses import natural_gaussian_nll
@@ -56,10 +54,6 @@ class NaturalGaussianNN(DiscreteRegressionNN):
             lr_scheduler_kwargs=lr_scheduler_kwargs,
         )
         self.head = nn.Linear(self.backbone.output_dim, 2)
-        self.ece = RegressionECE(
-            param_list=["loc", "scale"],
-            rv_class_type=norm,
-        )
         self.nll = AverageNLL()
         self.save_hyperparameters()
 
@@ -130,10 +124,7 @@ class NaturalGaussianNN(DiscreteRegressionNN):
         return mu.round()
 
     def _addl_test_metrics_dict(self) -> dict[str, Metric]:
-        return {
-            "continuous_ece": self.ece,
-            "nll": self.nll,
-        }
+        return {"nll": self.nll}
 
     def _update_addl_test_metrics_batch(
         self, x: torch.Tensor, y_hat: torch.Tensor, y: torch.Tensor
@@ -141,7 +132,6 @@ class NaturalGaussianNN(DiscreteRegressionNN):
         targets = y.flatten()
         dist = self.posterior_predictive(y_hat)
 
-        self.ece.update({"loc": dist.mean, "scale": dist.stddev}, targets)
         # We compute "probability" with the continuity correction (probability of +- 0.5 of the value).
         target_probs = dist.cdf(targets + 0.5) - dist.cdf(targets - 0.5)
         self.nll.update(target_probs)

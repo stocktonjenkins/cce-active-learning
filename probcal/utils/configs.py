@@ -24,6 +24,7 @@ class BaseConfig(object):
         dataset_type: DatasetType,
         dataset_path_or_spec: Path | ImageDatasetName,
         source_dict: dict,
+        input_dim: int,
         hidden_dim: int,
         batch_size: int,
         accelerator_type: AcceleratorType,
@@ -34,6 +35,7 @@ class BaseConfig(object):
         self.dataset_type = dataset_type
         self.dataset_path_or_spec = dataset_path_or_spec
         self.source_dict = source_dict
+        self.input_dim = input_dim
         self.hidden_dim = hidden_dim
         self.batch_size = batch_size
         self.accelerator_type = accelerator_type
@@ -131,6 +133,7 @@ class TrainingConfig(BaseConfig):
             dataset_type=dataset_type,
             source_dict=source_dict,
             dataset_path_or_spec=dataset_path_or_spec,
+            input_dim=input_dim,
             hidden_dim=hidden_dim,
             batch_size=batch_size,
             accelerator_type=accelerator_type,
@@ -146,7 +149,6 @@ class TrainingConfig(BaseConfig):
         self.beta_scheduler_type = beta_scheduler_type
         self.beta_scheduler_kwargs = beta_scheduler_kwargs
         self.num_trials = num_trials
-        self.input_dim = input_dim
         self.precision = precision
         self.random_seed = random_seed
 
@@ -236,11 +238,13 @@ class EvaluationConfig(BaseConfig):
         dataset_type: DatasetType,
         source_dict: dict,
         dataset_path_or_spec: Path | ImageDatasetName,
+        input_dim: int,
         hidden_dim: int,
         batch_size: int,
         accelerator_type: AcceleratorType,
         log_dir: Path,
         model_ckpt_path: Path,
+        mcmd_num_trials: int,
         mcmd_output_kernel: Literal["rbf", "laplacian"],
         mcmd_lambda: float,
         mcmd_num_samples: int,
@@ -254,12 +258,14 @@ class EvaluationConfig(BaseConfig):
             dataset_type=dataset_type,
             source_dict=source_dict,
             dataset_path_or_spec=dataset_path_or_spec,
+            input_dim=input_dim,
             hidden_dim=hidden_dim,
             batch_size=batch_size,
             accelerator_type=accelerator_type,
             log_dir=log_dir,
         )
         self.model_ckpt_path = model_ckpt_path
+        self.mcmd_num_trials = mcmd_num_trials
         self.mcmd_output_kernel = mcmd_output_kernel
         self.mcmd_lambda = mcmd_lambda
         self.mcmd_num_samples = mcmd_num_samples
@@ -288,9 +294,11 @@ class EvaluationConfig(BaseConfig):
         dataset_path_or_spec = TrainingConfig.get_dataset_path_or_spec(config_dict["dataset"])
 
         # Optional arguments.
+        input_dim = config_dict["dataset"].get("input_dim", 1)
         hidden_dim = config_dict.get("hidden_dim", 64)
         batch_size = config_dict.get("batch_size", 1)
         accelerator_type = AcceleratorType(config_dict.get("accelerator", "cpu"))
+        mcmd_num_trials = config_dict.get("mcmd_num_trials", 1)
         mcmd_output_kernel = config_dict.get("mcmd_output_kernel", "rbf")
         if mcmd_output_kernel not in ("rbf", "laplacian"):
             raise ValueError("mcmd_output_kernel must be either 'rbf' or 'laplacian'.")
@@ -308,11 +316,13 @@ class EvaluationConfig(BaseConfig):
             dataset_type=dataset_type,
             source_dict=config_dict,
             dataset_path_or_spec=dataset_path_or_spec,
+            input_dim=input_dim,
             hidden_dim=hidden_dim,
             batch_size=batch_size,
             accelerator_type=accelerator_type,
             log_dir=log_dir,
             model_ckpt_path=model_ckpt_path,
+            mcmd_num_trials=mcmd_num_trials,
             mcmd_output_kernel=mcmd_output_kernel,
             mcmd_lambda=mcmd_lambda,
             mcmd_num_samples=mcmd_num_samples,
