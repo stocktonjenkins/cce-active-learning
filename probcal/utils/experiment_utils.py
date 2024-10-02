@@ -15,6 +15,7 @@ from probcal.data_modules import COCOPeopleDataModule
 from probcal.data_modules import OodBlurCocoPeopleDataModule
 from probcal.data_modules import OodLabelNoiseCocoPeopleDataModule
 from probcal.data_modules import OodMixupCocoPeopleDataModule
+from probcal.data_modules import FGNetDataModule
 from probcal.data_modules import TabularDataModule
 from probcal.enums import DatasetType
 from probcal.enums import HeadType
@@ -69,7 +70,6 @@ def get_model(
         raise ValueError(f"Head type {config.head_type} not recognized.")
 
     if config.dataset_type == DatasetType.TABULAR:
-
         if "collision" in str(config.dataset_path_or_spec):
             backbone_type = LargerMLP
         else:
@@ -83,7 +83,7 @@ def get_model(
             backbone_type = MNISTCNN
         elif config.dataset_path_or_spec == ImageDatasetName.COCO_PEOPLE:
             backbone_type = ViT
-        elif config.dataset_path_or_spec == ImageDatasetName.AAF:
+        elif config.dataset_path_or_spec in (ImageDatasetName.AAF, ImageDatasetName.FG_NET):
             backbone_type = MobileNetV3
         else:
             backbone_type = MobileNetV3
@@ -158,6 +158,13 @@ def get_datamodule(
         elif dataset_path_or_spec == ImageDatasetName.AAF:
             return AAFDataModule(
                 root_dir=os.path.join(GLOBAL_DATA_DIR, "aaf"),
+                batch_size=batch_size,
+                num_workers=num_workers,
+                persistent_workers=True if num_workers > 0 else False,
+            )
+        elif dataset_path_or_spec == ImageDatasetName.FG_NET:
+            return FGNetDataModule(
+                root_dir=GLOBAL_DATA_DIR,
                 batch_size=batch_size,
                 num_workers=num_workers,
                 persistent_workers=True if num_workers > 0 else False,

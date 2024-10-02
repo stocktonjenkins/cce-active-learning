@@ -1,0 +1,26 @@
+experiment_name: fg_net_poisson
+random_seed: 1998
+head_type: poisson
+dataset:
+  type: image
+  spec: fg_net
+training:
+  accelerator: gpu
+  batch_size: 32
+  chkp_dir: weights
+  chkp_freq: 50
+  num_epochs: 50
+  optimizer:
+    type: adam_w
+    kwargs:
+      lr: 0.001
+      weight_decay: 0.00001
+  lr_scheduler:
+    type: cosine_annealing
+    kwargs:
+      T_max: 50
+      eta_min: 0
+      last_epoch: -1
+evaluation:
+  num_trials: 5
+  log_dir: logs
