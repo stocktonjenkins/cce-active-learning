@@ -7,9 +7,9 @@ dataset:
 training:
   accelerator: gpu
   batch_size: 32
-  chkp_dir: weights
-  chkp_freq: 50
-  num_epochs: 50
+  chkp_dir: chkp
+  chkp_freq: 100
+  num_epochs: 100
   optimizer:
     type: adam_w
     kwargs:
@@ -22,5 +22,5 @@ training:
       eta_min: 0
       last_epoch: -1
 evaluation:
-  num_trials: 5
+  num_trials: 1
   log_dir: logs

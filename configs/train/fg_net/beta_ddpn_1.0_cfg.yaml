@@ -16,7 +16,6 @@ training:
       beta_0: 1.0
       beta_1: 1.0
       last_epoch: -1
-
   optimizer:
     type: adam_w
     kwargs:

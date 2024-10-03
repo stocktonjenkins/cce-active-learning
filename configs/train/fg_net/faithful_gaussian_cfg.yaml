@@ -1,6 +1,6 @@
-experiment_name: fg_net_beta_ddpn_0.5
+experiment_name: fg_net_faithful_gaussian
 random_seed: 1998
-head_type: double_poisson
+head_type: faithful_gaussian
 dataset:
   type: image
   spec: fg_net
@@ -10,12 +10,6 @@ training:
   chkp_dir: chkp
   chkp_freq: 100
   num_epochs: 100
-  beta_scheduler:
-    type: cosine_annealing
-    kwargs:
-      beta_0: 0.5
-      beta_1: 0.5
-      last_epoch: -1
   optimizer:
     type: adam_w
     kwargs:
