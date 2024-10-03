@@ -303,7 +303,7 @@ class EvaluationConfig(BaseConfig):
         if mcmd_output_kernel not in ("rbf", "laplacian"):
             raise ValueError("mcmd_output_kernel must be either 'rbf' or 'laplacian'.")
         mcmd_lambda = config_dict.get("mcmd_lambda", 0.1)
-        mcmd_num_samples = config_dict.get("mcmd_num_samples", 5)
+        mcmd_num_samples = config_dict.get("mcmd_num_samples", 1)
         ece_bins = config_dict.get("ece_bins", 50)
         ece_weights = config_dict.get("ece_weights", "frequency")
         if ece_weights not in ("frequency", "uniform"):
