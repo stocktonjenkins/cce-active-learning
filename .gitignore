@@ -9,6 +9,7 @@ chkp/
 ignore/
 */mnist
 */coco_people
+*/eva
 */logs
 data/
 
