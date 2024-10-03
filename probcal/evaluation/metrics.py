@@ -166,7 +166,7 @@ def compute_mcmd_numpy(
     second_term = 2 * np.einsum("ij,jk,ki->i", k_X.T, A_2, k_X_prime, optimize=path)
     third_term = np.einsum("ij,jk,ki->i", k_X_prime.T, A_3, k_X_prime, optimize=path)
 
-    return first_term - second_term + third_term
+    return np.sqrt(first_term - second_term + third_term)
 
 
 def compute_mcmd_torch(
@@ -236,4 +236,4 @@ def compute_mcmd_torch(
     second_term = 2 * torch.einsum("ij,jk,ki->i", k_X.T, A_2, k_X_prime)
     third_term = torch.einsum("ij,jk,ki->i", k_X_prime.T, A_3, k_X_prime)
 
-    return first_term - second_term + third_term
+    return (first_term - second_term + third_term).sqrt()

@@ -96,7 +96,7 @@ class CalibrationEvaluatorSettings:
     mcmd_input_kernel: Literal["polynomial"] | KernelFunction = "polynomial"
     mcmd_output_kernel: Literal["rbf", "laplacian"] | KernelFunction = "rbf"
     mcmd_lambda: float = 0.1
-    mcmd_num_samples: int = 5
+    mcmd_num_samples: int = 1
     ece_bins: int = 50
     ece_weights: Literal["uniform", "frequency"] = "frequency"
     ece_alpha: float = 1.0
@@ -253,20 +253,23 @@ class CalibrationEvaluator:
         fig, axs = plt.subplots(1, 2, figsize=(10, 4))
         axs: Sequence[plt.Axes]
         grid_x, grid_y = np.mgrid[
-            min(input_grid_2d[:, 0]) : max(input_grid_2d[:, 0]) : complex(gridsize),
-            min(input_grid_2d[:, 1]) : max(input_grid_2d[:, 1]) : complex(gridsize),
+            min(input_grid_2d[:, 0]) : max(input_grid_2d[:, 0]) : gridsize * 1j,
+            min(input_grid_2d[:, 1]) : max(input_grid_2d[:, 1]) : gridsize * 1j,
         ]
 
         axs[0].set_title("Data")
         grid_data = griddata(
-            input_grid_2d, calibration_results.regression_targets, (grid_x, grid_y), method="cubic"
+            input_grid_2d,
+            calibration_results.regression_targets,
+            (grid_x, grid_y),
+            method="linear",
         )
-        mappable_0 = axs[0].contourf(grid_x, grid_y, grid_data, levels=20, cmap="viridis")
+        mappable_0 = axs[0].contourf(grid_x, grid_y, grid_data, levels=5, cmap="viridis")
         fig.colorbar(mappable_0, ax=axs[0])
 
         axs[1].set_title(f"Mean MCMD: {mean_mcmd:.4f}")
-        grid_mcmd = griddata(input_grid_2d, mcmd_vals, (grid_x, grid_y), method="cubic")
-        mappable_1 = axs[1].contourf(grid_x, grid_y, grid_mcmd, levels=20, cmap="viridis")
+        grid_mcmd = griddata(input_grid_2d, mcmd_vals, (grid_x, grid_y), method="linear")
+        mappable_1 = axs[1].contourf(grid_x, grid_y, grid_mcmd, levels=5, cmap="viridis")
         fig.colorbar(mappable_1, ax=axs[1])
 
         fig.tight_layout()
@@ -286,9 +289,9 @@ class CalibrationEvaluator:
             if self.settings.dataset_type == DatasetType.TABULAR:
                 x.append(inputs)
             elif self.settings.dataset_type == DatasetType.IMAGE:
-                x.append(self.clip_model.encode_image(inputs.to(self.device), normalize=True))
+                x.append(self.clip_model.encode_image(inputs.to(self.device), normalize=False))
             elif self.settings.dataset_type == DatasetType.TEXT:
-                x.append(self.clip_model.encode_text(inputs.to(self.device), normalize=True))
+                x.append(self.clip_model.encode_text(inputs.to(self.device), normalize=False))
             y.append(targets.to(self.device))
             y_hat = model.predict(inputs.to(self.device))
             x_prime.append(
@@ -302,11 +305,6 @@ class CalibrationEvaluator:
         y = torch.cat(y).float()
         x_prime = torch.cat(x_prime, dim=0)
         y_prime = torch.cat(y_prime).float()
-
-        # Ensure feature vectors are normalized so the polynomial kernel is bounded.
-        if self.settings.mcmd_input_kernel == "polynomial" and x.ndim > 1:
-            x = x / torch.norm(x, dim=-1, keepdim=True)
-            x_prime = x_prime / torch.norm(x_prime, dim=-1, keepdim=True)
 
         return x, y, x_prime, y_prime
 
