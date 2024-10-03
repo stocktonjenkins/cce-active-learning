@@ -1,0 +1,11 @@
+experiment_name: aaf_faithful_gaussian
+random_seed: 1998
+head_type: faithful_gaussian
+dataset:
+  type: image
+  spec: aaf
+batch_size: 4
+accelerator: cpu
+log_dir: logs/eval/aaf_faithful_gaussian
+model_ckpt_path: chkp/aaf_faithful_gaussian/version_0/best_loss.ckpt
+mcmd_num_trials: 5

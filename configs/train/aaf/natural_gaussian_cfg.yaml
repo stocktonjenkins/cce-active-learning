@@ -1,6 +1,6 @@
-experiment_name: aaf
+experiment_name: aaf_natural_gaussian
 random_seed: 1998
-head_type: poisson
+head_type: natural_gaussian
 dataset:
   type: image
   spec: aaf

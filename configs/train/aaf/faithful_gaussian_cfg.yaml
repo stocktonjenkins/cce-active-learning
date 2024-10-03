@@ -1,6 +1,6 @@
-experiment_name: aaf
+experiment_name: aaf_faithful_gaussian
 random_seed: 1998
-head_type: gaussian
+head_type: faithful_gaussian
 dataset:
   type: image
   spec: aaf

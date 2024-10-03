@@ -1,6 +1,6 @@
-experiment_name: aaf
+experiment_name: aaf_negative_binomial
 random_seed: 1998
-head_type: double_poisson
+head_type: negative_binomial
 dataset:
   type: image
   spec: aaf

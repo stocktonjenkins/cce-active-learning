@@ -1,0 +1,11 @@
+experiment_name: aaf_poisson
+random_seed: 1998
+head_type: poisson
+dataset:
+  type: image
+  spec: aaf
+batch_size: 4
+accelerator: cpu
+log_dir: logs/eval/aaf_poisson
+model_ckpt_path: chkp/aaf_poisson/version_0/best_loss.ckpt
+mcmd_num_trials: 5

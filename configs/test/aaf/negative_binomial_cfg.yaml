@@ -1,0 +1,11 @@
+experiment_name: aaf_negative_binomial
+random_seed: 1998
+head_type: negative_binomial
+dataset:
+  type: image
+  spec: aaf
+batch_size: 4
+accelerator: cpu
+log_dir: logs/eval/aaf_negative_binomial
+model_ckpt_path: chkp/aaf_negative_binomial/version_0/best_loss.ckpt
+mcmd_num_trials: 5
