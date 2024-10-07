@@ -130,7 +130,8 @@ def plot_mcmd_curve(
         x_prime=x_prime,
         y_prime=y_prime,
         x_kernel=partial(rbf_kernel, gamma=0.5),
-        y_kernel=partial(rbf_kernel, gamma=0.5),
+        y_kernel=partial(rbf_kernel, gamma=1 / (2 * y_true.var())),
+        lmbda=0.1,
     )
     ax = plt.subplots(1, 1)[1] if ax is None else ax
     sorted_indices = np.argsort(x)
@@ -138,7 +139,7 @@ def plot_mcmd_curve(
         x[sorted_indices],
         mcmd_vals[sorted_indices],
     )
-    ax.set_ylim(-0.01, max(ax.get_ylim()[1], 0.35))
+    ax.set_ylim(-0.01, max(ax.get_ylim()[1], 0.60))
     ax.set_xticks([])
     ax.set_yticks([])
     ax.annotate(
@@ -157,7 +158,7 @@ def produce_figure(save_path: str | Path):
     plt.rc("text", usetex=True)
     plt.rc("font", family="serif")
 
-    num_samples = 1000
+    num_samples = 2000
     cont_x = np.random.uniform(1, 10, size=num_samples)
     mean = cont_x
     variance = cont_x
@@ -206,7 +207,6 @@ def produce_figure(save_path: str | Path):
         gaussian_y,
         gaussian_post_pred,
         ax=axs[3, 0],
-        num_samples_from_posterior=10,
     )
 
     plot_posterior_predictive(
@@ -232,7 +232,6 @@ def produce_figure(save_path: str | Path):
         poisson_y,
         poisson_post_pred,
         ax=axs[3, 1],
-        num_samples_from_posterior=10,
     )
 
     plot_posterior_predictive(
@@ -254,9 +253,7 @@ def produce_figure(save_path: str | Path):
     axs[1, 2].set_xticks([])
     axs[1, 2].set_yticks([])
     plot_regression_calibration_curve_cdf(nbinom_y, nbinom_post_pred, ax=axs[2, 2], show=False)
-    plot_mcmd_curve(
-        cont_x, nbinom_y, nbinom_post_pred, ax=axs[3, 2], num_samples_from_posterior=20
-    )
+    plot_mcmd_curve(cont_x, nbinom_y, nbinom_post_pred, ax=axs[3, 2])
 
     row_labels = ["Posterior Predictive", "PIT", "Reliability Diagram", "MCMD"]
     for ax, row in zip(axs[:, 0], row_labels):
