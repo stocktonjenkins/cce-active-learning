@@ -11,7 +11,7 @@ ignore/
 */coco_people
 */eva
 */logs
-data/
+data
 
 # Specific exceptions
 !data/discrete_sine_wave/
