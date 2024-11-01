@@ -8,20 +8,20 @@ import lightning as L
 import numpy as np
 import torch
 import yaml
-from lightning.pytorch.callbacks import ModelCheckpoint
 
-from probcal.data_modules import AAFDataModule
-from probcal.data_modules import COCOPeopleDataModule
-from probcal.data_modules import EVADataModule
-from probcal.data_modules import FGNetDataModule
-from probcal.data_modules import OodBlurCocoPeopleDataModule
-from probcal.data_modules import OodLabelNoiseCocoPeopleDataModule
-from probcal.data_modules import OodMixupCocoPeopleDataModule
-from probcal.data_modules import TabularDataModule
-from probcal.enums import DatasetType
-from probcal.enums import HeadType
-from probcal.enums import ImageDatasetName
-from probcal.enums import TextDatasetName
+from lightning.pytorch.callbacks import ModelCheckpoint
+from probcal.data_modules import (
+    AAFDataModule,
+    COCOPeopleDataModule,
+    EVADataModule,
+    FGNetDataModule,
+    OodBlurCocoPeopleDataModule,
+    OodLabelNoiseCocoPeopleDataModule,
+    OodMixupCocoPeopleDataModule,
+    TabularDataModule
+)
+from probcal.data_modules.prob_cal_data_module import ProbCalDataModule
+from probcal.enums import DatasetType, HeadType, ImageDatasetName, TextDatasetName
 from probcal.models import DoublePoissonNN
 from probcal.models import FaithfulGaussianNN
 from probcal.models import GaussianNN
@@ -120,7 +120,7 @@ def get_datamodule(
     dataset_path_or_spec: Path | ImageDatasetName,
     batch_size: int,
     num_workers: Optional[int] = 8,
-) -> L.LightningDataModule:
+) -> L.LightningDataModule | ProbCalDataModule:
     if dataset_type == DatasetType.TABULAR:
         return TabularDataModule(
             dataset_path=dataset_path_or_spec,
