@@ -2,10 +2,10 @@ from argparse import Namespace, ArgumentParser
 
 
 from probcal.active_learning.configs import ActiveLearningConfig
-from probcal.active_learning.logging1.active_learning_average_cce_logger import (
+from probcal.active_learning.active_learning_logger.active_learning_average_cce_logger import (
     ActiveLearningAverageCCE,
 )
-from probcal.active_learning.logging1.active_learning_model_accuracy_logger import (
+from probcal.active_learning.active_learning_logger.active_learning_model_accuracy_logger import (
     ActiveLearningModelAccuracyLogger,
 )
 from probcal.active_learning.procedures import get_active_learning_procedure

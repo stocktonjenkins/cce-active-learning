@@ -3,7 +3,7 @@ from abc import ABC
 from typing import TypeVar, Union
 
 from probcal.active_learning.configs import ActiveLearningConfig
-from probcal.active_learning.types1 import (
+from probcal.active_learning.active_learning_types import (
     ActiveLearningEvaluationResults,
     IActiveLearningDataModuleDelegate,
 )
