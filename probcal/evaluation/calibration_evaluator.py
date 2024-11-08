@@ -107,6 +107,7 @@ class CalibrationEvaluator:
 
     def __init__(self, settings: CalibrationEvaluatorSettings):
         self.settings = settings
+        print(f"Using device: {settings.device}")
         self.device = settings.device
         self._clip_model = None
         self._image_preprocess = None

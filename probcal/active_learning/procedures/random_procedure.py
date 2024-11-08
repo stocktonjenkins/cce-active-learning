@@ -3,7 +3,7 @@ import numpy as np
 from probcal.active_learning.procedures.base import (
     ActiveLearningProcedure,
 )
-from probcal.active_learning.types import (
+from probcal.active_learning.types1 import (
     ModelAccuracyResults,
     RandomProcedureResults,
 )

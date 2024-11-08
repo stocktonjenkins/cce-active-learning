@@ -1,0 +1,6 @@
+num_iter: 10
+label_k: 5
+init_num_labeled: 100
+procedure_type: random
+settings:
+  device: cpu

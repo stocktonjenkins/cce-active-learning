@@ -12,9 +12,13 @@ class IActiveLearningDataModuleDelegate(abc.ABC):
         pass
 
 
+
 @dataclass
 class ModelAccuracyResults:
-    pass
+    accuracy: float = 0.0
+    precision: float = 0.0
+    recall: float = 0.0
+    f1_score: float = 0.0
 
 
 @dataclass
@@ -26,3 +30,4 @@ class ActiveLearningEvaluationResults:
 @dataclass
 class RandomProcedureResults(ActiveLearningEvaluationResults):
     random: int
+

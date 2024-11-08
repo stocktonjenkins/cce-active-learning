@@ -2,10 +2,10 @@ from argparse import Namespace, ArgumentParser
 
 
 from probcal.active_learning.configs import ActiveLearningConfig
-from probcal.active_learning.logging.active_learning_average_cce_logger import (
+from probcal.active_learning.logging1.active_learning_average_cce_logger import (
     ActiveLearningAverageCCE,
 )
-from probcal.active_learning.logging.active_learning_model_accuracy_logger import (
+from probcal.active_learning.logging1.active_learning_model_accuracy_logger import (
     ActiveLearningModelAccuracyLogger,
 )
 from probcal.active_learning.procedures import get_active_learning_procedure
@@ -28,7 +28,7 @@ def pipeline(
         chkp_dir = (
             train_config.chkp_dir
             / train_config.experiment_name
-            / f"{active_learn.__name__}_al_iter_{al_iter}"
+            / f"{active_learn.__class__.__name__}_al_iter_{al_iter}"
         )
         train_procedure(  # TODO: make sure the parameters for the model reference update
             model,
@@ -56,17 +56,26 @@ def parse_args() -> Namespace:
 
 if __name__ == "__main__":
     args = parse_args()
-    _train_config = TrainingConfig.from_yaml(args.config)
-    al_config = ActiveLearningConfig.from_yaml(args.config)
+    _train_config = TrainingConfig.from_yaml(args.train_config)
+    al_config = ActiveLearningConfig.from_yaml(args.al_config)
     Procedure: type[ActiveLearningProcedure] = get_active_learning_procedure(al_config)
-    module = get_datamodule(**_train_config.__dict__)
+    module = get_datamodule(
+        _train_config.dataset_type,
+        _train_config.dataset_path_or_spec,
+        _train_config.batch_size,
+    )
     if not isinstance(module, ProbCalDataModule):
         raise ValueError(f"Given module is not supported: {module}")
+    active_learning_data_module_args = {
+        "full_dataset": module.full_dataset,
+        "batch_size": _train_config.batch_size,
+        # "num_workers": _train_config.num_workers,
+        "config": al_config,  # Assuming config is part of TrainingConfig
+        # "persistent_workers": _train_config.persistent_workers,  # Add this field to TrainingConfig if not present
+    }
+    
     _active_learn = Procedure(
-        dataset=ActiveLearningDataModule(
-            full_dataset=module.full_dataset,
-            **_train_config.__dict__,
-        ),
+        dataset=ActiveLearningDataModule(**active_learning_data_module_args),
         config=al_config,
     )
     _active_learn.attach(
