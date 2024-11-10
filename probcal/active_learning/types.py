@@ -26,3 +26,7 @@ class ActiveLearningEvaluationResults:
 @dataclass
 class RandomProcedureResults(ActiveLearningEvaluationResults):
     random: int
+
+@dataclass
+class CCEProcedureResults(ActiveLearningEvaluationResults):
+    random: int

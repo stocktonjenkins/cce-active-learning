@@ -195,6 +195,51 @@ class CalibrationEvaluator:
             return return_obj[0]
         else:
             return tuple(return_obj)
+        
+    def compute_mcmd_unlabeled(
+        self,
+        model: DiscreteRegressionNN,
+        unlabeled_data_loader: DataLoader,
+        data_loader: DataLoader,
+        return_grid: bool = False,
+        return_targets: bool = False,
+    ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor] | tuple[
+        torch.Tensor, torch.Tensor, torch.Tensor
+    ]:
+        """Compute the MCMD between samples drawn from the given model and the data spanned by the data loader.
+
+        Args:
+            model (DiscreteRegressionNN): Probabilistic regression model to compute the MCMD for.
+            data_loader (DataLoader): DataLoader with the test data to compute MCMD over.
+            return_grid (bool, optional): Whether/not to return the grid of values the MCMD was computed over. Defaults to False.
+            return_targets (bool, optional): Whether/not to return the regression targets the MCMD was computed against. Defaults to False.
+
+        Returns:
+            torch.Tensor | tuple[torch.Tensor, torch.Tensor] | tuple[torch.Tensor, torch.Tensor, torch.Tensor]: The computed MCMD values, along with the grid of inputs these values correspond to (if return_grid is True) and the regression targets (if return_targets is True).
+        """
+        unlabeled_tensors = self._get_unlabelled_samples_for_mcmd(unlabeled_data_loader)
+        x, y, x_prime, y_prime = self._get_samples_for_mcmd(model, data_loader)
+
+        x_kernel, y_kernel = self._get_kernel_functions(y)
+        mcmd_vals = compute_mcmd_torch(
+            grid=unlabeled_tensors,
+            x=x,
+            y=y,
+            x_prime=x_prime,
+            y_prime=y_prime,
+            x_kernel=x_kernel,
+            y_kernel=y_kernel,
+            lmbda=self.settings.mcmd_lambda,
+        )
+        return_obj = [mcmd_vals]
+        if return_grid:
+            return_obj.append(x)
+        if return_targets:
+            return_obj.append(y)
+        if len(return_obj) == 1:
+            return return_obj[0]
+        else:
+            return tuple(return_obj)
 
     def compute_ece(self, model: DiscreteRegressionNN, data_loader: DataLoader) -> float:
         """Compute the regression ECE of the given model over the dataset spanned by the data loader.
@@ -277,7 +322,7 @@ class CalibrationEvaluator:
         if show:
             plt.show()
         return fig
-
+    
     def _get_samples_for_mcmd(
         self, model: DiscreteRegressionNN, data_loader: DataLoader
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -307,6 +352,36 @@ class CalibrationEvaluator:
         y_prime = torch.cat(y_prime).float()
 
         return x, y, x_prime, y_prime
+    
+    def _get_unlabelled_samples_for_mcmd(
+        self, data_loader: DataLoader
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        x = []
+        # y = []
+        # x_prime = []
+        # y_prime = []
+        for inputs, _ in tqdm(data_loader, desc="Sampling from posteriors for MCMD..."):
+            if self.settings.dataset_type == DatasetType.TABULAR:
+                x.append(inputs)
+            elif self.settings.dataset_type == DatasetType.IMAGE:
+                x.append(self.clip_model.encode_image(inputs.to(self.device), normalize=False))
+            elif self.settings.dataset_type == DatasetType.TEXT:
+                x.append(self.clip_model.encode_text(inputs.to(self.device), normalize=False))
+            # y.append(targets.to(self.device))
+            # y_hat = model.predict(inputs.to(self.device))
+            # x_prime.append(
+            #     torch.repeat_interleave(x[-1], repeats=self.settings.mcmd_num_samples, dim=0)
+            # )
+            # y_prime.append(
+            #     model.sample(y_hat, num_samples=self.settings.mcmd_num_samples).flatten()
+            # )
+
+        x = torch.cat(x, dim=0)
+        # y = torch.cat(y).float()
+        # x_prime = torch.cat(x_prime, dim=0)
+        # y_prime = torch.cat(y_prime).float()
+
+        return x
 
     def _get_kernel_functions(self, y: torch.Tensor) -> tuple[KernelFunction, KernelFunction]:
         if self.settings.mcmd_input_kernel == "polynomial":
