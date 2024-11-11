@@ -1,4 +1,4 @@
-from probcal.active_learning.types import ActiveLearningEvaluationResults
+from probcal.active_learning.active_learning_types import ActiveLearningEvaluationResults
 from probcal.lib.observer import IObserver, ISubject
 
 

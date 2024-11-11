@@ -3,7 +3,7 @@ from abc import ABC
 from typing import TypeVar, Union
 
 from probcal.active_learning.configs import ActiveLearningConfig
-from probcal.active_learning.types import (
+from probcal.active_learning.active_learning_types import (
     ActiveLearningEvaluationResults,
     IActiveLearningDataModuleDelegate,
 )
@@ -26,7 +26,7 @@ class ActiveLearningProcedure(
     config: ActiveLearningConfig
 
     def __init__(self, dataset: ActiveLearningDataModule, config: ActiveLearningConfig):
-        super().__init__(ActiveLearningProcedure, self)
+        super().__init__()
         self.dataset = dataset
         self.config = config
         self.cal_evaluator = CalibrationEvaluator(config.settings)

@@ -22,8 +22,8 @@ class ActiveLearningDataModule(ProbCalDataModule):
         full_dataset: Union[Sized, Dataset],
         config: ActiveLearningConfig,
         batch_size: int,
-        num_workers: int,
-        persistent_workers: bool,
+        num_workers: int=1,
+        persistent_workers: bool=False,
         train_val_split: tuple[float, float] = (0.7, 0.1),
         seed=1998
     ):

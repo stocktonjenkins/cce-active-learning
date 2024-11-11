@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, Union, List, Set
 
 
 SubjectState = TypeVar('SubjectState')
@@ -13,7 +13,7 @@ class ISubject(ABC, Generic[SubjectState]):
     _state: SubjectState
 
     @abstractmethod
-    def attach(self, observer: "IObserver" | list["IObserver"]) -> None:
+    def attach(self, observer: Union["IObserver", List["IObserver"]]) -> None:
         """
         Attach an observer to the subject.
         """
@@ -44,7 +44,7 @@ class Subject(ISubject[SubjectState]):
         super().__init__()
         self._observers = set()
 
-    def attach(self, observer: list["IObserver"] | "IObserver") -> None:
+    def attach(self, observer: Union[List["IObserver"], "IObserver"]) -> None:
         if isinstance(observer, list):
             self._observers.update(observer)
         else:
