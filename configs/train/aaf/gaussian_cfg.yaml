@@ -9,7 +9,7 @@ training:
   batch_size: 32
   chkp_dir: chkp
   chkp_freq: 200
-  num_epochs: 200
+  num_epochs: 1
   precision: bf16-mixed
   optimizer:
     type: adam_w

@@ -1,6 +1,8 @@
 num_iter: 10
-label_k: 5
+label_k: 143
 init_num_labeled: 100
 procedure_type: cce
+model_ckpt_freq: 5
+update_validation_set: false
 settings:
   device: cuda
