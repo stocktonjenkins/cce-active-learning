@@ -16,13 +16,14 @@ from probcal.models.discrete_regression_nn import DiscreteRegressionNN
 from probcal.training.train_model import train_procedure
 from probcal.utils.configs import TrainingConfig
 from probcal.utils.experiment_utils import get_model, get_datamodule, get_chkp_callbacks
+from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger
 
 
 def pipeline(
     model: DiscreteRegressionNN,
     train_config: TrainingConfig,
     active_learn: ActiveLearningProcedure,
-    # logger: Logger | bool,
+    logger,
 ):
     for al_iter in range(active_learn.config.num_iter):
         chkp_dir = (
@@ -38,7 +39,7 @@ def pipeline(
             callbacks=get_chkp_callbacks(chkp_dir, chkp_freq=train_config.num_epochs),
             # Don't know if we need to log the model over every AL iteration?
             # Can we just evaluate the performance at the end of training?
-            logger=False,
+            logger=logger,
         )
         # notify (log) after step in base class?
         active_learn.eval(model)  # use self.dataset to eval model
@@ -80,7 +81,7 @@ if __name__ == "__main__":
     )
     _active_learn.attach(
         [
-            ActiveLearningModelAccuracyLogger(),
+            ActiveLearningModelAccuracyLogger(args.logger),
             ActiveLearningAverageCCELogger(),
             # Add logging to save the model's results at the end of each AL iteration
             #  - End product: chart -> model accuracy (vs number of labels)
@@ -88,10 +89,18 @@ if __name__ == "__main__":
             #  - others???
         ]
     )
+    logger = (
+        CSVLogger(save_dir=_train_config.log_dir, name=_train_config.experiment_name)
+        if args.logger == "csv" else
+        TensorBoardLogger(save_dir=_train_config.log_dir, name=_train_config.experiment_name)
+        if args.logger == "tboard"
+        else True
+    )
     pipeline(
         model=get_model(_train_config),
         train_config=_train_config,
         active_learn=_active_learn,
+        logger=logger,
         # logger=(
         #     CSVLogger(save_dir=_train_config.log_dir, name=_train_config.experiment_name)
         #     if args.logger == "csv" else
