@@ -25,8 +25,6 @@ def train_procedure(
 ):
     trainer = L.Trainer(
         accelerator=config.accelerator_type.value,
-        strategy="ddp",
-        devices=2,
         min_epochs=config.num_epochs,
         max_epochs=config.num_epochs,
         log_every_n_steps=2,
