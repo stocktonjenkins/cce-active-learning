@@ -64,11 +64,15 @@ class OodBlurCocoPeopleDataModule(COCOPeopleDataModule):
         persistent_workers: bool,
         surface_image_path: bool = False,
     ):
-        super().__init__(root_dir, batch_size, num_workers, persistent_workers, surface_image_path)
+        super().__init__(
+            root_dir, batch_size, num_workers, persistent_workers, surface_image_path
+        )
 
     def setup(self, stage, *args, **kwargs):
         if stage != "test":
-            raise ValueError(f"Invalid stage: {stage}. Only 'test' is supported for OOD class")
+            raise ValueError(
+                f"Invalid stage: {stage}. Only 'test' is supported for OOD class"
+            )
 
         resize = Resize((self.IMG_SIZE, self.IMG_SIZE))
         ood_transform = GaussianBlur(
@@ -99,11 +103,15 @@ class OodMixupCocoPeopleDataModule(COCOPeopleDataModule):
         persistent_workers: bool,
         surface_image_path: bool = False,
     ):
-        super().__init__(root_dir, batch_size, num_workers, persistent_workers, surface_image_path)
+        super().__init__(
+            root_dir, batch_size, num_workers, persistent_workers, surface_image_path
+        )
 
     def setup(self, stage, *args, **kwargs):
         if stage != "test":
-            raise ValueError(f"Invalid stage: {stage}. Only 'test' is supported for OOD class")
+            raise ValueError(
+                f"Invalid stage: {stage}. Only 'test' is supported for OOD class"
+            )
 
         resize = Resize((self.IMG_SIZE, self.IMG_SIZE))
         normalize = Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
@@ -133,11 +141,15 @@ class OodLabelNoiseCocoPeopleDataModule(COCOPeopleDataModule):
         persistent_workers: bool,
         surface_image_path: bool = False,
     ):
-        super().__init__(root_dir, batch_size, num_workers, persistent_workers, surface_image_path)
+        super().__init__(
+            root_dir, batch_size, num_workers, persistent_workers, surface_image_path
+        )
 
     def setup(self, stage, *args, **kwargs):
         if stage != "test":
-            raise ValueError(f"Invalid stage: {stage}. Only 'test' is supported for OOD class")
+            raise ValueError(
+                f"Invalid stage: {stage}. Only 'test' is supported for OOD class"
+            )
 
         resize = Resize((self.IMG_SIZE, self.IMG_SIZE))
         normalize = Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))

@@ -36,12 +36,16 @@ class DiscreteRandomVariable:
         self.max_value = max_value
         self.use_torch = use_torch
         if use_torch and device is None:
-            raise ValueError("Must specify device to perform inference on if using torch.")
+            raise ValueError(
+                "Must specify device to perform inference on if using torch."
+            )
         self.device = device
         self._pmf_vals = None
         self._cdf_vals = None
 
-    def pmf(self, x: int | np.ndarray | torch.Tensor) -> float | np.ndarray | torch.Tensor:
+    def pmf(
+        self, x: int | np.ndarray | torch.Tensor
+    ) -> float | np.ndarray | torch.Tensor:
         """Compute the probability of this random variable taking the value(s) x.
 
         Args:
@@ -62,7 +66,9 @@ class DiscreteRandomVariable:
 
         return result
 
-    def ppf(self, q: float | np.ndarray | torch.Tensor) -> int | float | np.ndarray | torch.Tensor:
+    def ppf(
+        self, q: float | np.ndarray | torch.Tensor
+    ) -> int | float | np.ndarray | torch.Tensor:
         """Return the smallest possible value of this random variable at which the probability mass to the left is greater than or equal to `q`.
 
         If q is a scalar, returns a (`self.dimension`,) array/tensor with the inverse cdf values at q for each distribution represented by this random variable.
@@ -78,7 +84,11 @@ class DiscreteRandomVariable:
             int | np.ndarray | torch.Tensor: The smallest value(s) at which this distribution has mass >= `q` to the left of it.
         """
         if not isinstance(q, Iterable):
-            q = np.array([q]) if not self.use_torch else torch.tensor([q], device=self.device)
+            q = (
+                np.array([q])
+                if not self.use_torch
+                else torch.tensor([q], device=self.device)
+            )
 
         if q.shape not in {(1,), (self.dimension,)}:
             raise ValueError(
@@ -104,7 +114,9 @@ class DiscreteRandomVariable:
             return inverse_cdf.item()
         return inverse_cdf
 
-    def cdf(self, x: int | np.ndarray | torch.Tensor) -> float | np.ndarray | torch.Tensor:
+    def cdf(
+        self, x: int | np.ndarray | torch.Tensor
+    ) -> float | np.ndarray | torch.Tensor:
         """Compute the probability of this random variable taking a value <= x.
 
         Args:
@@ -124,7 +136,9 @@ class DiscreteRandomVariable:
                 return result.item()
         return result
 
-    def rvs(self, size: int | tuple, verbose: bool = False) -> int | np.ndarray | torch.Tensor:
+    def rvs(
+        self, size: int | tuple, verbose: bool = False
+    ) -> int | np.ndarray | torch.Tensor:
         """Draw a sample of the given size from this random variable.
 
         If `self.dimension` > 1, the `size` argument must be (n, `self.dimension`) (corresponding to n samples along each dimension).
@@ -154,7 +168,9 @@ class DiscreteRandomVariable:
             draws = torch.zeros(size=size, device=self.device)
 
         n = size[0]
-        iterable = range(n) if not verbose else tqdm(range(n), desc="Sampling...", total=n)
+        iterable = (
+            range(n) if not verbose else tqdm(range(n), desc="Sampling...", total=n)
+        )
         for i in iterable:
             draws[i] = self.ppf(U[i])
 
@@ -194,10 +210,16 @@ class DiscreteRandomVariable:
 
     def _expected_value(self) -> float | np.ndarray | torch.Tensor:
         """Return the expected value of this random variable."""
-        support = torch.arange(0, self.max_value) if self.use_torch else np.arange(self.max_value)
+        support = (
+            torch.arange(0, self.max_value)
+            if self.use_torch
+            else np.arange(self.max_value)
+        )
         return (self.pmf_vals * support).sum()
 
-    def _pmf(self, x: int | np.ndarray | torch.Tensor) -> float | np.ndarray | torch.Tensor:
+    def _pmf(
+        self, x: int | np.ndarray | torch.Tensor
+    ) -> float | np.ndarray | torch.Tensor:
         """Calculate the probability that this random variable takes on the value(s) x. Does not need to be normalized.
 
         Args:

@@ -2,6 +2,8 @@ import abc
 from abc import ABC
 from typing import TypeVar, Union
 
+import lightning
+
 from probcal.active_learning.configs import ActiveLearningConfig
 from probcal.active_learning.active_learning_types import (
     ActiveLearningEvaluationResults,
@@ -24,6 +26,7 @@ class ActiveLearningProcedure(
 ):
     dataset: ActiveLearningDataModule
     config: ActiveLearningConfig
+    _iteration: int = 0
 
     def __init__(self, dataset: ActiveLearningDataModule, config: ActiveLearningConfig):
         super().__init__()
@@ -31,7 +34,7 @@ class ActiveLearningProcedure(
         self.config = config
         self.cal_evaluator = CalibrationEvaluator(config.settings)
 
-    def eval(self, model: DiscreteRegressionNN):
+    def eval(self, trainer: lightning.Trainer, model: DiscreteRegressionNN):
         """
         Evaluate the given model in this active learning procedure.
             - Model accuracy
@@ -39,26 +42,29 @@ class ActiveLearningProcedure(
             - Other?
         Also updates the state to send to observers.
         Args:
+            trainer: the lightning trainer used to train the model.
             model: the regression model to evaluate
         Returns:
 
         """
-        evaluation = self._eval_impl(model)
-        # breakpoint()
+        evaluation = self._eval_impl(trainer, model)
         self.update_state(evaluation)
 
     @abc.abstractmethod
-    def _eval_impl(self, model: DiscreteRegressionNN) -> EvalState:
+    def _eval_impl(
+        self, trainer: lightning.Trainer, model: DiscreteRegressionNN
+    ) -> EvalState:
         pass
 
-    def step(self):
+    def step(self, model: DiscreteRegressionNN):
         """
         Update `self.dataset` to include pool the unlabeled samples
         from AL into the training pool
         Returns:
             None
         """
-        self.dataset.step(self)
+        self.dataset.step(self, model)
+        self._iteration += 1
         self.notify()
 
     def update_state(self, evaluation: EvalState):

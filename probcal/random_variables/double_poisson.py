@@ -57,12 +57,15 @@ class DoublePoisson(DiscreteRandomVariable):
         """Return the expected value of this DoublePoisson distribution."""
         return self.mu
 
-    def _pmf(self, x: int | np.ndarray | torch.Tensor) -> float | np.ndarray | torch.Tensor:
+    def _pmf(
+        self, x: int | np.ndarray | torch.Tensor
+    ) -> float | np.ndarray | torch.Tensor:
         exp = np.exp if not self.use_torch else torch.exp
         return exp(self._logpmf(x))
 
-    def _logpmf(self, x: int | np.ndarray | torch.Tensor) -> float | np.ndarray | torch.Tensor:
-
+    def _logpmf(
+        self, x: int | np.ndarray | torch.Tensor
+    ) -> float | np.ndarray | torch.Tensor:
         if not self.use_torch:
             x = np.array(x)
             return (
@@ -83,6 +86,8 @@ class DoublePoisson(DiscreteRandomVariable):
                 + self.phi * (x + torch.xlogy(x, self.mu) - torch.xlogy(x, x))
             )
 
-    def log_prob(self, x: int | np.ndarray | torch.Tensor) -> float | np.ndarray | torch.Tensor:
+    def log_prob(
+        self, x: int | np.ndarray | torch.Tensor
+    ) -> float | np.ndarray | torch.Tensor:
         """Helper function for compatibility with PyTorch distributions."""
         return self._logpmf(x)

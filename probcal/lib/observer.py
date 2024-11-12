@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import TypeVar, Generic, Union, List, Set
 
 
-SubjectState = TypeVar('SubjectState')
+SubjectState = TypeVar("SubjectState")
 
 
 class ISubject(ABC, Generic[SubjectState]):

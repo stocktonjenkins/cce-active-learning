@@ -14,7 +14,9 @@ def get_yaml(fpath) -> dict:
 def to_snake_case(string: str) -> str:
     """Convert the given string to snake case."""
     return "_".join(
-        sub("([A-Z][a-z]+)", r" \1", sub("([A-Z]+)", r" \1", string.replace("-", " "))).split()
+        sub(
+            "([A-Z][a-z]+)", r" \1", sub("([A-Z]+)", r" \1", string.replace("-", " "))
+        ).split()
     ).lower()
 
 

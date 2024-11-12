@@ -31,7 +31,9 @@ def mk_log_dir(log_dir, exp_name):
         None: This function does not return a value but creates directories as needed.
     """
 
-    log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), log_dir, exp_name)
+    log_dir = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), log_dir, exp_name
+    )
     log_file = os.path.join(log_dir, "log.txt")
     if not os.path.exists("logs"):
         os.makedirs("logs")
@@ -41,7 +43,6 @@ def mk_log_dir(log_dir, exp_name):
 
 
 def get_y_kernel(Y_true: torch.Tensor, gamma: str | float):
-
     if gamma == "auto":
         return partial(rbf_kernel, gamma=1 / (2 * Y_true.float().var()))
     elif isinstance(gamma, float):
@@ -90,7 +91,11 @@ def main(cfg: dict) -> None:
     )
     embedder.eval()
 
-    n = cfg["data"]["test_examples"] if cfg["data"]["test_examples"] else len(test_loader)
+    n = (
+        cfg["data"]["test_examples"]
+        if cfg["data"]["test_examples"]
+        else len(test_loader)
+    )
     m = cfg["data"]["n_samples"]
     X = torch.zeros((n, 512))  # image embeddings
     Y_true = torch.zeros((n, 1))  # true labels
@@ -132,7 +137,9 @@ def main(cfg: dict) -> None:
         disc_support = torch.arange(0, imgs_to_plot_true.max() + 5)
         dist_func = torch.exp(rv.log_prob(disc_support))
         axs[i, 1].plot(disc_support, dist_func)
-        axs[i, 1].scatter(imgs_to_plot_true[i], 0, color="black", marker="*", s=50, zorder=100)
+        axs[i, 1].scatter(
+            imgs_to_plot_true[i], 0, color="black", marker="*", s=50, zorder=100
+        )
 
     plt.savefig(os.path.join(log_dir, "input_images.png"))
 

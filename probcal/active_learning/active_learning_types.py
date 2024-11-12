@@ -6,37 +6,31 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 import numpy as np
 from typing import List
 from probcal.evaluation.calibration_evaluator import CalibrationResults
+from probcal.models.discrete_regression_nn import DiscreteRegressionNN
 
 
 class IActiveLearningDataModuleDelegate(abc.ABC):
     @abc.abstractmethod
-    def get_next_label_set(self, unlabeled_indices: np.ndarray, k: int) -> np.ndarray:
+    def get_next_label_set(
+        self, unlabeled_indices: np.ndarray, k: int, model: DiscreteRegressionNN
+    ) -> np.ndarray:
         pass
 
 
 @dataclass
 class ModelAccuracyResults:
-    accuracy: float = 0.0
-    precision: float = 0.0
-    recall: float = 0.0
-    f1_score: float = 0.0
-
-    @classmethod
-    def from_predictions(cls, y_true: torch.Tensor, y_pred: torch.Tensor) -> "ModelAccuracyResults":
-        accuracy = accuracy_score(y_true, y_pred)
-        precision = precision_score(y_true, y_pred, average='weighted')
-        recall = recall_score(y_true, y_pred, average='weighted')
-        f1 = f1_score(y_true, y_pred, average='weighted')
-        return cls(
-            accuracy=accuracy,
-            precision=precision,
-            recall=recall,
-            f1_score=f1
-        )
+    test_loss: float
+    test_mae: float
+    test_rmse: float
+    nll: float
 
 
 @dataclass
 class ActiveLearningEvaluationResults:
+    iteration: int
+    train_set_size: int
+    val_set_size: int
+    unlabeled_set_size: int
     calibration_results: CalibrationResults
     model_accuracy_results: ModelAccuracyResults
 
@@ -44,4 +38,3 @@ class ActiveLearningEvaluationResults:
 @dataclass
 class RandomProcedureResults(ActiveLearningEvaluationResults):
     pass
-

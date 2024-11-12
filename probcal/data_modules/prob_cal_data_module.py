@@ -40,7 +40,7 @@ class ProbCalDataModule(LightningDataModule):
         num_workers: int,
         persistent_workers: bool,
         train_val_split: tuple[float, float] = (0.7, 0.1),
-        seed=1998
+        seed=1998,
     ):
         super(ProbCalDataModule, self).__init__()
         self.batch_size = batch_size
@@ -58,21 +58,18 @@ class ProbCalDataModule(LightningDataModule):
         generator = np.random.default_rng(seed=seed)
         self.shuffled_indices = generator.permutation(np.arange(num_instances))
         self.train_indices = self.shuffled_indices[:num_train]
-        self.val_indices = self.shuffled_indices[num_train: num_train + num_val]
-        self.test_indices = self.shuffled_indices[num_train + num_val:]
+        self.val_indices = self.shuffled_indices[num_train : num_train + num_val]
+        self.test_indices = self.shuffled_indices[num_train + num_val :]
 
     def _init_transforms(self):
         resize = Resize((self.IMG_SIZE, self.IMG_SIZE))
         augment = AutoAugment()
-        normalize = Normalize(
-            mean=self.IMAGE_NET_MEAN,
-            std=self.IMAGE_NET_STD
-        )
+        normalize = Normalize(mean=self.IMAGE_NET_MEAN, std=self.IMAGE_NET_STD)
         to_tensor = ToTensor()
         self.train_transforms = [resize, augment, to_tensor, normalize]
         self.inference_transforms = [resize, to_tensor, normalize]
 
-    def setup(self, stage: Literal['fit', 'validate', 'test', 'predict']) -> None:
+    def setup(self, stage: Literal["fit", "validate", "test", "predict"]) -> None:
         self.train = ImageDatasetWrapper(
             base_dataset=Subset(self.full_dataset, self.train_indices),
             transforms=Compose(self.train_transforms),

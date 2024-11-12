@@ -221,7 +221,9 @@ class DiscreteRegressionNN(L.LightningModule):
     ) -> torch.distributions.Distribution | DiscreteRandomVariable:
         raise NotImplementedError("Should be implemented by subclass.")
 
-    def _point_prediction_impl(self, y_hat: torch.Tensor, training: bool) -> torch.Tensor:
+    def _point_prediction_impl(
+        self, y_hat: torch.Tensor, training: bool
+    ) -> torch.Tensor:
         raise NotImplementedError("Should be implemented by subclass.")
 
     def _addl_test_metrics_dict(self) -> dict[str, Metric]:

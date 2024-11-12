@@ -33,7 +33,9 @@ from probcal.training.losses import neg_binom_nll
 
 
 def embed_data_in_2d(
-    train_embeddings: torch.Tensor, val_embeddings: torch.Tensor, test_embeddings: torch.Tensor
+    train_embeddings: torch.Tensor,
+    val_embeddings: torch.Tensor,
+    test_embeddings: torch.Tensor,
 ) -> tuple[torch.Tensor, torch.Tensor]:
     all_embeddings_numpy = (
         torch.cat([train_embeddings, val_embeddings, test_embeddings]).detach().numpy()
@@ -49,7 +51,6 @@ def draw_mcmd_samples_and_compute_losses(
     datamodule: L.LightningDataModule,
     test_embeddings: torch.Tensor,
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-
     if isinstance(model, DoublePoissonNN):
         loss_fn = double_poisson_nll
     elif isinstance(model, GaussianNN):
@@ -86,7 +87,9 @@ def draw_mcmd_samples_and_compute_losses(
     return x, y, x_prime, y_prime, losses
 
 
-def create_training_data_density_plot(train_embeddings_2d: torch.Tensor, save_path: Path):
+def create_training_data_density_plot(
+    train_embeddings_2d: torch.Tensor, save_path: Path
+):
     min_x, max_x = (
         train_embeddings_2d[:, 0].detach().numpy().min(),
         train_embeddings_2d[:, 0].detach().numpy().max(),
@@ -100,7 +103,9 @@ def create_training_data_density_plot(train_embeddings_2d: torch.Tensor, save_pa
     ax.set_title("Training Data Density")
     kde = gaussian_kde(train_embeddings_2d.T)
     grid_x, grid_y = np.mgrid[min_x:max_x:300j, min_y:max_y:300j]
-    grid_densities = kde(np.vstack([grid_x.flatten(), grid_y.flatten()])).reshape(grid_x.shape)
+    grid_densities = kde(np.vstack([grid_x.flatten(), grid_y.flatten()])).reshape(
+        grid_x.shape
+    )
     ax.contourf(grid_x, grid_y, grid_densities, levels=10, cmap="viridis")
     fig.savefig(save_path, dpi=150)
 
@@ -116,7 +121,9 @@ def get_meshgrid_test_embeddings(
         test_embeddings_2d[:, 1].detach().numpy().min(),
         test_embeddings_2d[:, 1].detach().numpy().max(),
     )
-    grid_x, grid_y = np.mgrid[min_x : max_x : granularity * 1j, min_y : max_y : granularity * 1j]
+    grid_x, grid_y = np.mgrid[
+        min_x : max_x : granularity * 1j, min_y : max_y : granularity * 1j
+    ]
     return grid_x, grid_y
 
 
@@ -129,7 +136,9 @@ def create_test_target_plot(
     fig, ax = plt.subplots(1, 1, figsize=(5, 4))
     ax: plt.Axes
     ax.set_title("Test Data (projected to 2d)")
-    grid_data = griddata(test_embeddings_2d, targets.detach().numpy(), meshgrid, method="linear")
+    grid_data = griddata(
+        test_embeddings_2d, targets.detach().numpy(), meshgrid, method="linear"
+    )
     mappable = ax.contourf(*meshgrid, grid_data, levels=5, cmap="viridis")
     fig.colorbar(mappable, ax=ax)
     fig.savefig(save_path, dpi=150)
@@ -180,8 +189,24 @@ def create_mcmd_best_worst_plot(
         axs[1, i].set_title(f"MCMD: {mcmd_vals[least_aligned[i]]:.4f}", fontsize=10)
         axs[1, i].imshow(resize(datamodule.test.base[least_aligned[i]][0]))
 
-    fig.text(0.1, 0.7, "Lowest MCMD", va="center", ha="center", rotation="vertical", fontsize=10)
-    fig.text(0.1, 0.3, "Highest MCMD", va="center", ha="center", rotation="vertical", fontsize=10)
+    fig.text(
+        0.1,
+        0.7,
+        "Lowest MCMD",
+        va="center",
+        ha="center",
+        rotation="vertical",
+        fontsize=10,
+    )
+    fig.text(
+        0.1,
+        0.3,
+        "Highest MCMD",
+        va="center",
+        ha="center",
+        rotation="vertical",
+        fontsize=10,
+    )
     [ax.axis("off") for ax in axs.ravel()]
     fig.savefig(save_path, dpi=150)
 
@@ -193,7 +218,6 @@ def main(
     save_folder: Path,
     num_highest_lowest_mcmd: int = 5,
 ):
-
     if not save_folder.exists():
         os.makedirs(save_folder)
 
@@ -203,9 +227,13 @@ def main(
     datamodule.prepare_data()
     datamodule.setup("fit")
 
-    train_embeddings = torch.load(embeddings_dir / "train_embeddings.pt", weights_only=True)
+    train_embeddings = torch.load(
+        embeddings_dir / "train_embeddings.pt", weights_only=True
+    )
     val_embeddings = torch.load(embeddings_dir / "val_embeddings.pt", weights_only=True)
-    test_embeddings = torch.load(embeddings_dir / "test_embeddings.pt", weights_only=True)
+    test_embeddings = torch.load(
+        embeddings_dir / "test_embeddings.pt", weights_only=True
+    )
 
     print("Running TSNE to project data to 2d...")
     train_embeddings_2d, test_embeddings_2d = embed_data_in_2d(
@@ -240,12 +268,17 @@ def main(
         train_embeddings_2d, save_path=save_folder / "training_densities.pdf"
     )
     create_test_target_plot(
-        test_embeddings_2d, meshgrid, targets=y, save_path=save_folder / "test_targets.pdf"
+        test_embeddings_2d,
+        meshgrid,
+        targets=y,
+        save_path=save_folder / "test_targets.pdf",
     )
     create_mcmd_plot(
         test_embeddings_2d, meshgrid, mcmd_vals, save_path=save_folder / "test_mcmd.pdf"
     )
-    create_loss_plot(test_embeddings_2d, meshgrid, losses, save_path=save_folder / "test_loss.pdf")
+    create_loss_plot(
+        test_embeddings_2d, meshgrid, losses, save_path=save_folder / "test_loss.pdf"
+    )
     create_mcmd_best_worst_plot(
         datamodule,
         mcmd_vals,
@@ -258,7 +291,15 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument(
         "--model-type",
-        choices=["ddpn", "faithful", "natural", "gaussian", "seitzer", "poisson", "nbinom"],
+        choices=[
+            "ddpn",
+            "faithful",
+            "natural",
+            "gaussian",
+            "seitzer",
+            "poisson",
+            "nbinom",
+        ],
     )
     parser.add_argument("--model-ckpt", type=str)
     parser.add_argument(

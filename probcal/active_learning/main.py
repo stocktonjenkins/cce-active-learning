@@ -1,5 +1,7 @@
+import os.path
+import shutil
 from argparse import Namespace, ArgumentParser
-
+from logging import Logger
 
 from probcal.active_learning.configs import ActiveLearningConfig
 from probcal.active_learning.active_learning_logger.active_learning_average_cce_logger import (
@@ -19,32 +21,54 @@ from probcal.utils.experiment_utils import get_model, get_datamodule, get_chkp_c
 from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger
 
 
+def get_logger(
+    train_config: TrainingConfig,
+    logger_type: str,
+    log_dirname: str,
+    version: str,
+) -> Logger | bool:
+    logger_args = {
+        "save_dir": train_config.log_dir,
+        "name": log_dirname,
+        "version": version,
+    }
+    return (
+        CSVLogger(**logger_args)
+        if logger_type == "csv"
+        else TensorBoardLogger(**logger_args)
+        if logger_type == "tboard"
+        else True
+    )
+
+
 def pipeline(
     model: DiscreteRegressionNN,
     train_config: TrainingConfig,
     active_learn: ActiveLearningProcedure,
-    logger,
+    logger_type: str,
+    log_dirname: str,
 ):
     for al_iter in range(active_learn.config.num_iter):
-        chkp_dir = (
-            train_config.chkp_dir
-            / train_config.experiment_name
-            / f"{active_learn.__class__.__name__}_al_iter_{al_iter}"
-        )
-        train_procedure(  # TODO: make sure the parameters for the model reference update
+        al_iter_name = f"al_iter_{al_iter}"
+
+        chkp_dir = train_config.chkp_dir / log_dirname / al_iter_name
+        trainer = train_procedure(
             model,
             datamodule=active_learn.dataset,
             config=train_config,
-            # Checkpoints for model at the END of each AL iteration
-            callbacks=get_chkp_callbacks(chkp_dir, chkp_freq=train_config.num_epochs),
-            # Don't know if we need to log the model over every AL iteration?
-            # Can we just evaluate the performance at the end of training?
-            logger=logger,
+            callbacks=(
+                get_chkp_callbacks(chkp_dir, chkp_freq=train_config.num_epochs)
+                if al_iter % active_learn.config.model_ckpt_freq == 0
+                else None
+            ),
+            logger=(
+                get_logger(train_config, logger_type, log_dirname, al_iter_name)
+                if al_iter % active_learn.config.model_ckpt_freq == 0
+                else None
+            ),
         )
-        # notify (log) after step in base class?
-        active_learn.eval(model)  # use self.dataset to eval model
-        # Update dataset object
-        active_learn.step()
+        active_learn.eval(trainer, model)
+        active_learn.step(model)
 
 
 def parse_args() -> Namespace:
@@ -74,38 +98,29 @@ if __name__ == "__main__":
         "config": al_config,  # Assuming config is part of TrainingConfig
         # "persistent_workers": _train_config.persistent_workers,  # Add this field to TrainingConfig if not present
     }
-    
+
     _active_learn = Procedure(
         dataset=ActiveLearningDataModule(**active_learning_data_module_args),
         config=al_config,
     )
+    _log_dirname = f"{al_config.procedure_type}__{_train_config.experiment_name}"
+    os.makedirs(os.path.join("logs", _log_dirname), exist_ok=True)
+
     _active_learn.attach(
         [
-            ActiveLearningModelAccuracyLogger(args.logger),
-            ActiveLearningAverageCCELogger(),
-            # Add logging to save the model's results at the end of each AL iteration
-            #  - End product: chart -> model accuracy (vs number of labels)
-            #  - End product: chart -> average CCE (vs number of labels)
-            #  - others???
+            ActiveLearningModelAccuracyLogger(
+                path=os.path.join("logs", _log_dirname, f"al_model_acc.log")
+            ),
+            ActiveLearningAverageCCELogger(
+                path=os.path.join("logs", _log_dirname, f"al_model_calibration.log")
+            ),
         ]
     )
-    logger = (
-        CSVLogger(save_dir=_train_config.log_dir, name=_train_config.experiment_name)
-        if args.logger == "csv" else
-        TensorBoardLogger(save_dir=_train_config.log_dir, name=_train_config.experiment_name)
-        if args.logger == "tboard"
-        else True
-    )
+    shutil.copy(args.al_config, os.path.join("logs", _log_dirname, "al_config.yaml"))
     pipeline(
         model=get_model(_train_config),
         train_config=_train_config,
         active_learn=_active_learn,
-        logger=logger,
-        # logger=(
-        #     CSVLogger(save_dir=_train_config.log_dir, name=_train_config.experiment_name)
-        #     if args.logger == "csv" else
-        #     TensorBoardLogger(save_dir=_train_config.log_dir, name=_train_config.experiment_name)
-        #     if args.logger == "tboard"
-        #     else True
-        # )
+        logger_type=args.logger,
+        log_dirname=_log_dirname,
     )

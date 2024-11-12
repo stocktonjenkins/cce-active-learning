@@ -19,7 +19,6 @@ from probcal.utils.experiment_utils import get_model
 
 
 def main(config_path: Path):
-
     config = EvaluationConfig.from_yaml(config_path)
     if not config.log_dir.exists():
         os.makedirs(config.log_dir)
@@ -30,7 +29,9 @@ def main(config_path: Path):
         config.batch_size,
     )
 
-    initializer: Type[DiscreteRegressionNN] = get_model(config, return_initializer=True)[1]
+    initializer: Type[DiscreteRegressionNN] = get_model(
+        config, return_initializer=True
+    )[1]
     model = initializer.load_from_checkpoint(config.model_ckpt_path)
     evaluator = L.Trainer(
         accelerator=config.accelerator_type.value,

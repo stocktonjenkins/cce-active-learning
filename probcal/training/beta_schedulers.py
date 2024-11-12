@@ -10,8 +10,9 @@ class BetaScheduler:
         last_epoch (int, optional): Epoch at which beta should achieve `beta_1`. Defaults to 1000.
     """
 
-    def __init__(self, beta_0: float = 0.0, beta_1: float = 0.0, last_epoch: int = 1000):
-
+    def __init__(
+        self, beta_0: float = 0.0, beta_1: float = 0.0, last_epoch: int = 1000
+    ):
         if (beta_0 < 0 or beta_0 > 1) or (beta_1 < 0 or beta_1 > 1):
             raise ValueError(
                 f"Both `beta_0` and `beta_1` should be in [0, 1]. Got {beta_0, beta_1}"

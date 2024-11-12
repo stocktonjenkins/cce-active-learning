@@ -13,7 +13,6 @@ from PIL.Image import Image as PILImage
 from torch.utils.data import Dataset
 
 
-
 class AAFDataset(Dataset):
     """The All-Age-Faces (AAF) Dataset contains 13'322 face images (mostly Asian)
     distributed across all ages (from 2 to 80), including 7381 females and 5941 males."""
@@ -65,7 +64,6 @@ class AAFDataset(Dataset):
         )
 
     def _download(self):
-
         # Download raw folder
         print("Downloading zipped file...")
         zip_file_name = "All-Age-Faces Dataset"
@@ -74,7 +72,9 @@ class AAFDataset(Dataset):
         unpack_archive(output_path, self.root_dir)
 
         # Setup annotations files
-        input_txt_file1 = str(self.root_dir / zip_file_name / "image sets" / "train.txt")
+        input_txt_file1 = str(
+            self.root_dir / zip_file_name / "image sets" / "train.txt"
+        )
         input_txt_file2 = str(self.root_dir / zip_file_name / "image sets" / "val.txt")
         output_csv_file = str(self.annotations_csv_path)
 
@@ -82,7 +82,6 @@ class AAFDataset(Dataset):
         with open(input_txt_file1, "r") as txt_file1, open(
             input_txt_file2, "r"
         ) as txt_file2, open(output_csv_file, "w") as csv_file:
-
             csv_writer = csv.writer(csv_file)
             csv_writer.writerow(["image_path", "age", "gender"])
 
@@ -112,7 +111,9 @@ class AAFDataset(Dataset):
         annotations = str(self.annotations_csv_path)
         return pd.read_csv(annotations)
 
-    def __getitem__(self, idx: int) -> tuple[PILImage, int] | tuple[PILImage, tuple[str, int]]:
+    def __getitem__(
+        self, idx: int
+    ) -> tuple[PILImage, int] | tuple[PILImage, tuple[str, int]]:
         row = self.instances.iloc[idx]
         image_path = str(self.image_dir / row["image_path"])
         image = Image.open(image_path)

@@ -16,7 +16,9 @@ from torch.utils.data import Dataset
 class COCOPeopleDataset(Dataset):
     """Subset of COCO with images containing people (labeled with the count of people in each image)."""
 
-    ANNOTATIONS_URL = "http://images.cocodataset.org/annotations/annotations_trainval2017.zip"
+    ANNOTATIONS_URL = (
+        "http://images.cocodataset.org/annotations/annotations_trainval2017.zip"
+    )
     PERSON_CATEGORY_ID = 1
 
     def __init__(
@@ -73,11 +75,15 @@ class COCOPeopleDataset(Dataset):
     def _download(self):
         if not self.annotations_json_path.exists():
             print("Downloading annotations file...")
-            annotations_zip_fname = wget.download(self.ANNOTATIONS_URL, out=str(self.root_dir))
+            annotations_zip_fname = wget.download(
+                self.ANNOTATIONS_URL, out=str(self.root_dir)
+            )
             unpack_archive(annotations_zip_fname, self.root_dir)
         self.coco_api = COCO(self.annotations_json_path)
 
-        self.image_ids = self.coco_api.getImgIds(catIds=self.PERSON_CATEGORY_ID)[: self.limit]
+        self.image_ids = self.coco_api.getImgIds(catIds=self.PERSON_CATEGORY_ID)[
+            : self.limit
+        ]
         images = self.coco_api.loadImgs(self.image_ids)
         image_urls = []
         self.image_paths = []
@@ -98,7 +104,9 @@ class COCOPeopleDataset(Dataset):
             instances["count"].append(num_people)
         return pd.DataFrame(instances)
 
-    def __getitem__(self, idx: int) -> tuple[PILImage, int] | tuple[PILImage, tuple[str, int]]:
+    def __getitem__(
+        self, idx: int
+    ) -> tuple[PILImage, int] | tuple[PILImage, tuple[str, int]]:
         row = self.instances.iloc[idx]
         image_path = row["image_path"]
         image = Image.open(image_path)

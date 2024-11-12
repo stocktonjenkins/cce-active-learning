@@ -15,7 +15,9 @@ def _compute_discrete_torch_dist_cdf(
     y_vals: torch.Tensor,
     max_val: int = 2000,
 ) -> torch.Tensor:
-    support = torch.arange(max_val, device=y_vals.device).unsqueeze(0).repeat(len(y_vals), 1)
+    support = (
+        torch.arange(max_val, device=y_vals.device).unsqueeze(0).repeat(len(y_vals), 1)
+    )
     probs_over_support: torch.Tensor = dist.log_prob(support).exp()
     probs_over_support *= support <= y_vals.view(-1, 1)
     cdf = probs_over_support.sum(dim=1)
@@ -51,7 +53,9 @@ def compute_regression_ece(
     Returns:
         float: The expected calibration error.
     """
-    TorchDistribution: TypeAlias = torch.distributions.Distribution | DiscreteRandomVariable
+    TorchDistribution: TypeAlias = (
+        torch.distributions.Distribution | DiscreteRandomVariable
+    )
     eps = 1e-5
     p_j = np.linspace(eps, 1 - eps, num=num_bins)
 

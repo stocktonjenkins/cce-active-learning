@@ -127,7 +127,9 @@ class NegBinomNN(DiscreteRegressionNN):
         dist = torch.distributions.NegativeBinomial(total_count=n, probs=failure_prob)
         return dist
 
-    def _point_prediction_impl(self, y_hat: torch.Tensor, training: bool) -> torch.Tensor:
+    def _point_prediction_impl(
+        self, y_hat: torch.Tensor, training: bool
+    ) -> torch.Tensor:
         dist = self.posterior_predictive(y_hat, training)
         return dist.mode
 

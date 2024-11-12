@@ -24,7 +24,9 @@ def double_poisson_nll(
         )
     if beta is not None:
         if beta < 0 or beta > 1:
-            raise ValueError(f"Invalid value of beta specified. Must be in [0, 1]. Got {beta}")
+            raise ValueError(
+                f"Invalid value of beta specified. Must be in [0, 1]. Got {beta}"
+            )
 
     logmu, logphi = torch.split(output, [1, 1], dim=-1)
 
@@ -68,7 +70,9 @@ def gaussian_nll(
         )
     if beta is not None:
         if beta < 0 or beta > 1:
-            raise ValueError(f"Invalid value of beta specified. Must be in [0, 1]. Got {beta}")
+            raise ValueError(
+                f"Invalid value of beta specified. Must be in [0, 1]. Got {beta}"
+            )
 
     mu, logvar = torch.split(outputs, [1, 1], dim=-1)
     losses = 0.5 * (torch.exp(-logvar) * (targets - mu) ** 2 + logvar)
@@ -155,6 +159,8 @@ def natural_gaussian_nll(outputs: torch.Tensor, targets: torch.Tensor) -> torch.
     n = len(outputs)
     target = torch.cat([targets, targets.square()], dim=1)
     inner = torch.einsum("nk,nk->n", target, outputs)
-    log_A = outputs[:, 0].square() / (4 * outputs[:, 1]) + 0.5 * torch.log(-2 * outputs[:, 1])
+    log_A = outputs[:, 0].square() / (4 * outputs[:, 1]) + 0.5 * torch.log(
+        -2 * outputs[:, 1]
+    )
     log_lik = n * C + inner.sum() + log_A.sum()
     return -log_lik / n

@@ -2,7 +2,9 @@
 import torch
 
 
-def rbf_kernel(x: torch.Tensor, x_prime: torch.Tensor, gamma: float | None = None) -> torch.Tensor:
+def rbf_kernel(
+    x: torch.Tensor, x_prime: torch.Tensor, gamma: float | None = None
+) -> torch.Tensor:
     """Pytorch implementation of sklearn's RBF kernel.
 
     Args:

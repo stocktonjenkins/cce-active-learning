@@ -18,7 +18,7 @@ from probcal.data_modules import (
     OodBlurCocoPeopleDataModule,
     OodLabelNoiseCocoPeopleDataModule,
     OodMixupCocoPeopleDataModule,
-    TabularDataModule
+    TabularDataModule,
 )
 from probcal.data_modules.prob_cal_data_module import ProbCalDataModule
 from probcal.enums import DatasetType, HeadType, ImageDatasetName, TextDatasetName
@@ -45,11 +45,13 @@ GLOBAL_DATA_DIR = "data"
 def get_model(
     config: TrainingConfig | EvaluationConfig, return_initializer: bool = False
 ) -> DiscreteRegressionNN:
-
     initializer: Type[DiscreteRegressionNN]
 
     if config.head_type == HeadType.GAUSSIAN:
-        if hasattr(config, "beta_scheduler_type") and config.beta_scheduler_type is not None:
+        if (
+            hasattr(config, "beta_scheduler_type")
+            and config.beta_scheduler_type is not None
+        ):
             initializer = partialclass(
                 GaussianNN,
                 beta_scheduler_type=config.beta_scheduler_type,
@@ -84,7 +86,10 @@ def get_model(
             backbone_type = MNISTCNN
         elif config.dataset_path_or_spec == ImageDatasetName.COCO_PEOPLE:
             backbone_type = ViT
-        elif config.dataset_path_or_spec in (ImageDatasetName.AAF, ImageDatasetName.FG_NET):
+        elif config.dataset_path_or_spec in (
+            ImageDatasetName.AAF,
+            ImageDatasetName.FG_NET,
+        ):
             backbone_type = MobileNetV3
         else:
             backbone_type = MobileNetV3

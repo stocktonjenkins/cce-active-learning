@@ -163,10 +163,14 @@ class MobileNetV3(Backbone):
         """
         super(MobileNetV3, self).__init__(output_dim=output_dim)
 
-        self.backbone = mobilenet_v3_large(weights=MobileNet_V3_Large_Weights.DEFAULT).features
+        self.backbone = mobilenet_v3_large(
+            weights=MobileNet_V3_Large_Weights.DEFAULT
+        ).features
         self.avg_pool = nn.AdaptiveAvgPool2d(output_size=(1, 1))
         self.flatten = nn.Flatten(start_dim=2)
-        self.conv1d = nn.Conv1d(in_channels=960, out_channels=self.output_dim, kernel_size=1)
+        self.conv1d = nn.Conv1d(
+            in_channels=960, out_channels=self.output_dim, kernel_size=1
+        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         h = self.flatten(self.avg_pool(self.backbone(x)))

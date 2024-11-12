@@ -53,7 +53,9 @@ class FGNetDataset(Dataset):
     def _download(self):
         if not self.image_dir.exists():
             print("Downloading data...")
-            annotations_zip_fname = wget.download(self.URL, out=f"{self.root_dir}/fgnet.zip")
+            annotations_zip_fname = wget.download(
+                self.URL, out=f"{self.root_dir}/fgnet.zip"
+            )
             unpack_archive(annotations_zip_fname, self.root_dir)
             rmtree(self.root_dir / "__MACOSX")
             rmtree(self.root_dir / "FGNET" / "Data_files")
@@ -73,7 +75,9 @@ class FGNetDataset(Dataset):
             instances["age"].append(age)
         return pd.DataFrame(instances)
 
-    def __getitem__(self, idx: int) -> tuple[PILImage, int] | tuple[PILImage, tuple[str, int]]:
+    def __getitem__(
+        self, idx: int
+    ) -> tuple[PILImage, int] | tuple[PILImage, tuple[str, int]]:
         row = self.instances.iloc[idx]
         image_path = row["image_path"]
         image = Image.open(image_path).convert("RGB")

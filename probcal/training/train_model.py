@@ -35,11 +35,10 @@ def train_procedure(
         precision=config.precision,
     )
     trainer.fit(model=model, datamodule=datamodule)
-    trainer.test(model=model, datamodule=datamodule)
+    return trainer
 
 
 def main(config: TrainingConfig):
-
     fix_random_seed(config.random_seed)
     datamodule = get_datamodule(
         config.dataset_type,
