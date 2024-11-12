@@ -43,7 +43,6 @@ def get_logger(
 
 
 def pipeline(
-    model: DiscreteRegressionNN,
     train_config: TrainingConfig,
     active_learn: ActiveLearningProcedure,
     logger_type: str,
@@ -51,7 +50,7 @@ def pipeline(
 ):
     for al_iter in range(active_learn.config.num_iter):
         al_iter_name = f"al_iter_{al_iter}"
-
+        model = get_model(_train_config)
         chkp_dir = train_config.chkp_dir / log_dirname / al_iter_name
         trainer = train_procedure(
             model,
@@ -121,7 +120,6 @@ if __name__ == "__main__":
     )
     shutil.copy(args.al_config, os.path.join("logs", _log_dirname, "al_config.yaml"))
     pipeline(
-        model=get_model(_train_config),
         train_config=_train_config,
         active_learn=_active_learn,
         logger_type=args.logger,
