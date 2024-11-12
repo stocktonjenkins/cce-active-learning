@@ -1,4 +1,5 @@
 import os.path
+import torch
 import shutil
 from argparse import Namespace, ArgumentParser
 from logging import Logger
@@ -66,6 +67,7 @@ def pipeline(
                 if al_iter % active_learn.config.model_ckpt_freq == 0
                 else None
             ),
+            validation_rate=active_learn.config.model_ckpt_freq
         )
         active_learn.eval(trainer, model)
         active_learn.step(model)
@@ -80,6 +82,7 @@ def parse_args() -> Namespace:
 
 
 if __name__ == "__main__":
+    torch.set_float32_matmul_precision('medium')
     args = parse_args()
     _train_config = TrainingConfig.from_yaml(args.train_config)
     al_config = ActiveLearningConfig.from_yaml(args.al_config)
