@@ -3,4 +3,4 @@ label_k: 5
 init_num_labeled: 100
 procedure_type: random
 settings:
-  device: cpu
+  device: cuda
