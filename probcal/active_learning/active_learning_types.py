@@ -1,5 +1,7 @@
 import abc
 from dataclasses import dataclass
+
+import torch
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import numpy as np
 from typing import List
@@ -20,7 +22,7 @@ class ModelAccuracyResults:
     f1_score: float = 0.0
 
     @classmethod
-    def from_predictions(cls, y_true: List[int], y_pred: List[int]) -> "ModelAccuracyResults":
+    def from_predictions(cls, y_true: torch.Tensor, y_pred: torch.Tensor) -> "ModelAccuracyResults":
         accuracy = accuracy_score(y_true, y_pred)
         precision = precision_score(y_true, y_pred, average='weighted')
         recall = recall_score(y_true, y_pred, average='weighted')
