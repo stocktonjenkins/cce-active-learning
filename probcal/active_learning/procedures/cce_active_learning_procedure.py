@@ -46,7 +46,7 @@ class CCEProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
     ) -> ActiveLearningEvaluationResults:
         # results = self.cal_evaluator(model, data_module=self.dataset)
         calibration_results = None
-        results = trainer.test(model)
+        results = trainer.test(model, dataloaders=self.dataset)
 
         model_accuracy_results = ModelAccuracyResults(**results[0])
         return ActiveLearningEvaluationResults(
