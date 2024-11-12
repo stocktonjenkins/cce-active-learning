@@ -24,8 +24,6 @@ def train_procedure(
     validation_rate: int = 1,
 ):
     trainer = L.Trainer(
-        # devices=[1],
-        # strategy="auto",
         accelerator=config.accelerator_type.value,
         min_epochs=config.num_epochs,
         max_epochs=config.num_epochs,

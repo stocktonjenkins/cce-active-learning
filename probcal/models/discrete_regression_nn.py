@@ -185,7 +185,7 @@ class DiscreteRegressionNN(L.LightningModule):
 
     def test_step(self, batch: torch.Tensor):
         x, y = batch
-        y_hat = self.all_gather(self.predict(x))
+        y_hat = self.predict(x)
         loss = self.loss_fn(y_hat, y.view(-1, 1).float())
         self.log("test_loss", loss, prog_bar=True, on_epoch=True, sync_dist=True)
 
