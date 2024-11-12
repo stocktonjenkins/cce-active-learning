@@ -24,9 +24,22 @@ class RandomProcedure(ActiveLearningProcedure[RandomProcedureResults]):
         return np.random.choice(unlabeled_indices, size=k, replace=False)
 
     def _eval_impl(self, model: DiscreteRegressionNN) -> RandomProcedureResults:
-        results = self.cal_evaluator(model, data_module=self.dataset)
+        calibration_results = self.cal_evaluator(model, self.dataset)
+
+        model_accuracy_results = None
+        print(f"Model accuracy results: {model_accuracy_results}")
         return RandomProcedureResults(
-            calibration_results=results,
-            model_accuracy_results=ModelAccuracyResults(),
-            random=42,
+            calibration_results=calibration_results,
+            model_accuracy_results=model_accuracy_results,
+            random=42,  # Example random value, replace with actual logic if needed
         )
+    
+    def step(self):
+        """
+        Update `self.dataset` to include pool the unlabeled samples
+        from AL into the training pool
+        Returns:
+            None
+        """
+        self.dataset.step(self)
+        self.notify()

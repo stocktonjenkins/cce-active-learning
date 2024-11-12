@@ -44,6 +44,7 @@ class ActiveLearningProcedure(
 
         """
         evaluation = self._eval_impl(model)
+        # breakpoint()
         self.update_state(evaluation)
 
     @abc.abstractmethod

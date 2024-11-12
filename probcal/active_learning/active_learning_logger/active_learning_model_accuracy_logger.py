@@ -1,20 +1,31 @@
+from probcal.active_learning.active_learning_types import ActiveLearningEvaluationResults
 from probcal.lib.observer import IObserver, ISubject
-from probcal.active_learning.active_learning_types import ActiveLearningEvaluationResults, ModelAccuracyResults
+import csv
 
 class ActiveLearningModelAccuracyLogger(IObserver[ActiveLearningEvaluationResults]):
+    def __init__(self, log_file: str):
+        self.log_file = log_file
+        # Initialize the CSV file with headers
+        with open(self.log_file, mode='w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(["Accuracy", "Precision", "Recall", "F1 Score"])
+
     def update(self, subject: ISubject[ActiveLearningEvaluationResults]) -> None:
         # Get the current state from the subject
         state = subject.get_state()
         
-        # Assuming state contains y_true and y_pred
-        y_true = state.y_true
-        y_pred = state.y_pred
+        # Log the results to the CSV file
+        with open(self.log_file, mode='a', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow([
+                state.model_accuracy_results.accuracy,
+                state.model_accuracy_results.precision,
+                state.model_accuracy_results.recall,
+                state.model_accuracy_results.f1_score
+            ])
         
-        # Calculate model accuracy results
-        model_accuracy_results = ModelAccuracyResults.from_predictions(y_true, y_pred)
-        
-        # Print the results
-        print(f"Accuracy: {model_accuracy_results.accuracy}")
-        print(f"Precision: {model_accuracy_results.precision}")
-        print(f"Recall: {model_accuracy_results.recall}")
-        print(f"F1 Score: {model_accuracy_results.f1_score}")
+        # Print the results to the terminal
+        print(f"Accuracy: {state.model_accuracy_results.accuracy}")
+        print(f"Precision: {state.model_accuracy_results.precision}")
+        print(f"Recall: {state.model_accuracy_results.recall}")
+        print(f"F1 Score: {state.model_accuracy_results.f1_score}")

@@ -27,7 +27,7 @@ def train_procedure(
         accelerator=config.accelerator_type.value,
         min_epochs=config.num_epochs,
         max_epochs=config.num_epochs,
-        log_every_n_steps=5,
+        log_every_n_steps=2,
         check_val_every_n_epoch=validation_rate,
         enable_model_summary=False,
         callbacks=callbacks,
@@ -35,6 +35,7 @@ def train_procedure(
         precision=config.precision,
     )
     trainer.fit(model=model, datamodule=datamodule)
+    trainer.test(model=model, datamodule=datamodule)
 
 
 def main(config: TrainingConfig):
