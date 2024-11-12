@@ -5,6 +5,7 @@ import numpy as np
 from numpy import ndarray
 from torch.utils.data import Dataset, Subset
 from torchvision.transforms import Compose
+from torch.utils.data import DataLoader
 
 from probcal.active_learning.configs import ActiveLearningConfig
 from probcal.active_learning.procedures.base import IActiveLearningDataModuleDelegate
@@ -85,9 +86,18 @@ class ActiveLearningDataModule(ProbCalDataModule):
 
     def setup(self, stage):
         super().setup(stage)
-        # Setup unlabeled... do we ignore the ys,
+        # Setup unlabeled... do we ignore the ys, (Rishabh): Ignore the y's, no need to remove them, we'll need them later anyways
         # or do we have to explicitly remove them?
         self.unlabeled = ImageDatasetWrapper(
             base_dataset=Subset(self.full_dataset, self.unlabeled_indices),
             transforms=Compose(self.inference_transforms)
+        )
+    
+    def unlabeled_dataloader(self) -> DataLoader:
+        return DataLoader(
+            self.unlabeled,
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=self.num_workers,
+            persistent_workers=self.persistent_workers,
         )

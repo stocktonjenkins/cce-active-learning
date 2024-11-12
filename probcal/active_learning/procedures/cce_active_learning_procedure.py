@@ -23,8 +23,8 @@ class CCEProcedure(ActiveLearningProcedure[CCEProcedureResults]):
         Returns:
             A random subset of unlabeled indices.
         """
-        train_dataloader = DataLoader(self.dataset[self.dataset.train_indices], batch_size=self.dataset.batch_size, shuffle=False)
-        unlabeled_dataloader = DataLoader(self.dataset[self.dataset.unlabeled_indices], batch_size=self.dataset.batch_size, shuffle=False)
+        train_dataloader = self.dataset.train_dataloader()
+        unlabeled_dataloader = self.dataset.unlabeled_dataloader()
         cce_unlabeled = self.cal_evaluator.compute_mcmd_unlabeled(model, unlabeled_data_loader=unlabeled_dataloader, data_loader=train_dataloader)
         assert cce_unlabeled.shape[0] == len(unlabeled_indices)
         _, sampling_indices = torch.topk(cce_unlabeled, k)
