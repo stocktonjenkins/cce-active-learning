@@ -12,7 +12,6 @@ class IActiveLearningDataModuleDelegate(abc.ABC):
         pass
 
 
-
 @dataclass
 class ModelAccuracyResults:
     accuracy: float = 0.0
@@ -20,13 +19,13 @@ class ModelAccuracyResults:
     recall: float = 0.0
     f1_score: float = 0.0
 
-    @staticmethod
-    def from_predictions(y_true: List[int], y_pred: List[int]) -> "ModelAccuracyResults":
+    @classmethod
+    def from_predictions(cls, y_true: List[int], y_pred: List[int]) -> "ModelAccuracyResults":
         accuracy = accuracy_score(y_true, y_pred)
         precision = precision_score(y_true, y_pred, average='weighted')
         recall = recall_score(y_true, y_pred, average='weighted')
         f1 = f1_score(y_true, y_pred, average='weighted')
-        return ModelAccuracyResults(
+        return cls(
             accuracy=accuracy,
             precision=precision,
             recall=recall,
@@ -42,5 +41,5 @@ class ActiveLearningEvaluationResults:
 
 @dataclass
 class RandomProcedureResults(ActiveLearningEvaluationResults):
-    random: int
+    pass
 

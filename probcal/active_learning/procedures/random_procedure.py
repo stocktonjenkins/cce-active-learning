@@ -24,9 +24,11 @@ class RandomProcedure(ActiveLearningProcedure[RandomProcedureResults]):
         return np.random.choice(unlabeled_indices, size=k, replace=False)
 
     def _eval_impl(self, model: DiscreteRegressionNN) -> RandomProcedureResults:
-        results = self.cal_evaluator(model, data_module=self.dataset)
+        # TODO: evaluate model and return results. Use self.dataset.test_dataloader()
+        # results = self.cal_evaluator(model, data_module=self.dataset)
+        # model_accuracy_results = ModelAccuracyResults.from_predictions(y_true, y_pred)
+        breakpoint()
         return RandomProcedureResults(
-            calibration_results=results,
-            model_accuracy_results=ModelAccuracyResults(),
-            random=42,
+            calibration_results=None,
+            model_accuracy_results=None,
         )

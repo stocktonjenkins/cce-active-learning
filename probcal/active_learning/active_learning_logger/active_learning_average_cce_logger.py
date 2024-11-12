@@ -2,7 +2,7 @@ from probcal.active_learning.active_learning_types import ActiveLearningEvaluati
 from probcal.lib.observer import IObserver, ISubject
 
 
-class ActiveLearningAverageCCE(IObserver):
+class ActiveLearningAverageCCELogger(IObserver):
     def update(self, subject: ISubject[ActiveLearningEvaluationResults]) -> None:
         # do something with subject.get_state()
         print(subject.get_state().calibration_results)

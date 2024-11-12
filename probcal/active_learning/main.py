@@ -3,7 +3,7 @@ from argparse import Namespace, ArgumentParser
 
 from probcal.active_learning.configs import ActiveLearningConfig
 from probcal.active_learning.active_learning_logger.active_learning_average_cce_logger import (
-    ActiveLearningAverageCCE,
+    ActiveLearningAverageCCELogger,
 )
 from probcal.active_learning.active_learning_logger.active_learning_model_accuracy_logger import (
     ActiveLearningModelAccuracyLogger,
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     _active_learn.attach(
         [
             ActiveLearningModelAccuracyLogger(),
-            ActiveLearningAverageCCE(),
+            ActiveLearningAverageCCELogger(),
             # Add logging to save the model's results at the end of each AL iteration
             #  - End product: chart -> model accuracy (vs number of labels)
             #  - End product: chart -> average CCE (vs number of labels)

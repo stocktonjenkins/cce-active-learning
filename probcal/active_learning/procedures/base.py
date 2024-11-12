@@ -60,7 +60,6 @@ class ActiveLearningProcedure(
         self.dataset.step(self)
         self.notify()
 
-
     def update_state(self, evaluation: EvalState):
         """
         Update the subject state. Prep for notifying observers
