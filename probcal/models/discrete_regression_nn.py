@@ -198,7 +198,7 @@ class DiscreteRegressionNN(L.LightningModule):
         self.log("test_mae", self.test_mae, on_epoch=True)
         for name, metric_tracker in self._addl_test_metrics_dict().items():
             self.log(name, metric_tracker, on_epoch=True)
-        return loss
+        return y_hat
 
     def predict_step(self, batch: torch.Tensor) -> torch.Tensor:
         x, _ = batch
