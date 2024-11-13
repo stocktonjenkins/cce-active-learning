@@ -48,7 +48,6 @@ class CCEProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
     ) -> ActiveLearningEvaluationResults:
         # results = self.cal_evaluator(model, data_module=self.dataset)
         calibration_results = None
-        trainer = lightning.Trainer(devices=1, num_nodes=1)
         results = trainer.test(model, datamodule=self.dataset)
         model_accuracy_results = ModelAccuracyResults(**results[0])
         return ActiveLearningEvaluationResults(
