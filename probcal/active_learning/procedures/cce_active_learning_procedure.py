@@ -1,7 +1,6 @@
 import lightning
 import numpy as np
 import torch
-from lightning import Trainer
 from torchmetrics.functional import precision
 
 from probcal.active_learning.active_learning_types import (
@@ -48,8 +47,7 @@ class CCEProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
     ) -> ActiveLearningEvaluationResults:
         # results = self.cal_evaluator(model, data_module=self.dataset)
         calibration_results = None
-        _trainer = Trainer(devices=1, accelerator="gpu")
-        results = _trainer.test(model, datamodule=self.dataset)
+        results = trainer.test(model, datamodule=self.dataset)
         model_accuracy_results = ModelAccuracyResults(**results[0])
         return ActiveLearningEvaluationResults(
             calibration_results=calibration_results,

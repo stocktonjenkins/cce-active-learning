@@ -100,7 +100,10 @@ class AverageNLL(Metric):
         Returns:
             torch.Tensor: The average NLL.
         """
-        all_target_probs = torch.cat(self.all_target_probs)
+        try:
+            all_target_probs = torch.cat(self.all_target_probs)
+        except TypeError:
+            all_target_probs = self.all_target_probs
         eps = torch.tensor(1e-5, device=all_target_probs.device)
         nll = -torch.maximum(all_target_probs, eps).log().mean()
         return nll
