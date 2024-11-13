@@ -102,6 +102,7 @@ if __name__ == "__main__":
     }
     del module
     module = None
+    print(f"USING DEVICE FOR MCMD: {al_config.settings.device}")
     _active_learn = Procedure(
         dataset=ActiveLearningDataModule(**active_learning_data_module_args),
         config=al_config,

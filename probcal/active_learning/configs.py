@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import torch
+from zmq.backend.cffi import device
 
 from probcal.evaluation import CalibrationEvaluatorSettings
 from probcal.utils.generic_utils import get_yaml
@@ -11,7 +12,8 @@ class ActiveLearningConfig:
     def from_yaml(config_path: str | Path) -> "ActiveLearningConfig":
         config_dict = get_yaml(config_path)
         config_dict["settings"] = CalibrationEvaluatorSettings(
-            **config_dict["settings"]
+            **config_dict["settings"],
+            device=torch.device("cpu")
         )
 
         return ActiveLearningConfig(**config_dict)
