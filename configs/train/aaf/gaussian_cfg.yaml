@@ -6,7 +6,7 @@ dataset:
   spec: aaf
 training:
   accelerator: gpu
-  batch_size: 32
+  batch_size: 4
   chkp_dir: chkp
   chkp_freq: 200
   num_epochs: 1
