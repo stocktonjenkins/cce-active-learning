@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import torch
+
 from probcal.evaluation import CalibrationEvaluatorSettings
 from probcal.utils.generic_utils import get_yaml
 
@@ -29,5 +31,6 @@ class ActiveLearningConfig:
         self.init_num_labeled = init_num_labeled
         self.procedure_type = procedure_type
         self.settings = settings
+        self.settings.device = torch.device("cpu")
         self.model_ckpt_freq = model_ckpt_freq
         self.update_validation_set = update_validation_set
