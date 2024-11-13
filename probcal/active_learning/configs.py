@@ -11,8 +11,10 @@ class ActiveLearningConfig:
     def from_yaml(config_path: str | Path) -> "ActiveLearningConfig":
         config_dict = get_yaml(config_path)
         config_dict["settings"] = CalibrationEvaluatorSettings(
-            **config_dict["settings"],
-            device=torch.device("cpu")
+            **{
+                **config_dict["settings"],
+                "device": torch.device("cpu")
+            }
         )
 
         return ActiveLearningConfig(**config_dict)
