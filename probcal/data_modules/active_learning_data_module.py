@@ -85,7 +85,7 @@ class ActiveLearningDataModule(ProbCalDataModule):
             labeled_indices[:num_train],
             labeled_indices[num_train:],
         )
-        self.unlabeled_indices = self.unlabeled_indices[:1000]
+        self.unlabeled_indices = self.unlabeled_indices[:100]
 
     def setup(self, stage):
         super().setup(stage)
