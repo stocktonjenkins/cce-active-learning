@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import torch
-from zmq.backend.cffi import device
 
 from probcal.evaluation import CalibrationEvaluatorSettings
 from probcal.utils.generic_utils import get_yaml
