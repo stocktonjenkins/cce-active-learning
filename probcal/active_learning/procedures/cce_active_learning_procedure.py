@@ -41,7 +41,7 @@ class CCEProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
         assert cce_unlabeled.shape[0] == len(unlabeled_indices)
         _, sampling_indices = torch.topk(cce_unlabeled, k)
 
-        return sampling_indices
+        return sampling_indices.cpu().numpy()
 
     def _eval_impl(
         self, trainer: lightning.Trainer, model: DiscreteRegressionNN
