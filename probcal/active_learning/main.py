@@ -100,7 +100,8 @@ if __name__ == "__main__":
         "config": al_config,  # Assuming config is part of TrainingConfig
         # "persistent_workers": _train_config.persistent_workers,  # Add this field to TrainingConfig if not present
     }
-
+    del module
+    module = None
     _active_learn = Procedure(
         dataset=ActiveLearningDataModule(**active_learning_data_module_args),
         config=al_config,
