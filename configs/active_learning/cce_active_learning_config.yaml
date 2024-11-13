@@ -1,6 +1,6 @@
 num_iter: 10
-label_k: 143
-init_num_labeled: 100
+label_k: 100
+init_num_labeled: 143
 procedure_type: cce
 model_ckpt_freq: 1
 update_validation_set: false
