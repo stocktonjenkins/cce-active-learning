@@ -30,6 +30,7 @@ class CCEProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
         Returns:
             A random subset of unlabeled indices.
         """
+        model = model.to(self.config.settings.device)
         train_dataloader = self.dataset.train_dataloader()
         unlabeled_dataloader = self.dataset.unlabeled_dataloader()
         cce_unlabeled = self.cal_evaluator.compute_mcmd_unlabeled(
