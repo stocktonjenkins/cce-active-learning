@@ -79,13 +79,13 @@ class ActiveLearningDataModule(ProbCalDataModule):
             self.shuffled_indices[num_test:],
         )
         labeled_indices = rest[: self.config.init_num_labeled]
-        self.unlabeled_indices = rest[self.config.init_num_labeled:]
+        self.unlabeled_indices = rest[self.config.init_num_labeled :]
         num_train = int(train_split * self.config.init_num_labeled)
         self.train_indices, self.val_indices = (
             labeled_indices[:num_train],
             labeled_indices[num_train:],
         )
-        self.unlabeled_indices = self.unlabeled_indices[:100]
+        self.unlabeled_indices = self.unlabeled_indices
 
     def setup(self, stage):
         super().setup(stage)

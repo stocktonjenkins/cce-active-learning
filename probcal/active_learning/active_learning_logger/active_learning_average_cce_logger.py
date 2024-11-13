@@ -1,6 +1,8 @@
 import csv
 from pathlib import Path
 
+import numpy as np
+
 from probcal.active_learning.active_learning_types import (
     ActiveLearningEvaluationResults,
 )
@@ -18,10 +20,27 @@ class ActiveLearningAverageCCELogger(IObserver):
                     "Training Set Size",
                     "Val. Set Size",
                     "Unlabeled Set Size",
-                    # TODO: other columns?
+                    "Mean MCMD",
+                    "ECE",
                 ]
             )
 
     def update(self, subject: ISubject[ActiveLearningEvaluationResults]) -> None:
-        # do something with subject.get_state()
-        print(subject.get_state().calibration_results)
+        state = subject.get_state()
+        with open(self.path, mode="a", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow(
+                [
+                    state.iteration,
+                    state.train_set_size,
+                    state.val_set_size,
+                    state.unlabeled_set_size,
+                    np.concatenate(
+                        [
+                            vals.mcmd_vals
+                            for vals in state.calibration_results.mcmd_results
+                        ]
+                    ).mean(),
+                    state.calibration_results.ece,
+                ]
+            )

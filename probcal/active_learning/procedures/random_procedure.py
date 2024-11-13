@@ -30,8 +30,7 @@ class RandomProcedure(ActiveLearningProcedure[RandomProcedureResults]):
     def _eval_impl(
         self, trainer: lightning.Trainer, model: DiscreteRegressionNN
     ) -> RandomProcedureResults:
-        # calibration_results = self.cal_evaluator(model, self.dataset)
-        calibration_results = None
+        calibration_results = self.cal_evaluator(model, self.dataset)
         results = trainer.test(model, datamodule=self.dataset)
         model_accuracy_results = ModelAccuracyResults(**results[0])
         return RandomProcedureResults(

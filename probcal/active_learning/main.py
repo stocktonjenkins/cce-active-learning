@@ -15,7 +15,6 @@ from probcal.active_learning.procedures import get_active_learning_procedure
 from probcal.active_learning.procedures.base import ActiveLearningProcedure
 from probcal.data_modules.active_learning_data_module import ActiveLearningDataModule
 from probcal.data_modules.prob_cal_data_module import ProbCalDataModule
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
 from probcal.training.train_model import train_procedure
 from probcal.utils.configs import TrainingConfig
 from probcal.utils.experiment_utils import get_model, get_datamodule, get_chkp_callbacks
@@ -66,7 +65,7 @@ def pipeline(
                 if al_iter % active_learn.config.model_ckpt_freq == 0
                 else None
             ),
-            validation_rate=active_learn.config.model_ckpt_freq
+            validation_rate=active_learn.config.model_ckpt_freq,
         )
         active_learn.eval(trainer, model)
         active_learn.step(model)
@@ -81,7 +80,7 @@ def parse_args() -> Namespace:
 
 
 if __name__ == "__main__":
-    torch.set_float32_matmul_precision('medium')
+    torch.set_float32_matmul_precision("medium")
     args = parse_args()
     _train_config = TrainingConfig.from_yaml(args.train_config)
     al_config = ActiveLearningConfig.from_yaml(args.al_config)
@@ -100,9 +99,6 @@ if __name__ == "__main__":
         "config": al_config,  # Assuming config is part of TrainingConfig
         # "persistent_workers": _train_config.persistent_workers,  # Add this field to TrainingConfig if not present
     }
-    del module
-    module = None
-    print(f"USING DEVICE FOR MCMD: {al_config.settings.device}")
     _active_learn = Procedure(
         dataset=ActiveLearningDataModule(**active_learning_data_module_args),
         config=al_config,

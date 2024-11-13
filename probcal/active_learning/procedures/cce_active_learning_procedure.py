@@ -10,6 +10,7 @@ from probcal.active_learning.active_learning_types import (
 from probcal.active_learning.procedures.base import (
     ActiveLearningProcedure,
 )
+from probcal.evaluation.calibration_evaluator import CalibrationResults
 from probcal.models.discrete_regression_nn import DiscreteRegressionNN
 
 
@@ -46,8 +47,9 @@ class CCEProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
     def _eval_impl(
         self, trainer: lightning.Trainer, model: DiscreteRegressionNN
     ) -> ActiveLearningEvaluationResults:
-        # results = self.cal_evaluator(model, data_module=self.dataset)
-        calibration_results = None
+        calibration_results: CalibrationResults = self.cal_evaluator(
+            model, data_module=self.dataset
+        )
         results = trainer.test(model, datamodule=self.dataset)
         model_accuracy_results = ModelAccuracyResults(**results[0])
         return ActiveLearningEvaluationResults(
