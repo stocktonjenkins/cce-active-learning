@@ -66,7 +66,6 @@ class ActiveLearningDataModule(ProbCalDataModule):
         self.unlabeled_indices = np.setdiff1d(
             self.unlabeled_indices, unlabeled_indices_to_label
         )
-        self.unlabeled_indices = self.unlabeled_indices[:100]
 
     def _init_indices(self, train_val_split: tuple[float, float], seed=1998):
         num_instances = len(self.full_dataset)
@@ -86,6 +85,7 @@ class ActiveLearningDataModule(ProbCalDataModule):
             labeled_indices[:num_train],
             labeled_indices[num_train:],
         )
+        self.unlabeled_indices = self.unlabeled_indices[:1000]
 
     def setup(self, stage):
         super().setup(stage)
