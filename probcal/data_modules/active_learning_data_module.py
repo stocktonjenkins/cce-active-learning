@@ -89,8 +89,6 @@ class ActiveLearningDataModule(ProbCalDataModule):
 
     def setup(self, stage):
         super().setup(stage)
-        # Setup unlabeled... do we ignore the ys, (Rishabh): Ignore the y's, no need to remove them, we'll need them later anyways
-        # or do we have to explicitly remove them?
         self.unlabeled = ImageDatasetWrapper(
             base_dataset=Subset(self.full_dataset, self.unlabeled_indices),
             transforms=Compose(self.inference_transforms),

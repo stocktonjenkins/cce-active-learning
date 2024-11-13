@@ -34,13 +34,13 @@ class ProbCalDataModule(LightningDataModule):
     IMAGE_NET_STD = [0.229, 0.224, 0.225]
 
     def __init__(
-        self,
-        full_dataset: Union[Sized, Dataset],
-        batch_size: int,
-        num_workers: int,
-        persistent_workers: bool,
-        train_val_split: tuple[float, float] = (0.7, 0.1),
-        seed=1998,
+            self,
+            full_dataset: Union[Sized, Dataset],
+            batch_size: int,
+            num_workers: int,
+            persistent_workers: bool,
+            train_val_split: tuple[float, float] = (0.7, 0.1),
+            seed=1998,
     ):
         super(ProbCalDataModule, self).__init__()
         self.batch_size = batch_size
@@ -58,8 +58,8 @@ class ProbCalDataModule(LightningDataModule):
         generator = np.random.default_rng(seed=seed)
         self.shuffled_indices = generator.permutation(np.arange(num_instances))
         self.train_indices = self.shuffled_indices[:num_train]
-        self.val_indices = self.shuffled_indices[num_train : num_train + num_val]
-        self.test_indices = self.shuffled_indices[num_train + num_val :]
+        self.val_indices = self.shuffled_indices[num_train: num_train + num_val]
+        self.test_indices = self.shuffled_indices[num_train + num_val:]
 
     def _init_transforms(self):
         resize = Resize((self.IMG_SIZE, self.IMG_SIZE))

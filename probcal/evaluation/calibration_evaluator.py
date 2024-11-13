@@ -383,9 +383,6 @@ class CalibrationEvaluator:
 
     def _get_unlabelled_samples_for_mcmd(self, data_loader: DataLoader) -> torch.Tensor:
         x = []
-        # y = []
-        # x_prime = []
-        # y_prime = []
         for inputs, _ in tqdm(data_loader, desc="Sampling from posteriors for MCMD..."):
             if self.settings.dataset_type == DatasetType.TABULAR:
                 x.append(inputs)
@@ -399,21 +396,7 @@ class CalibrationEvaluator:
                 x.append(
                     self.clip_model.encode_text(inputs.to(self.device), normalize=False)
                 )
-            # y.append(targets.to(self.device))
-            # y_hat = model.predict(inputs.to(self.device))
-            # x_prime.append(
-            #     torch.repeat_interleave(x[-1], repeats=self.settings.mcmd_num_samples, dim=0)
-            # )
-            # y_prime.append(
-            #     model.sample(y_hat, num_samples=self.settings.mcmd_num_samples).flatten()
-            # )
-
-        x = torch.cat(x, dim=0)
-        # y = torch.cat(y).float()
-        # x_prime = torch.cat(x_prime, dim=0)
-        # y_prime = torch.cat(y_prime).float()
-
-        return x
+        return torch.cat(x, dim=0)
 
     def _get_kernel_functions(
         self, y: torch.Tensor

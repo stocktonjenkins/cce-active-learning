@@ -27,7 +27,7 @@ def train_procedure(
         accelerator=config.accelerator_type.value,
         min_epochs=config.num_epochs,
         max_epochs=config.num_epochs,
-        log_every_n_steps=2,
+        log_every_n_steps=5,
         check_val_every_n_epoch=validation_rate,
         enable_model_summary=False,
         callbacks=callbacks,

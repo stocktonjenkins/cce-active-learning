@@ -7,5 +7,5 @@ dataset:
 batch_size: 4
 accelerator: cpu
 log_dir: logs/eval/aaf_gaussian
-model_ckpt_path: chkp/aaf_gaussian/version_0/best_loss.ckpt
+model_ckpt_path: chkp/cce__aaf_gaussian/al_iter_0/best_loss.ckpt
 mcmd_num_trials: 5
