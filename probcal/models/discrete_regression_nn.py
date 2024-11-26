@@ -186,6 +186,9 @@ class DiscreteRegressionNN(L.LightningModule):
     def test_step(self, batch: torch.Tensor):
         x, y = batch
         y_hat = self.predict(x)
+        loss = self.loss_fn(y_hat, y.view(-1, 1).float())
+        self.log("test_loss", loss, prog_bar=True, on_epoch=True, sync_dist=True)
+
         point_predictions = self.point_prediction(y_hat, training=False).flatten()
         self.test_rmse.update(point_predictions, y.flatten().float())
         self.test_mae.update(point_predictions, y.flatten().float())
@@ -195,6 +198,7 @@ class DiscreteRegressionNN(L.LightningModule):
         self.log("test_mae", self.test_mae, on_epoch=True)
         for name, metric_tracker in self._addl_test_metrics_dict().items():
             self.log(name, metric_tracker, on_epoch=True)
+        return loss
 
     def predict_step(self, batch: torch.Tensor) -> torch.Tensor:
         x, _ = batch
@@ -217,7 +221,9 @@ class DiscreteRegressionNN(L.LightningModule):
     ) -> torch.distributions.Distribution | DiscreteRandomVariable:
         raise NotImplementedError("Should be implemented by subclass.")
 
-    def _point_prediction_impl(self, y_hat: torch.Tensor, training: bool) -> torch.Tensor:
+    def _point_prediction_impl(
+        self, y_hat: torch.Tensor, training: bool
+    ) -> torch.Tensor:
         raise NotImplementedError("Should be implemented by subclass.")
 
     def _addl_test_metrics_dict(self) -> dict[str, Metric]:

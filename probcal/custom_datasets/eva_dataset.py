@@ -55,7 +55,9 @@ class EVADataset(Dataset):
             self._concatenate_and_extract_zip()
 
         # read the label data in from the data folder
-        self.votes_filtered_df = pd.read_csv(self.labels_dir.joinpath(self.LABELS_CSV), sep="=")
+        self.votes_filtered_df = pd.read_csv(
+            self.labels_dir.joinpath(self.LABELS_CSV), sep="="
+        )
 
         # find the average of all the votes to create the label for the image
         self.labels_df = (
@@ -68,7 +70,9 @@ class EVADataset(Dataset):
         # the file name for each image is just {image_id}.jpg
         self.labels_df["file_name"] = self.labels_df["image_id"].astype(str) + ".jpg"
 
-    def __getitem__(self, idx: int) -> tuple[PILImage, int] | tuple[PILImage, tuple[str, int]]:
+    def __getitem__(
+        self, idx: int
+    ) -> tuple[PILImage, int] | tuple[PILImage, tuple[str, int]]:
         row = self.labels_df.iloc[idx]
         image_path = self.image_dir.joinpath(row["file_name"])
         image = Image.open(image_path)
@@ -118,7 +122,9 @@ class EVADataset(Dataset):
         # Find all zip parts
         zip_parts = sorted(glob(f"{zip_prefix}.00*"))
         if not zip_parts:
-            print(f"No zip parts found with prefix '{zip_prefix}' in the current directory.")
+            print(
+                f"No zip parts found with prefix '{zip_prefix}' in the current directory."
+            )
             return
 
         print(f"Found {len(zip_parts)} zip parts: {zip_parts}")

@@ -80,7 +80,9 @@ def plot_regression_calibration_curve(
     epsilon = 1e-4
     p_vals = np.linspace(0 + epsilon, 1 - epsilon, num=num_bins).reshape(-1, 1)
     expected_pct_where_cdf_less_than_p = p_vals
-    actual_pct_where_cdf_less_than_p = (posterior_predictive.cdf(y_true) <= p_vals).mean(axis=1)
+    actual_pct_where_cdf_less_than_p = (
+        posterior_predictive.cdf(y_true) <= p_vals
+    ).mean(axis=1)
 
     ax = plt.subplots(1, 1)[1] if ax is None else ax
     ax.set_title("Calibration Curve")

@@ -60,7 +60,9 @@ class BaseConfig(object):
         Returns:
             TrainingConfig: The specified config.
         """
-        raise NotImplementedError("This method should be implemented in a subclass of BaseConfig.")
+        raise NotImplementedError(
+            "This method should be implemented in a subclass of BaseConfig."
+        )
 
     @staticmethod
     def get_dataset_path_or_spec(dataset_cfg: dict):
@@ -185,7 +187,9 @@ class TrainingConfig(BaseConfig):
             lr_scheduler_kwargs = None
 
         if "beta_scheduler" in training_dict:
-            beta_scheduler_type = BetaSchedulerType(training_dict["beta_scheduler"]["type"])
+            beta_scheduler_type = BetaSchedulerType(
+                training_dict["beta_scheduler"]["type"]
+            )
             beta_scheduler_kwargs = training_dict["beta_scheduler"]["kwargs"]
             if beta_scheduler_kwargs.get("last_epoch", None) == -1:
                 beta_scheduler_kwargs["last_epoch"] = num_epochs
@@ -194,7 +198,9 @@ class TrainingConfig(BaseConfig):
             beta_scheduler_kwargs = None
 
         dataset_type = DatasetType(config_dict["dataset"]["type"])
-        dataset_path_or_spec = TrainingConfig.get_dataset_path_or_spec(config_dict["dataset"])
+        dataset_path_or_spec = TrainingConfig.get_dataset_path_or_spec(
+            config_dict["dataset"]
+        )
 
         num_trials = eval_dict["num_trials"]
         log_dir = Path(eval_dict["log_dir"])
@@ -291,7 +297,9 @@ class EvaluationConfig(BaseConfig):
         dataset_type = DatasetType(config_dict["dataset"]["type"])
         log_dir = Path(config_dict["log_dir"])
         model_ckpt_path = Path(config_dict["model_ckpt_path"])
-        dataset_path_or_spec = TrainingConfig.get_dataset_path_or_spec(config_dict["dataset"])
+        dataset_path_or_spec = TrainingConfig.get_dataset_path_or_spec(
+            config_dict["dataset"]
+        )
 
         # Optional arguments.
         input_dim = config_dict["dataset"].get("input_dim", 1)

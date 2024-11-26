@@ -81,7 +81,9 @@ def plot_regression_calibration_curve_cdf(
     epsilon = 1e-4
     p_vals = np.linspace(0 + epsilon, 1 - epsilon, num=num_bins).reshape(-1, 1)
     expected_pct_where_cdf_less_than_p = p_vals
-    actual_pct_where_cdf_less_than_p = (posterior_predictive.cdf(y_true) <= p_vals).mean(axis=1)
+    actual_pct_where_cdf_less_than_p = (
+        posterior_predictive.cdf(y_true) <= p_vals
+    ).mean(axis=1)
 
     ece = compute_regression_ece(
         y_true, posterior_predictive, num_bins=50, weights="frequency", alpha=1
@@ -121,7 +123,9 @@ def plot_mcmd_curve(
     ax: plt.Axes | None = None,
     num_samples_from_posterior: int = 1,
 ):
-    y_prime = np.ravel(posterior_predictive.rvs(size=(num_samples_from_posterior, len(y_true))))
+    y_prime = np.ravel(
+        posterior_predictive.rvs(size=(num_samples_from_posterior, len(y_true)))
+    )
     x_prime = np.tile(x, num_samples_from_posterior)
     mcmd_vals = compute_mcmd_numpy(
         grid=x,
@@ -201,7 +205,9 @@ def produce_figure(save_path: str | Path):
     )
     axs[1, 0].set_xticks([])
     axs[1, 0].set_yticks([])
-    plot_regression_calibration_curve_cdf(gaussian_y, gaussian_post_pred, ax=axs[2, 0], show=False)
+    plot_regression_calibration_curve_cdf(
+        gaussian_y, gaussian_post_pred, ax=axs[2, 0], show=False
+    )
     plot_mcmd_curve(
         cont_x,
         gaussian_y,
@@ -226,7 +232,9 @@ def produce_figure(save_path: str | Path):
     )
     axs[1, 1].set_xticks([])
     axs[1, 1].set_yticks([])
-    plot_regression_calibration_curve_cdf(poisson_y, poisson_post_pred, ax=axs[2, 1], show=False)
+    plot_regression_calibration_curve_cdf(
+        poisson_y, poisson_post_pred, ax=axs[2, 1], show=False
+    )
     plot_mcmd_curve(
         cont_x,
         poisson_y,
@@ -252,7 +260,9 @@ def produce_figure(save_path: str | Path):
     )
     axs[1, 2].set_xticks([])
     axs[1, 2].set_yticks([])
-    plot_regression_calibration_curve_cdf(nbinom_y, nbinom_post_pred, ax=axs[2, 2], show=False)
+    plot_regression_calibration_curve_cdf(
+        nbinom_y, nbinom_post_pred, ax=axs[2, 2], show=False
+    )
     plot_mcmd_curve(cont_x, nbinom_y, nbinom_post_pred, ax=axs[3, 2])
 
     row_labels = ["Posterior Predictive", "PIT", "Reliability Diagram", "MCMD"]

@@ -42,7 +42,6 @@ class RegressionECE(Metric):
         self.add_state("y", default=[], dist_reduce_fx="cat")
 
     def update(self, params: dict[str, torch.Tensor], y: torch.Tensor):
-
         if list(params.keys()) != self.param_list:
             raise ValueError(
                 f"""Must specify values for each param indicated in the `param_list` provided at `ExpectedCalibrationError` initialization.
@@ -56,7 +55,11 @@ class RegressionECE(Metric):
 
     def compute(self) -> torch.Tensor:
         param_dict = {
-            param_name: torch.cat(getattr(self, param_name)).flatten().detach().cpu().numpy()
+            param_name: torch.cat(getattr(self, param_name))
+            .flatten()
+            .detach()
+            .cpu()
+            .numpy()
             for param_name in self.param_list
         }
         self.posterior_predictive = self.rv_class_type(**param_dict)
@@ -97,7 +100,10 @@ class AverageNLL(Metric):
         Returns:
             torch.Tensor: The average NLL.
         """
-        all_target_probs = torch.cat(self.all_target_probs)
+        try:
+            all_target_probs = torch.cat(self.all_target_probs)
+        except TypeError:
+            all_target_probs = self.all_target_probs
         eps = torch.tensor(1e-5, device=all_target_probs.device)
         nll = -torch.maximum(all_target_probs, eps).log().mean()
         return nll

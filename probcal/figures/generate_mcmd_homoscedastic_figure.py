@@ -48,7 +48,6 @@ def generate_homoscedastic_data(
 
 
 def generate_figure(save_path: str):
-
     plt.rc("text", usetex=True)
     plt.rc("font", family="serif")
 
@@ -110,7 +109,9 @@ def generate_figure(save_path: str):
 
         scatter_ax.set_title(title, fontsize=10)
         scatter_ax.scatter(x, y, alpha=0.5, s=5, label="$(x, y)$")
-        scatter_ax.scatter(x_prime, y_prime, alpha=0.5, s=5, label="$(x\prime, y\prime)$")
+        scatter_ax.scatter(
+            x_prime, y_prime, alpha=0.5, s=5, label="$(x\prime, y\prime)$"
+        )
         scatter_ax.set_ylim(-7, 7)
         scatter_ax.xaxis.set_major_locator(MultipleLocator(np.pi))
         scatter_ax.xaxis.set_major_formatter(FuncFormatter(multiple_formatter()))

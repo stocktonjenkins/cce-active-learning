@@ -31,7 +31,9 @@ def plot_regression_reliability_diagram(
     epsilon = 1e-4
     p_vals = np.linspace(0 + epsilon, 1 - epsilon, num=num_bins).reshape(-1, 1)
     expected_pct_where_cdf_less_than_p = p_vals
-    actual_pct_where_cdf_less_than_p = (posterior_predictive.cdf(y_true) <= p_vals).mean(axis=1)
+    actual_pct_where_cdf_less_than_p = (
+        posterior_predictive.cdf(y_true) <= p_vals
+    ).mean(axis=1)
 
     ax = plt.subplots(1, 1)[1] if ax is None else ax
     ax.plot(
@@ -58,7 +60,6 @@ def plot_regression_reliability_diagram(
 
 
 def generate_figure(alpha: float, save_dir: Path):
-
     x = np.random.normal(0, 1, size=500)
     y = np.random.normal(alpha * x, 1)
 
@@ -128,7 +129,9 @@ def generate_figure(alpha: float, save_dir: Path):
     # Plot D: Plot the MCMD values, which correctly show a large discrepancy in the distributions.
     order = np.argsort(x)
     subplot_d.plot(x[order], mcmd_vals[order])
-    subplot_d.annotate(f"Avg. MCMD: {mcmd_vals.mean():.3f}", xy=(-2.5, mcmd_vals.max() * 1.2))
+    subplot_d.annotate(
+        f"Avg. MCMD: {mcmd_vals.mean():.3f}", xy=(-2.5, mcmd_vals.max() * 1.2)
+    )
     subplot_d.set_ylim(0, mcmd_vals.max() * 1.5)
     subplot_d.set_xlim(x.min(), x.max())
     subplot_d.set_xlabel("$X$")
