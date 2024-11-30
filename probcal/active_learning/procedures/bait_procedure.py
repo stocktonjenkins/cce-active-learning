@@ -50,7 +50,7 @@ class BAITProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
         assert fisher_scores.shape[0] == len(unlabeled_indices)
         
         _, sampling_indices = torch.topk(fisher_scores, k)
-        
+        print(len(sampling_indices))
         return unlabeled_indices[sampling_indices.numpy()]
 
     def _eval_impl(
