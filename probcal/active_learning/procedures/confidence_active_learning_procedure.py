@@ -65,7 +65,7 @@ class ConfidenceProcedure(ActiveLearningProcedure[ActiveLearningProcedure]):
                     data_loader, desc="doing forward pass to compute confidence..."
             ):
                 
-                y_hat = model.predict(inputs.to(self.device))
+                y_hat = model.predict(inputs.to(model.device))
                 (mu, var) = torch.split(y_hat, [1, 1], dim=-1)
                 conf.append(var.flatten())
 
