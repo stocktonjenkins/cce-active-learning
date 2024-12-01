@@ -37,7 +37,7 @@ class ConfidenceProcedure(ActiveLearningProcedure[ActiveLearningProcedure]):
         assert confindence_unlabelled.shape[0] == len(unlabeled_indices)
         _, sampling_indices = torch.topk(confindence_unlabelled, k)
 
-        return np.random.choice(sampling_indices, size=k, replace=False)
+        return unlabeled_indices[sampling_indices]
 
     def _eval_impl(
         self, trainer: lightning.Trainer, model: DiscreteRegressionNN
