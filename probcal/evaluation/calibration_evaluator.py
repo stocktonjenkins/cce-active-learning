@@ -348,7 +348,7 @@ class CalibrationEvaluator:
             x_prime = []
             y_prime = []
             for inputs, targets in tqdm(
-                    data_loader, desc="Sampling from posteriors for MCMD..."
+                data_loader, desc="Sampling from posteriors for MCMD..."
             ):
                 if self.settings.dataset_type == DatasetType.TABULAR:
                     x.append(inputs)
@@ -360,7 +360,9 @@ class CalibrationEvaluator:
                     )
                 elif self.settings.dataset_type == DatasetType.TEXT:
                     x.append(
-                        self.clip_model.encode_text(inputs.to(self.device), normalize=False)
+                        self.clip_model.encode_text(
+                            inputs.to(self.device), normalize=False
+                        )
                     )
                 y.append(targets.to(self.device))
                 y_hat = model.predict(inputs.to(self.device))
@@ -385,7 +387,9 @@ class CalibrationEvaluator:
     def _get_unlabelled_samples_for_mcmd(self, data_loader: DataLoader) -> torch.Tensor:
         with torch.no_grad():
             x = []
-            for inputs, _ in tqdm(data_loader, desc="Sampling from posteriors for MCMD..."):
+            for inputs, _ in tqdm(
+                data_loader, desc="Sampling from posteriors for MCMD..."
+            ):
                 if self.settings.dataset_type == DatasetType.TABULAR:
                     x.append(inputs)
                 elif self.settings.dataset_type == DatasetType.IMAGE:
@@ -396,7 +400,9 @@ class CalibrationEvaluator:
                     )
                 elif self.settings.dataset_type == DatasetType.TEXT:
                     x.append(
-                        self.clip_model.encode_text(inputs.to(self.device), normalize=False)
+                        self.clip_model.encode_text(
+                            inputs.to(self.device), normalize=False
+                        )
                     )
             return torch.cat(x, dim=0)
 

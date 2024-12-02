@@ -1,14 +1,14 @@
 from probcal.active_learning.configs import ActiveLearningConfig
 from probcal.active_learning.procedures.cce_active_learning_procedure import (
-    CCEProcedure
-)
-from probcal.active_learning.procedures.cce_active_learning_procedure import (
-    ReverseCCEProcedure
+    CCEProcedure,
 )
 from probcal.active_learning.procedures.confidence_active_learning_procedure import (
-    ConfidenceProcedure
+    ConfidenceProcedure,
 )
 from probcal.active_learning.procedures.random_procedure import RandomProcedure
+from probcal.active_learning.procedures.reverse_cce_active_learning_procedure import (
+    ReverseCCEProcedure,
+)
 
 
 def get_active_learning_procedure(config: ActiveLearningConfig):

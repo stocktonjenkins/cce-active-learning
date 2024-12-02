@@ -55,16 +55,15 @@ class ConfidenceProcedure(ActiveLearningProcedure[ActiveLearningProcedure]):
             val_set_size=self.dataset.val_indices.shape[0],
             unlabeled_set_size=self.dataset.unlabeled_indices.shape[0],
         )
-    
+
     def get_confidence_score_from_model(
         self, model: DiscreteRegressionNN, data_loader: DataLoader
     ) -> tuple[torch.Tensor]:
         with torch.no_grad():
             conf = []
             for inputs, _ in tqdm(
-                    data_loader, desc="doing forward pass to compute confidence..."
+                data_loader, desc="doing forward pass to compute confidence..."
             ):
-                
                 y_hat = model.predict(inputs.to(model.device))
                 (mu, var) = torch.split(y_hat, [1, 1], dim=-1)
                 conf.append(var.flatten())
