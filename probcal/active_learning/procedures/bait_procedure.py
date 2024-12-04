@@ -69,14 +69,3 @@ class BAITProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
             val_set_size=self.dataset.val_indices.shape[0],
             unlabeled_set_size=self.dataset.unlabeled_indices.shape[0],
         )
-
-    def step(self):
-        """
-        Update `self.dataset` to include the pool of unlabeled samples
-        from AL into the training pool.
-
-        Returns:
-            None
-        """
-        self.dataset.step(self)
-        self.notify()
