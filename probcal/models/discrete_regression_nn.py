@@ -241,3 +241,15 @@ class DiscreteRegressionNN(L.LightningModule):
             y (torch.Tensor): Model regression targets.
         """
         raise NotImplementedError("Should be implemented by subclass.")
+    def get_last_layer_representation(self, x):
+        """
+        Get the representation at the last layer before the output layer.
+        
+        Args:
+            x: Input tensor.
+
+        Returns:
+            Tensor of last layer representations.
+        """
+        x = torch.relu(self.layer1(x))
+        return x

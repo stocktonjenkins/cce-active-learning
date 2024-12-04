@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, Subset
-import lightning
+import lightning as L
 
 from probcal.active_learning.procedures.base import ActiveLearningProcedure
 from probcal.active_learning.active_learning_types import (
@@ -9,10 +9,6 @@ from probcal.active_learning.active_learning_types import (
     ActiveLearningEvaluationResults,
 )
 from probcal.models.discrete_regression_nn import DiscreteRegressionNN
-from probcal.active_learning.procedures.base import (
-    ActiveLearningProcedure,
-)
-from probcal.evaluation.calibration_evaluator import CalibrationResults
 
 
 class BAITProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
@@ -28,44 +24,86 @@ class BAITProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
         Returns:
             A subset of unlabeled indices selected based on Fisher Information.
         """
+        # Set the model to evaluation mode
         model.eval()
+        
+        # Create a DataLoader for the unlabeled data
         unlabeled_dataloader = self.dataset.unlabeled_dataloader()
-        
-        fisher_scores = []
-        
-        with torch.no_grad():
-            for data, _ in unlabeled_dataloader:
-                data = data.to(model.device)
-                predictions = model(data)                
-                for pred, input_data in zip(predictions, data):
-                    model.zero_grad()
-                    pred.backward(retain_graph=True)
-                    fisher_score = 0
-                    for param in model.parameters():
-                        if param.grad is not None:
-                            fisher_score += torch.sum(param.grad**2).item()
-                    fisher_scores.append(fisher_score)
-        
-        fisher_scores = torch.tensor(fisher_scores)
-        assert fisher_scores.shape[0] == len(unlabeled_indices)
-        
-        _, sampling_indices = torch.topk(fisher_scores, k)
-        print(len(sampling_indices))
-        return unlabeled_indices[sampling_indices.numpy()]
 
-    def _eval_impl(
-        self, trainer: lightning.Trainer, model: DiscreteRegressionNN
-    ) -> ActiveLearningEvaluationResults:
-        calibration_results: CalibrationResults = self.cal_evaluator(
-            model, data_module=self.dataset
-        )
-        results = trainer.test(model, datamodule=self.dataset)
-        model_accuracy_results = ModelAccuracyResults(**results[0])
+        # Compute Fisher Information scores for all unlabeled data
+        fisher_scores = self.compute_fisher_information(model, unlabeled_dataloader)
+
+        # Ensure the Fisher Information scores match the number of unlabeled indices
+        assert fisher_scores.shape[0] == len(unlabeled_indices), \
+            "Fisher Information scores must match the number of unlabeled indices."
+
+        # Select the top-k indices with the highest Fisher Information
+        _, top_indices = torch.topk(fisher_scores, k)
+
+        return unlabeled_indices[top_indices.numpy()]
+
+    def compute_fisher_information(self, model: DiscreteRegressionNN, dataloader: DataLoader) -> torch.Tensor:
+        """
+        Compute the Fisher Information for the unlabeled data.
+        
+        Args:
+            model: DiscreteRegressionNN
+            dataloader: DataLoader
+
+        Returns:
+            A tensor of Fisher Information scores for the unlabeled data.
+        """
+        fisher_information = []
+        i=0
+        print(len(dataloader))
+        for data, _ in dataloader:
+            data = data.to(model.device)
+            data.requires_grad = True  # Ensure the input tensor requires gradients
+            i+=1
+            print(i)
+            # Forward pass to get predictions
+            predictions = model(data)
+
+            # Compute Fisher Information for each sample in the batch
+            batch_fisher_scores = []
+            for pred in predictions:
+                model.zero_grad()  # Clear previous gradients
+                
+                # Reduce the prediction to a scalar before calling backward()
+                pred.sum().backward(retain_graph=True)
+
+                # Sum of squared gradients as Fisher Information score
+                fisher_score = sum((param.grad ** 2).sum().item() for param in model.parameters() if param.grad is not None)
+                batch_fisher_scores.append(fisher_score)
+
+            fisher_information.extend(batch_fisher_scores)
+
+        return torch.tensor(fisher_information)
+
+    def _eval_impl(self, trainer: L.Trainer, model: DiscreteRegressionNN) -> ActiveLearningEvaluationResults:
+        """
+        Evaluate the model and return the results, including calibration results and model accuracy results.
+        
+        Args:
+            trainer: L.Trainer
+            model: DiscreteRegressionNN
+
+        Returns:
+            ActiveLearningEvaluationResults
+        """
+        # Evaluate calibration results using the provided calibration evaluator
+        calibration_results = self.cal_evaluator(model, data_module=self.dataset)
+        
+        # Use the trainer to test the model
+        test_results = trainer.test(model, datamodule=self.dataset)
+        model_accuracy_results = ModelAccuracyResults(**test_results[0])
+
+        # Compile evaluation results
         return ActiveLearningEvaluationResults(
             calibration_results=calibration_results,
             model_accuracy_results=model_accuracy_results,
             iteration=self._iteration,
-            train_set_size=self.dataset.train_indices.shape[0],
-            val_set_size=self.dataset.val_indices.shape[0],
-            unlabeled_set_size=self.dataset.unlabeled_indices.shape[0],
+            train_set_size=len(self.dataset.train_indices),
+            val_set_size=len(self.dataset.val_indices),
+            unlabeled_set_size=len(self.dataset.unlabeled_indices),
         )
