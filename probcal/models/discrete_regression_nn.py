@@ -7,6 +7,7 @@ import torch
 from torchmetrics import MeanAbsoluteError
 from torchmetrics import MeanSquaredError
 from torchmetrics import Metric
+from torch.utils.data import DataLoader
 
 from probcal.enums import LRSchedulerType
 from probcal.enums import OptimizerType
@@ -243,13 +244,62 @@ class DiscreteRegressionNN(L.LightningModule):
         raise NotImplementedError("Should be implemented by subclass.")
     def get_last_layer_representation(self, x):
         """
-        Get the representation at the last layer before the output layer.
-        
+        Get the representation at the last hidden layer before the output layer.
+
         Args:
             x: Input tensor.
 
         Returns:
-            Tensor of last layer representations.
+            Tensor of the last layer's representations.
         """
-        x = torch.relu(self.layer1(x))
-        return x
+        if hasattr(self, 'layer1'):  # Check if `layer1` exists
+            x = torch.relu(self.layer1(x))
+            return x
+        elif hasattr(self, 'backbone'):  # Fallback for models with a backbone
+            return self.backbone(x)
+        else:
+            raise AttributeError("Model does not have a 'layer1' or 'backbone'.")
+
+    def get_grad_representations(self, dataloader: DataLoader, device: torch.device = "cpu") -> torch.Tensor:
+        """
+        Compute gradient embeddings for all samples in a DataLoader.
+
+        Args:
+            dataloader: DataLoader providing the data.
+            device: Device for computation (e.g., "cpu" or "cuda").
+
+        Returns:
+            torch.Tensor: Gradient embeddings for all samples.
+        """
+        grad_embeddings = []
+
+        # Ensure the model is in evaluation mode
+        self.eval()
+        self.to(device)
+        print(len(dataloader))
+        i=0
+        for batch in dataloader:
+            i+=1
+            print(i)
+            inputs, _ = batch  # Unlabeled samples
+            inputs = inputs.to(device)
+            # Process each sample independently
+            for x in inputs:
+                x = x.unsqueeze(0)  # Add batch dimension for single sample
+
+                # Forward pass
+                outputs = self(x)
+                predicted_label = outputs.argmax(dim=1)  # Get predicted label
+
+                # Compute the loss with respect to the predicted label
+                loss = self.loss_fn(outputs, predicted_label)
+
+                # Compute gradients
+                self.zero_grad()
+                loss.backward()  # Compute gradients for this sample
+
+                # Extract gradients of the head layer
+                grad = self.head.weight.grad  # Access gradients of the head layer
+                grad_embeddings.append(grad.flatten().detach().cpu())
+
+        return torch.stack(grad_embeddings)

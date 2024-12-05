@@ -64,6 +64,9 @@ def gaussian_nll(
     Returns:
         torch.Tensor: Avg. loss across all targets. Zero-dimensional tensor (torch.Size([])).
     """
+    if targets.dim() == 1:
+        targets = targets.unsqueeze(1)  # Ensure targets have the correct dimensions
+
     if targets.size(1) != 1:
         warnings.warn(
             f"Targets tensor for `gaussian_nll` expected to be of shape (n, 1) but got shape {targets.shape}. This may result in unexpected training behavior."
