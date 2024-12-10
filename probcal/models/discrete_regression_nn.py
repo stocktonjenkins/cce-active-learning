@@ -289,11 +289,9 @@ class DiscreteRegressionNN(L.LightningModule):
 
                 # Forward pass
                 outputs = self(x)
-                predicted_label = outputs.argmax(dim=1)  # Get predicted label
-
+                _, logvar = torch.split(outputs, [1, 1], dim=-1)
                 # Compute the loss with respect to the predicted label
-                loss = self.loss_fn(outputs, predicted_label)
-
+                loss = logvar.mean()
                 # Compute gradients
                 self.zero_grad()
                 loss.backward()  # Compute gradients for this sample
