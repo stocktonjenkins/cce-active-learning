@@ -1,0 +1,14 @@
+backbone_kwargs:
+  output_dim: 64
+backbone_type: !!python/name:probcal.models.backbones.MobileNetV3 ''
+beta_scheduler_kwargs: null
+beta_scheduler_type: null
+lr_scheduler_kwargs:
+  T_max: 10
+  eta_min: 0
+  last_epoch: -1
+lr_scheduler_type: COSINE_ANNEALING
+optim_kwargs:
+  lr: 0.001
+  weight_decay: 1.0e-05
+optim_type: ADAM_W

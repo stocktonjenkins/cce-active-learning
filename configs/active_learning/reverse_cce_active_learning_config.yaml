@@ -1,0 +1,9 @@
+num_iter: 10
+label_k: 1000
+init_num_labeled: 1428
+procedure_type: reverse_cce
+model_ckpt_freq: 5
+update_validation_set: false
+settings:
+  device: cuda
+  mcmd_num_trials: 1  # TODO: increase this to 5 after the midterm report
