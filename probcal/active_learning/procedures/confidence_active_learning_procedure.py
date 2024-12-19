@@ -1,17 +1,11 @@
-import lightning
 import numpy as np
 import torch
 from tqdm import tqdm
 from torch.utils.data import DataLoader
 
-from probcal.active_learning.active_learning_types import (
-    ActiveLearningEvaluationResults,
-    ModelAccuracyResults,
-)
 from probcal.active_learning.procedures.base import (
     ActiveLearningProcedure,
 )
-from probcal.evaluation.calibration_evaluator import CalibrationResults
 from probcal.models.discrete_regression_nn import DiscreteRegressionNN
 
 
@@ -30,35 +24,19 @@ class ConfidenceProcedure(ActiveLearningProcedure[ActiveLearningProcedure]):
             A random subset of unlabeled indices.
         """
         unlabeled_dataloader = self.dataset.unlabeled_dataloader()
-        confindence_unlabelled = self.get_confidence_score_from_model(
+        confidence = self.get_confidence_score_from_model(
             model,
             data_loader=unlabeled_dataloader,
         )
-        assert confindence_unlabelled.shape[0] == len(unlabeled_indices)
-        _, sampling_indices = torch.topk(confindence_unlabelled, k)
+        assert confidence.shape[0] == len(unlabeled_indices)
+        _, sampling_indices = torch.topk(confidence, k)
 
         return unlabeled_indices[sampling_indices]
 
-    def _eval_impl(
-        self, trainer: lightning.Trainer, model: DiscreteRegressionNN
-    ) -> ActiveLearningEvaluationResults:
-        calibration_results: CalibrationResults = self.cal_evaluator(
-            model, data_module=self.dataset
-        )
-        results = trainer.test(model, datamodule=self.dataset)
-        model_accuracy_results = ModelAccuracyResults(**results[0])
-        return ActiveLearningEvaluationResults(
-            calibration_results=calibration_results,
-            model_accuracy_results=model_accuracy_results,
-            iteration=self._iteration,
-            train_set_size=self.dataset.train_indices.shape[0],
-            val_set_size=self.dataset.val_indices.shape[0],
-            unlabeled_set_size=self.dataset.unlabeled_indices.shape[0],
-        )
-
+    @staticmethod
     def get_confidence_score_from_model(
-        self, model: DiscreteRegressionNN, data_loader: DataLoader
-    ) -> tuple[torch.Tensor]:
+        model: DiscreteRegressionNN, data_loader: DataLoader
+    ) -> torch.Tensor:
         with torch.no_grad():
             conf = []
             for inputs, _ in tqdm(
@@ -68,6 +46,4 @@ class ConfidenceProcedure(ActiveLearningProcedure[ActiveLearningProcedure]):
                 (mu, var) = torch.split(y_hat, [1, 1], dim=-1)
                 conf.append(var.flatten())
 
-            conf = torch.cat(conf).float()
-
-            return conf
+            return torch.cat(conf).float()

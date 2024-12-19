@@ -1,6 +1,6 @@
 import abc
 from abc import ABC
-from typing import TypeVar, Union
+from typing import TypeVar, Union, Any
 
 import lightning
 
@@ -8,6 +8,7 @@ from probcal.active_learning.configs import ActiveLearningConfig
 from probcal.active_learning.active_learning_types import (
     ActiveLearningEvaluationResults,
     IActiveLearningDataModuleDelegate,
+    ModelAccuracyResults,
 )
 from probcal.data_modules.active_learning_data_module import ActiveLearningDataModule
 from probcal.evaluation import CalibrationEvaluator
@@ -34,7 +35,12 @@ class ActiveLearningProcedure(
         self.config = config
         self.cal_evaluator = CalibrationEvaluator(config.settings)
 
-    def eval(self, trainer: lightning.Trainer, model: DiscreteRegressionNN):
+    def eval(
+        self,
+        trainer: lightning.Trainer,
+        model: DiscreteRegressionNN | None = None,
+        best_path: str | None = None,
+    ):
         """
         Evaluate the given model in this active learning procedure.
             - Model accuracy
@@ -43,18 +49,42 @@ class ActiveLearningProcedure(
         Also updates the state to send to observers.
         Args:
             trainer: the lightning trainer used to train the model.
-            model: the regression model to evaluate
+            model: the regression model to evaluate OR
+            best_path: the path of the best model to evaluate
         Returns:
 
         """
-        evaluation = self._eval_impl(trainer, model)
+        assert (
+            model is not None or best_path is not None
+        ), "`model` or `best_path` must be defined."
+        calibration_results = self.cal_evaluator(model, data_module=self.dataset)
+        results = trainer.test(
+            model=model, ckpt_path=best_path, datamodule=self.dataset
+        )
+        model_accuracy_results = ModelAccuracyResults(**results[0])
+        eval_dict = {
+            "calibration_results": calibration_results,
+            "model_accuracy_results": model_accuracy_results,
+            "iteration": self._iteration,
+            "train_set_size": self.dataset.train_indices.shape[0],
+            "val_set_size": self.dataset.val_indices.shape[0],
+            "unlabeled_set_size": self.dataset.unlabeled_indices.shape[0],
+        }
+        eval_cls, rest = self._eval_ext(trainer, model, best_path)
+        evaluation: EvalState = eval_cls(**{**eval_dict, **rest})
         self.update_state(evaluation)
 
-    @abc.abstractmethod
-    def _eval_impl(
-        self, trainer: lightning.Trainer, model: DiscreteRegressionNN
-    ) -> EvalState:
-        pass
+    def _eval_ext(
+        self,
+        trainer: lightning.Trainer,
+        model: DiscreteRegressionNN | None = None,
+        best_path: str | None = None,
+    ) -> tuple[type[EvalState], dict[str, Any]]:
+        """
+        Adds evaluation stats and defines the type of the evaluation result.
+        It must extend `ActiveLearningEvaluationResults`
+        """
+        return ActiveLearningEvaluationResults, {}
 
     def step(self, model: DiscreteRegressionNN):
         """

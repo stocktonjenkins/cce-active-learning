@@ -242,6 +242,7 @@ class DiscreteRegressionNN(L.LightningModule):
             y (torch.Tensor): Model regression targets.
         """
         raise NotImplementedError("Should be implemented by subclass.")
+
     def get_last_layer_representation(self, x):
         """
         Get the representation at the last hidden layer before the output layer.
@@ -252,15 +253,17 @@ class DiscreteRegressionNN(L.LightningModule):
         Returns:
             Tensor of the last layer's representations.
         """
-        if hasattr(self, 'layer1'):  # Check if `layer1` exists
+        if hasattr(self, "layer1"):  # Check if `layer1` exists
             x = torch.relu(self.layer1(x))
             return x
-        elif hasattr(self, 'backbone'):  # Fallback for models with a backbone
+        elif hasattr(self, "backbone"):  # Fallback for models with a backbone
             return self.backbone(x)
         else:
             raise AttributeError("Model does not have a 'layer1' or 'backbone'.")
 
-    def get_grad_representations(self, dataloader: DataLoader, device: torch.device = "cpu") -> torch.Tensor:
+    def get_grad_representations(
+        self, dataloader: DataLoader, device: torch.device = "cpu"
+    ) -> torch.Tensor:
         """
         Compute gradient embeddings for all samples in a DataLoader.
 
@@ -277,9 +280,9 @@ class DiscreteRegressionNN(L.LightningModule):
         self.eval()
         self.to(device)
         print(len(dataloader))
-        i=0
+        i = 0
         for batch in dataloader:
-            i+=1
+            i += 1
             print(i)
             inputs, _ = batch  # Unlabeled samples
             inputs = inputs.to(device)

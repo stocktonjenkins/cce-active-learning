@@ -55,19 +55,11 @@ def pipeline(
             model,
             datamodule=active_learn.dataset,
             config=train_config,
-            callbacks=(
-                get_chkp_callbacks(chkp_dir, chkp_freq=train_config.num_epochs)
-                if al_iter % active_learn.config.model_ckpt_freq == 0
-                else None
-            ),
-            logger=(
-                get_logger(train_config, logger_type, log_dirname, al_iter_name)
-                if al_iter % active_learn.config.model_ckpt_freq == 0
-                else None
-            ),
+            callbacks=get_chkp_callbacks(chkp_dir, chkp_freq=train_config.num_epochs),
+            logger=get_logger(train_config, logger_type, log_dirname, al_iter_name),
             validation_rate=active_learn.config.model_ckpt_freq,
         )
-        active_learn.eval(trainer, model)
+        active_learn.eval(trainer, best_path=os.path.join(chkp_dir, "best_mae.ckpt"))
         active_learn.step(model)
 
 

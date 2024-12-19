@@ -1,19 +1,23 @@
 import numpy as np
 import torch
-from torch.utils.data import DataLoader, Subset, TensorDataset
-import pytorch_lightning as pl
-from torchvision import transforms
+from torch.utils.data import DataLoader, TensorDataset
 
 from probcal.active_learning.procedures.base import ActiveLearningProcedure
 from probcal.active_learning.active_learning_types import (
-    ModelAccuracyResults,
     ActiveLearningEvaluationResults,
 )
 from probcal.models.discrete_regression_nn import DiscreteRegressionNN
 
 
 class BAITProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
-    def __init__(self, dataset, config, fisher_approximation='full', fisher_batch_size=32, device='cpu'):
+    def __init__(
+        self,
+        dataset,
+        config,
+        fisher_approximation="full",
+        fisher_batch_size=32,
+        device="cpu",
+    ):
         super().__init__(dataset, config)
         self.fisher_approximation = fisher_approximation
         self.fisher_batch_size = fisher_batch_size
@@ -27,7 +31,7 @@ class BAITProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
     ) -> np.ndarray:
         """
         Choose the next set of indices to add to the label set based on Fisher Information.
-        
+
         Args:
             model: DiscreteRegressionNN
             unlabeled_indices: np.ndarray
@@ -38,31 +42,40 @@ class BAITProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
         """
         # Set the model to evaluation mode
         model.eval()
-        
+
         # Get the DataLoader for unlabeled data
         unlabeled_dataloader = self.dataset.unlabeled_dataloader()
-        
+
         # Compute Fisher Information for unlabeled data
-        fisher_unlabeled, repr_unlabeled = self.compute_fisher_information(model, unlabeled_dataloader)
+        fisher_unlabeled, repr_unlabeled = self.compute_fisher_information(
+            model, unlabeled_dataloader
+        )
         # print(repr_unlabeled.shape)
         # Compute Fisher Information for labeled data
         labeled_dataloader = self.dataset.train_dataloader()
-        fisher_labeled, repr_labeled = self.compute_fisher_information(model, labeled_dataloader)
+        fisher_labeled, repr_labeled = self.compute_fisher_information(
+            model, labeled_dataloader
+        )
         # print(repr_labeled.shape)
         # Compute fisher_labeled using the provided code snippet
         fisher_labeled = self.compute_fisher_labeled(repr_labeled)
-        
+
         # Select top-k samples based on Fisher Information
         num_labeled = len(self.dataset.train_indices)
         lmb = 1.0  # Regularization parameter, adjust as needed
-        chosen_indices = select_topk(repr_unlabeled, k, fisher_unlabeled, fisher_labeled, lmb, num_labeled)
-        
+        chosen_indices = select_topk(
+            repr_unlabeled, k, fisher_unlabeled, fisher_labeled, lmb, num_labeled
+        )
+
         return unlabeled_indices[chosen_indices]
 
-    def compute_fisher_information(self, model: DiscreteRegressionNN, dataloader: DataLoader) -> torch.Tensor:
+    @staticmethod
+    def compute_fisher_information(
+        model: DiscreteRegressionNN, dataloader: DataLoader
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Compute the Fisher Information for the data.
-        
+
         Args:
             model: DiscreteRegressionNN
             dataloader: DataLoader
@@ -72,28 +85,28 @@ class BAITProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
         """
         fisher_information = []
         representations = []
-        
+
         for data, _ in dataloader:
             data.requires_grad = True  # Ensure the input tensor requires gradients
-            
+
             # Forward pass through the backbone to get the last layer representation
             with torch.no_grad():
                 x = model.backbone(data)
-            
+
             # Compute the Fisher Information score
-            fisher_info = torch.sum(x ** 2, dim=1)
+            fisher_info = torch.sum(x**2, dim=1)
             fisher_information.append(fisher_info)
             representations.append(x)
-        
+
         # Clear cache to free up memory
         torch.cuda.empty_cache()
-        
+
         return torch.cat(fisher_information), torch.cat(representations)
 
     def compute_fisher_labeled(self, repr_labeled: torch.Tensor) -> torch.Tensor:
         """
         Compute the Fisher Information for the labeled data using the provided code snippet.
-        
+
         Args:
             repr_labeled: Tensor of representations for the labeled data.
 
@@ -102,70 +115,37 @@ class BAITProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
         """
         fisher_dim = (repr_labeled.size(-1), repr_labeled.size(-1))
         fisher_labeled = torch.zeros(fisher_dim).to(self.device)
-        dl = DataLoader(TensorDataset(repr_labeled), batch_size=self.fisher_batch_size, shuffle=False)
+        dl = DataLoader(
+            TensorDataset(repr_labeled),
+            batch_size=self.fisher_batch_size,
+            shuffle=False,
+        )
         print(len(dl))
-        i=0
+        i = 0
         for batch in dl:
-            i+=1
-            if i%10==0:
+            i += 1
+            if i % 10 == 0:
                 print(i)
             repr_batch = batch[0].to(self.device)
             # print(repr_batch.shape)
-            if self.fisher_approximation == 'full':
-                repr_batch = repr_batch.view(repr_batch.size(0), -1, repr_batch.size(-1))
+            if self.fisher_approximation == "full":
+                repr_batch = repr_batch.view(
+                    repr_batch.size(0), -1, repr_batch.size(-1)
+                )
                 # print(repr_batch.shape)
                 term = torch.matmul(repr_batch.transpose(1, 2), repr_batch)
                 fisher_labeled += torch.mean(term, dim=0)
-            elif self.fisher_approximation == 'block_diag':
+            elif self.fisher_approximation == "block_diag":
                 repr_batch = repr_batch.view(-1, 10, 10, fisher_dim[0])
-                term = torch.einsum('nkhd,mkhe->hde', repr_batch, repr_batch)
+                term = torch.einsum("nkhd,mkhe->hde", repr_batch, repr_batch)
                 fisher_labeled += term / len(repr_batch)
-            elif self.fisher_approximation == 'diag':
-                term = torch.mean(torch.sum(repr_batch ** 2, dim=1), dim=0)
+            elif self.fisher_approximation == "diag":
+                term = torch.mean(torch.sum(repr_batch**2, dim=1), dim=0)
                 fisher_labeled += term
             else:
                 raise NotImplementedError()
-        
+
         return fisher_labeled
-
-    def _eval_impl(self, trainer: pl.Trainer, model: DiscreteRegressionNN) -> ActiveLearningEvaluationResults:
-        """
-        Evaluate the model and return the results, including calibration results and model accuracy results.
-        
-        Args:
-            trainer: pl.Trainer
-            model: DiscreteRegressionNN
-
-        Returns:
-            ActiveLearningEvaluationResults
-        """
-        # Evaluate the model using the calibration evaluator
-        calibration_results = self.cal_evaluator(model, data_module=self.dataset)
-        
-        # Use the trainer to test the model
-        results = trainer.test(model, datamodule=self.dataset)
-        model_accuracy_results = ModelAccuracyResults(**results[0])
-        
-        return ActiveLearningEvaluationResults(
-            calibration_results=calibration_results,
-            model_accuracy_results=model_accuracy_results,
-            iteration=self._iteration,
-            train_set_size=self.dataset.train_indices.shape[0],
-            val_set_size=self.dataset.val_indices.shape[0],
-            unlabeled_set_size=self.dataset.unlabeled_indices.shape[0],
-        )
-
-    def step(self, model: DiscreteRegressionNN):
-        """
-        Update `self.dataset` to include pool the unlabeled samples
-        from AL into the training pool.
-        
-        Returns:
-            None
-        """
-        self.dataset.step(self, model)
-        self._iteration += 1
-        self.notify()
 
 
 def select_topk(repr_unlabeled, acq_size, fisher_all, fisher_labeled, lmb, num_labeled):
@@ -184,9 +164,18 @@ def select_topk(repr_unlabeled, acq_size, fisher_all, fisher_labeled, lmb, num_l
     M_0_inv = torch.inverse(M_0)
     print(M_0_inv.shape)
     # repr_unlabeled = repr_unlabeled * np.sqrt(acq_size / (num_labeled + acq_size))
-    A = torch.inverse(torch.eye(rank, device=device) + repr_unlabeled @
-                      M_0_inv @ repr_unlabeled.transpose(1, 2))
-    tmp = repr_unlabeled @ M_0_inv @ fisher_all @ M_0_inv @ repr_unlabeled.transpose(1, 2) @ A
+    A = torch.inverse(
+        torch.eye(rank, device=device)
+        + repr_unlabeled @ M_0_inv @ repr_unlabeled.transpose(1, 2)
+    )
+    tmp = (
+        repr_unlabeled
+        @ M_0_inv
+        @ fisher_all
+        @ M_0_inv
+        @ repr_unlabeled.transpose(1, 2)
+        @ A
+    )
     scores = torch.diagonal(tmp, dim1=-2, dim2=-1).sum(-1)
-    chosen = (scores.topk(acq_size).indices)
+    chosen = scores.topk(acq_size).indices
     return chosen
