@@ -29,5 +29,5 @@ class ActiveLearningEvaluationResults:
     train_set_size: int
     val_set_size: int
     unlabeled_set_size: int
-    calibration_results: CalibrationResults
     model_accuracy_results: ModelAccuracyResults
+    calibration_results: CalibrationResults | None = None

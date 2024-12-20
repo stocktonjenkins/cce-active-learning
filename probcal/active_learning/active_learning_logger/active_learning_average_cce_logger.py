@@ -27,6 +27,7 @@ class ActiveLearningAverageCCELogger(IObserver):
 
     def update(self, subject: ISubject[ActiveLearningEvaluationResults]) -> None:
         state = subject.get_state()
+        assert state.calibration_results is not None, "Calibration results not saved!"
         with open(self.path, mode="a", newline="") as file:
             writer = csv.writer(file)
             writer.writerow(
