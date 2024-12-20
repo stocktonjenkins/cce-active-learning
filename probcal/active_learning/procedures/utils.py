@@ -21,4 +21,3 @@ def seed_torch(seed: int, settings: DeterministicSettings):
         torch.backends.cudnn.deterministic = settings.cudnn_deterministic
     if settings.cudnn_benchmark:
         torch.backends.cudnn.benchmark = settings.cudnn_benchmark
-

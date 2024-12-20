@@ -16,7 +16,6 @@ from probcal.active_learning.active_learning_logger.active_learning_model_accura
 )
 from probcal.active_learning.procedures import get_active_learning_procedure
 from probcal.active_learning.procedures.base import ActiveLearningProcedure
-from probcal.active_learning.procedures.utils import run_single_process
 from probcal.data_modules.active_learning_data_module import ActiveLearningDataModule
 from probcal.data_modules.prob_cal_data_module import ProbCalDataModule
 from probcal.training.train_model import train_procedure
