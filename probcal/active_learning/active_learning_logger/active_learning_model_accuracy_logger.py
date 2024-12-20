@@ -12,27 +12,30 @@ import csv
 class ActiveLearningModelAccuracyLogger(IObserver[ActiveLearningEvaluationResults]):
     def __init__(self, path: Path | str):
         self.path = path
-        with open(self.path, mode="w", newline="") as file:
-            writer = csv.writer(file)
-            writer.writerow(
-                [
-                    "Kth Trial",
-                    "A.L. Iteration",
-                    "Training",
-                    "Validation",
-                    "Test",
-                    "Unlabeled",
-                    "MAE",
-                    "RMSE",
-                    "LOSS",
-                    "NLL",
-                ]
-            )
+        lock_path = path.split(".")[0] + ".lock"
+        self.lock_path = lock_path
+        with FileLock(self.lock_path):
+            with open(self.path, mode="w", newline="") as file:
+                writer = csv.writer(file)
+                writer.writerow(
+                    [
+                        "Kth Trial",
+                        "A.L. Iteration",
+                        "Training",
+                        "Validation",
+                        "Test",
+                        "Unlabeled",
+                        "MAE",
+                        "RMSE",
+                        "LOSS",
+                        "NLL",
+                    ]
+                )
 
     def update(self, subject: ISubject[ActiveLearningEvaluationResults]) -> None:
         state = subject.get_state()
         # Log the results to the CSV file
-        with FileLock(self.path):
+        with FileLock(self.lock_path):
             with open(self.path, mode="a", newline="") as file:
                 writer = csv.writer(file)
                 writer.writerow(

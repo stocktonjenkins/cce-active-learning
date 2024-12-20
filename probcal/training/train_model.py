@@ -22,7 +22,7 @@ def train_procedure(
     callbacks: list[Callback] | None,
     logger: Logger | bool,
     validation_rate: int = 1,
-    devices: list[int] | str | int  = "auto",
+    devices: list[int] | str | int = "auto",
 ):
     trainer = L.Trainer(
         devices=devices,
