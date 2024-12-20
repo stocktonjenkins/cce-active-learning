@@ -2,9 +2,18 @@ from enum import Enum
 from pathlib import Path
 
 import torch
+from dataclasses import dataclass
 
 from probcal.evaluation import CalibrationEvaluatorSettings
 from probcal.utils.generic_utils import get_yaml
+
+
+@dataclass
+class DeterministicSettings:
+    # seed: int = 0
+    cudnn_deterministic: bool = True
+    cudnn_benchmark: bool = False
+    disable_debug_apis: bool = True
 
 
 class ProcedureType(Enum):
@@ -25,10 +34,14 @@ class ActiveLearningConfig:
         config_dict["settings"] = CalibrationEvaluatorSettings(
             **{**config_dict["settings"], "device": torch.device("cpu")}
         )
+        config_dict["deterministic_settings"] = DeterministicSettings(
+            **{**config_dict["deterministic_settings"]}
+        )
         return ActiveLearningConfig(**config_dict)
 
     def __init__(
         self,
+        deterministic_settings: DeterministicSettings,
         seeds: list[int],
         num_al_iter: int,
         label_k: int,
@@ -37,6 +50,7 @@ class ActiveLearningConfig:
         measure_calibration: bool = False,
         update_validation_set: bool = False,
     ):
+        self.deterministic_settings = deterministic_settings
         self.seeds = seeds
         self.num_al_iter = num_al_iter
         self.label_k = label_k

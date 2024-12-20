@@ -7,3 +7,7 @@ measure_calibration: false
 settings:
   device: cuda
   mcmd_num_trials: 5
+deterministic_settings:
+  cudnn_deterministic : True
+  cudnn_benchmark : False
+  disable_debug_apis: True

@@ -1,10 +1,16 @@
 import os.path
 import torch
+import random
+import numpy as np
 import shutil
 from argparse import Namespace, ArgumentParser
 from logging import Logger
 
-from probcal.active_learning.configs import ActiveLearningConfig, ProcedureType
+from probcal.active_learning.configs import (
+    ActiveLearningConfig,
+    ProcedureType,
+    DeterministicSettings,
+)
 from probcal.active_learning.active_learning_logger.active_learning_average_cce_logger import (
     ActiveLearningAverageCCELogger,
 )

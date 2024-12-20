@@ -1,4 +1,3 @@
-import abc
 from abc import ABC
 from typing import TypeVar, Union, Any
 
@@ -10,6 +9,7 @@ from probcal.active_learning.active_learning_types import (
     IActiveLearningDataModuleDelegate,
     ModelAccuracyResults,
 )
+from probcal.active_learning.procedures.utils import seed_torch
 from probcal.data_modules.active_learning_data_module import ActiveLearningDataModule
 from probcal.evaluation import CalibrationEvaluator
 from probcal.lib.observer import Subject
@@ -107,6 +107,7 @@ class ActiveLearningProcedure(
         self._al_iteration = 0
         self._k += 1
         self.dataset.reset(seed)
+        seed_torch(seed, self.config.deterministic_settings)
 
     def update_state(self, evaluation: EvalState):
         """
