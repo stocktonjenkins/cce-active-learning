@@ -1,3 +1,9 @@
+deterministic_settings:
+  seed: 0
+  cudnn_deterministic : True
+  cudnn_benchmark : False
+  disable_debug_apis: True
+
 num_iter: 10
 label_k: 1000
 init_num_labeled: 1428
