@@ -1,0 +1,8 @@
+num_iter: 10
+label_k: 1000
+init_num_labeled: 1429
+update_validation_set: false
+measure_calibration: false
+settings:
+  device: cuda
+  mcmd_num_trials: 5

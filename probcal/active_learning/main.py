@@ -4,7 +4,7 @@ import shutil
 from argparse import Namespace, ArgumentParser
 from logging import Logger
 
-from probcal.active_learning.configs import ActiveLearningConfig
+from probcal.active_learning.configs import ActiveLearningConfig, ProcedureType
 from probcal.active_learning.active_learning_logger.active_learning_average_cce_logger import (
     ActiveLearningAverageCCELogger,
 )
@@ -57,7 +57,6 @@ def pipeline(
             config=train_config,
             callbacks=get_chkp_callbacks(chkp_dir, chkp_freq=train_config.num_epochs),
             logger=get_logger(train_config, logger_type, log_dirname, al_iter_name),
-            validation_rate=active_learn.config.model_ckpt_freq,
         )
         active_learn.eval(trainer, best_path=os.path.join(chkp_dir, "best_mae.ckpt"))
         active_learn.step(model)
@@ -66,7 +65,7 @@ def pipeline(
 def parse_args() -> Namespace:
     parser = ArgumentParser()
     parser.add_argument("--train-config", type=str)
-    parser.add_argument("--al-config", type=str)
+    parser.add_argument("--procedure", type=ProcedureType)
     parser.add_argument("--logger", type=str, default="csv", help="csv|tboard")
     return parser.parse_args()
 
@@ -75,7 +74,10 @@ if __name__ == "__main__":
     torch.set_float32_matmul_precision("medium")
     args = parse_args()
     _train_config = TrainingConfig.from_yaml(args.train_config)
-    al_config = ActiveLearningConfig.from_yaml(args.al_config)
+    al_config = ActiveLearningConfig.from_yaml(
+        config_path="configs/active_learning/config.yaml",
+    )
+    al_config.procedure_type = args.procedure
     Procedure: type[ActiveLearningProcedure] = get_active_learning_procedure(al_config)
     module = get_datamodule(
         _train_config.dataset_type,

@@ -44,7 +44,7 @@ class ActiveLearningProcedure(
         """
         Evaluate the given model in this active learning procedure.
             - Model accuracy
-            - Model calibration
+            - Model calibration?
             - Other?
         Also updates the state to send to observers.
         Args:
@@ -57,19 +57,20 @@ class ActiveLearningProcedure(
         assert (
             model is not None or best_path is not None
         ), "`model` or `best_path` must be defined."
-        calibration_results = self.cal_evaluator(model, data_module=self.dataset)
         results = trainer.test(
             model=model, ckpt_path=best_path, datamodule=self.dataset
         )
         model_accuracy_results = ModelAccuracyResults(**results[0])
         eval_dict = {
-            "calibration_results": calibration_results,
             "model_accuracy_results": model_accuracy_results,
             "iteration": self._iteration,
             "train_set_size": self.dataset.train_indices.shape[0],
             "val_set_size": self.dataset.val_indices.shape[0],
             "unlabeled_set_size": self.dataset.unlabeled_indices.shape[0],
         }
+        if self.config.measure_calibration:
+            calibration_results = self.cal_evaluator(model, data_module=self.dataset)
+            eval_dict["calibration_results"] = calibration_results
         eval_cls, rest = self._eval_ext(trainer, model, best_path)
         evaluation: EvalState = eval_cls(**{**eval_dict, **rest})
         self.update_state(evaluation)

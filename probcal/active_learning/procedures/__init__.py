@@ -1,4 +1,4 @@
-from probcal.active_learning.configs import ActiveLearningConfig
+from probcal.active_learning.configs import ActiveLearningConfig, ProcedureType
 from probcal.active_learning.procedures.cce_active_learning_procedure import (
     CCEProcedure,
 )
@@ -18,17 +18,17 @@ from probcal.active_learning.procedures.reverse_cce_active_learning_procedure im
 
 
 def get_active_learning_procedure(config: ActiveLearningConfig):
-    if config.procedure_type == "random":
+    if config.procedure_type == ProcedureType.RANDOM:
         return RandomProcedure
-    if config.procedure_type == "cce":
+    if config.procedure_type == ProcedureType.CCE:
         return CCEProcedure
-    if config.procedure_type == "bait":
+    if config.procedure_type == ProcedureType.BAIT:
         return BAITProcedure
-    if config.procedure_type == "badge":
+    if config.procedure_type == ProcedureType.BADGE:
         return BadgeProcedure
-    if config.procedure_type == "reverse_cce":
+    if config.procedure_type == ProcedureType.REVERSE_CCE:
         return ReverseCCEProcedure
-    if config.procedure_type == "confidence":
+    if config.procedure_type == ProcedureType.CONFIDENCE:
         return ConfidenceProcedure
     else:
         raise ValueError(
