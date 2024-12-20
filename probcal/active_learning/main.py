@@ -64,14 +64,12 @@ def pipeline(
                 ),
                 logger=get_logger(train_config, logger_type, log_dirname, al_iter_name),
             )
-            with torch.cuda.device(0):
-                active_learn.eval(
-                    trainer, best_path=os.path.join(chkp_dir, "best_mae.ckpt")
-                )
-                active_learn.step(model)
+            active_learn.eval(
+                trainer, best_path=os.path.join(chkp_dir, "best_mae.ckpt")
+            )
+            active_learn.step(model)
             torch.cuda.synchronize()
-        with torch.cuda.device(0):
-            active_learn.jump(seed=active_learn.config.seeds[k + 1])
+        active_learn.jump(seed=active_learn.config.seeds[k + 1])
         torch.cuda.synchronize()
 
 
@@ -110,18 +108,20 @@ if __name__ == "__main__":
         dataset=ActiveLearningDataModule(**active_learning_data_module_args),
         config=al_config,
     )
-    _log_dirname = f"{al_config.procedure_type.value.lower()}__{_train_config.experiment_name}"
+    _log_dirname = (
+        f"{al_config.procedure_type.value.lower()}__{_train_config.experiment_name}"
+    )
     os.makedirs(os.path.join("logs", _log_dirname), exist_ok=True)
 
     _active_learn.attach(
         ActiveLearningModelAccuracyLogger(
-            path=os.path.join("logs", _log_dirname, f"al_model_acc.log")
+            path=os.path.join("logs", _log_dirname, f"al_model_acc.csv")
         ),
     )
     if al_config.measure_calibration:
         _active_learn.attach(
             ActiveLearningAverageCCELogger(
-                path=os.path.join("logs", _log_dirname, f"al_model_calibration.log")
+                path=os.path.join("logs", _log_dirname, f"al_model_calibration.csv")
             ),
         )
     shutil.copy(config_path, os.path.join("logs", _log_dirname, "config.yaml"))
