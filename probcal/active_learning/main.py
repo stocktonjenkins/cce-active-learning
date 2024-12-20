@@ -70,10 +70,10 @@ def pipeline(
             )
             if run_single_process():
                 active_learn.step(model)
-                torch.cuda.synchronize()
+            torch.cuda.synchronize()
         if run_single_process():
             active_learn.jump(seed=active_learn.config.seeds[k + 1])
-            torch.cuda.synchronize()
+        torch.cuda.synchronize()
 
 
 def parse_args() -> Namespace:
