@@ -50,5 +50,8 @@ class ActiveLearningModelAccuracyLogger(IObserver[ActiveLearningEvaluationResult
                 state.model_accuracy_results.test_loss,
                 state.model_accuracy_results.nll,
             ]
+            df = df.round(
+                {col: 4 for col in df.select_dtypes(include=["float"]).columns}
+            )
             df.drop_duplicates(inplace=True)
             df.to_csv(self.path, index=False)
