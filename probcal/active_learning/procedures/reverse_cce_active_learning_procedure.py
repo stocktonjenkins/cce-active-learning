@@ -36,6 +36,8 @@ class ReverseCCEProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResult
             data_loader=train_dataloader,
         )
         assert cce_unlabeled.shape[0] == len(unlabeled_indices)
-        _, sampling_indices = torch.topk(input=cce_unlabeled, k=min(k, unlabeled_indices.shape[0]), largest=False)
+        _, sampling_indices = torch.topk(
+            input=cce_unlabeled, k=min(k, unlabeled_indices.shape[0]), largest=False
+        )
 
         return unlabeled_indices[sampling_indices]

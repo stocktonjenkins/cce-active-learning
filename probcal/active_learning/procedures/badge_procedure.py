@@ -39,7 +39,9 @@ class BadgeProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
 
         # Select top-k samples using k-means++
         chosen_indices = kmeans_plusplus(
-            grad_embedding.numpy(), min(k, unlabeled_indices.shape[0]), rng=np.random.default_rng()
+            grad_embedding.numpy(),
+            min(k, unlabeled_indices.shape[0]),
+            rng=np.random.default_rng(),
         )
 
         return unlabeled_indices[chosen_indices]
