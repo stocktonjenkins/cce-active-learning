@@ -113,13 +113,13 @@ if __name__ == "__main__":
 
     _active_learn.attach(
         ActiveLearningModelAccuracyLogger(
-            path=os.path.join("logs", _log_dirname, f"al_model_acc.log")
+            path=os.path.join("logs", _log_dirname, f"al_model_acc.csv")
         ),
     )
     if al_config.measure_calibration:
         _active_learn.attach(
             ActiveLearningAverageCCELogger(
-                path=os.path.join("logs", _log_dirname, f"al_model_calibration.log")
+                path=os.path.join("logs", _log_dirname, f"al_model_calibration.csv")
             ),
         )
     shutil.copy(config_path, os.path.join("logs", _log_dirname, "config.yaml"))
