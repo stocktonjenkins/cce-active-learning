@@ -65,10 +65,10 @@ def pipeline(
                 ),
                 logger=get_logger(train_config, logger_type, log_dirname, al_iter_name),
             )
+            active_learn.eval(
+                trainer, best_path=os.path.join(chkp_dir, "best_mae.ckpt")
+            )
             if run_single_process():
-                active_learn.eval(
-                    trainer, best_path=os.path.join(chkp_dir, "best_mae.ckpt")
-                )
                 active_learn.step(model)
                 torch.cuda.synchronize()
         if run_single_process():
