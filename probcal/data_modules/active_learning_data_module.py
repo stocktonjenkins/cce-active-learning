@@ -26,7 +26,7 @@ class ActiveLearningDataModule(ProbCalDataModule):
         batch_size: int,
         num_workers: int = 0,
         persistent_workers: bool = False,
-        train_val_split: tuple[float, float] = (0.7, 0.1),
+        train_val_split: tuple[float, float] = (0.75, 0.1),
         seed=1998,
     ):
         self.config = config  # must be initialized before super.__init__()

@@ -68,6 +68,7 @@ class ActiveLearningProcedure(
             "iteration": self._al_iteration,
             "train_set_size": self.dataset.train_indices.shape[0],
             "val_set_size": self.dataset.val_indices.shape[0],
+            "test_set_size": self.dataset.test_indices.shape[0],
             "unlabeled_set_size": self.dataset.unlabeled_indices.shape[0],
         }
         if self.config.measure_calibration:

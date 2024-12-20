@@ -17,10 +17,12 @@ class ActiveLearningAverageCCELogger(IObserver):
             writer = csv.writer(file)
             writer.writerow(
                 [
+                    "Kth Trial",
                     "A.L. Iteration",
-                    "Training Set Size",
-                    "Val. Set Size",
-                    "Unlabeled Set Size",
+                    "Training",
+                    "Validation",
+                    "Test",
+                    "Unlabeled",
                     "Mean MCMD",
                     "ECE",
                 ]
@@ -34,9 +36,11 @@ class ActiveLearningAverageCCELogger(IObserver):
                 writer = csv.writer(file)
                 writer.writerow(
                     [
+                        state.kth_trial,
                         state.iteration,
                         state.train_set_size,
                         state.val_set_size,
+                        state.test_set_size,
                         state.unlabeled_set_size,
                         np.concatenate(
                             [

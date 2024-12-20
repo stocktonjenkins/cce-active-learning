@@ -27,6 +27,7 @@ class ActiveLearningEvaluationResults:
     kth_trial: int
     iteration: int
     train_set_size: int
+    test_set_size: int
     val_set_size: int
     unlabeled_set_size: int
     model_accuracy_results: ModelAccuracyResults
