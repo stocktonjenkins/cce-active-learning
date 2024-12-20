@@ -1,3 +1,4 @@
+import os
 import random
 
 import numpy as np
@@ -20,3 +21,12 @@ def seed_torch(seed: int, settings: DeterministicSettings):
         torch.backends.cudnn.deterministic = settings.cudnn_deterministic
     if settings.cudnn_benchmark:
         torch.backends.cudnn.benchmark = settings.cudnn_benchmark
+
+
+def run_single_process():
+    cuda_visible_devices = os.environ.get("CUDA_VISIBLE_DEVICES", "")
+    cuda_visible_devices = list(map(int, cuda_visible_devices.split(",")))
+    return (
+        min(cuda_visible_devices) == torch.cuda.current_device()
+        or len(cuda_visible_devices) == 1
+    )

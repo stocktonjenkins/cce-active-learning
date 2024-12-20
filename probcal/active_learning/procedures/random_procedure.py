@@ -23,4 +23,6 @@ class RandomProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
         Returns:
             A random subset of unlabeled indices.
         """
-        return np.random.choice(unlabeled_indices, size=min(k, unlabeled_indices.shape[0]), replace=False)
+        return np.random.choice(
+            unlabeled_indices, size=min(k, unlabeled_indices.shape[0]), replace=False
+        )

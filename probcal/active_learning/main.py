@@ -16,6 +16,7 @@ from probcal.active_learning.active_learning_logger.active_learning_model_accura
 )
 from probcal.active_learning.procedures import get_active_learning_procedure
 from probcal.active_learning.procedures.base import ActiveLearningProcedure
+from probcal.active_learning.procedures.utils import run_single_process
 from probcal.data_modules.active_learning_data_module import ActiveLearningDataModule
 from probcal.data_modules.prob_cal_data_module import ProbCalDataModule
 from probcal.training.train_model import train_procedure
@@ -64,13 +65,15 @@ def pipeline(
                 ),
                 logger=get_logger(train_config, logger_type, log_dirname, al_iter_name),
             )
-            active_learn.eval(
-                trainer, best_path=os.path.join(chkp_dir, "best_mae.ckpt")
-            )
-            active_learn.step(model)
+            if run_single_process():
+                active_learn.eval(
+                    trainer, best_path=os.path.join(chkp_dir, "best_mae.ckpt")
+                )
+                active_learn.step(model)
+                torch.cuda.synchronize()
+        if run_single_process():
+            active_learn.jump(seed=active_learn.config.seeds[k + 1])
             torch.cuda.synchronize()
-        active_learn.jump(seed=active_learn.config.seeds[k + 1])
-        torch.cuda.synchronize()
 
 
 def parse_args() -> Namespace:
