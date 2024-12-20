@@ -1,10 +1,17 @@
 from pathlib import Path
 
 import torch
+from dataclasses import dataclass
 
 from probcal.evaluation import CalibrationEvaluatorSettings
 from probcal.utils.generic_utils import get_yaml
 
+@dataclass
+class DeteministicSettings:
+    seed: int = 0
+    cudnn_deterministic: bool = True
+    cudnn_benchmark: bool = False
+    disable_debug_apis: bool = True
 
 class ActiveLearningConfig:
     @staticmethod
@@ -13,11 +20,14 @@ class ActiveLearningConfig:
         config_dict["settings"] = CalibrationEvaluatorSettings(
             **{**config_dict["settings"], "device": torch.device("cpu")}
         )
-
+        config_dict["deterministic_settings"] = DeteministicSettings(
+            **{**config_dict["deterministic_settings"]}
+        )
         return ActiveLearningConfig(**config_dict)
 
     def __init__(
         self,
+        deterministic_settings: DeteministicSettings,
         num_iter: int,
         label_k: int,
         init_num_labeled: int,
@@ -26,6 +36,7 @@ class ActiveLearningConfig:
         model_ckpt_freq: int,
         update_validation_set: bool = False,
     ):
+        self.deterministic_settings = deterministic_settings
         self.num_iter = num_iter
         self.label_k = label_k
         self.init_num_labeled = init_num_labeled

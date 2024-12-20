@@ -1,5 +1,7 @@
 import os.path
 import torch
+import random
+import numpy as np
 import shutil
 from argparse import Namespace, ArgumentParser
 from logging import Logger
@@ -20,6 +22,23 @@ from probcal.utils.configs import TrainingConfig
 from probcal.utils.experiment_utils import get_model, get_datamodule, get_chkp_callbacks
 from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger
 
+def setup_seed_params(cfg):
+    """Setup random seeds and other torch details
+    """
+    if cfg.disable_debug_apis:
+        torch.autograd.set_detect_anomaly(False)
+        torch.autograd.profiler.profile(False)
+        torch.autograd.profiler.emit_nvtx(False)
+
+    random.seed(cfg.seed)
+    torch.manual_seed(cfg.seed)
+    np.random.seed(cfg.seed)
+    if cfg.cudnn_deterministic:
+        torch.backends.cudnn.deterministic = cfg.cudnn_deterministic
+    if cfg.cudnn_benchmark:
+        torch.backends.cudnn.benchmark = cfg.cudnn_benchmark
+
+    return None
 
 def get_logger(
     train_config: TrainingConfig,
@@ -84,6 +103,7 @@ if __name__ == "__main__":
     args = parse_args()
     _train_config = TrainingConfig.from_yaml(args.train_config)
     al_config = ActiveLearningConfig.from_yaml(args.al_config)
+    setup_seed_params(al_config.deterministic_settings)
     Procedure: type[ActiveLearningProcedure] = get_active_learning_procedure(al_config)
     module = get_datamodule(
         _train_config.dataset_type,
