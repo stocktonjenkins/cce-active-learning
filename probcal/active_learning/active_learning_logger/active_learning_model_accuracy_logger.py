@@ -50,5 +50,5 @@ class ActiveLearningModelAccuracyLogger(IObserver[ActiveLearningEvaluationResult
                 state.model_accuracy_results.test_loss,
                 state.model_accuracy_results.nll,
             ]
-            df.drop_duplicates()
+            df.drop_duplicates(inplace=True)
             df.to_csv(self.path, index=False)
