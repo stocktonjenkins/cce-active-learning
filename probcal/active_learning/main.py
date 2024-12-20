@@ -110,7 +110,7 @@ if __name__ == "__main__":
         dataset=ActiveLearningDataModule(**active_learning_data_module_args),
         config=al_config,
     )
-    _log_dirname = f"{al_config.procedure_type}__{_train_config.experiment_name}"
+    _log_dirname = f"{al_config.procedure_type.value.lower()}__{_train_config.experiment_name}"
     os.makedirs(os.path.join("logs", _log_dirname), exist_ok=True)
 
     _active_learn.attach(
