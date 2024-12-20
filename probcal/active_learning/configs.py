@@ -10,7 +10,6 @@ from probcal.utils.generic_utils import get_yaml
 
 @dataclass
 class DeterministicSettings:
-    # seed: int = 0
     cudnn_deterministic: bool = True
     cudnn_benchmark: bool = False
     disable_debug_apis: bool = True

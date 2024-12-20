@@ -1,7 +1,6 @@
 import os.path
 import torch
-import random
-import numpy as np
+from torch import distributed
 import shutil
 from argparse import Namespace, ArgumentParser
 from logging import Logger
@@ -9,7 +8,6 @@ from logging import Logger
 from probcal.active_learning.configs import (
     ActiveLearningConfig,
     ProcedureType,
-    DeterministicSettings,
 )
 from probcal.active_learning.active_learning_logger.active_learning_average_cce_logger import (
     ActiveLearningAverageCCELogger,
@@ -19,6 +17,7 @@ from probcal.active_learning.active_learning_logger.active_learning_model_accura
 )
 from probcal.active_learning.procedures import get_active_learning_procedure
 from probcal.active_learning.procedures.base import ActiveLearningProcedure
+from probcal.active_learning.procedures.utils import SingleProcessContext
 from probcal.data_modules.active_learning_data_module import ActiveLearningDataModule
 from probcal.data_modules.prob_cal_data_module import ProbCalDataModule
 from probcal.training.train_model import train_procedure
@@ -67,11 +66,15 @@ def pipeline(
                 ),
                 logger=get_logger(train_config, logger_type, log_dirname, al_iter_name),
             )
-            active_learn.eval(
-                trainer, best_path=os.path.join(chkp_dir, "best_mae.ckpt")
-            )
-            active_learn.step(model)
-        active_learn.jump(seed=active_learn.config.seeds[k + 1])
+            with SingleProcessContext() as is_zero_rank:
+                if is_zero_rank:
+                    active_learn.eval(
+                        trainer, best_path=os.path.join(chkp_dir, "best_mae.ckpt")
+                    )
+                    active_learn.step(model)
+        with SingleProcessContext() as is_zero_rank:
+            if is_zero_rank:
+                active_learn.jump(seed=active_learn.config.seeds[k + 1])
 
 
 def parse_args() -> Namespace:
@@ -84,6 +87,7 @@ def parse_args() -> Namespace:
 
 if __name__ == "__main__":
     torch.set_float32_matmul_precision("medium")
+    distributed.init_process_group(backend="nccl")
     args = parse_args()
     _train_config = TrainingConfig.from_yaml(args.train_config)
     al_config = ActiveLearningConfig.from_yaml(
