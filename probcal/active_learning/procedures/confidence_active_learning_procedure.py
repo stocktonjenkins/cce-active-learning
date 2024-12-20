@@ -29,7 +29,7 @@ class ConfidenceProcedure(ActiveLearningProcedure[ActiveLearningProcedure]):
             data_loader=unlabeled_dataloader,
         )
         assert confidence.shape[0] == len(unlabeled_indices)
-        _, sampling_indices = torch.topk(confidence, k)
+        _, sampling_indices = torch.topk(confidence, k=min(k, unlabeled_indices.shape[0]))
 
         return unlabeled_indices[sampling_indices]
 

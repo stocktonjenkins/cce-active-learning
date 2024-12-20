@@ -64,7 +64,7 @@ class BAITProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
         num_labeled = len(self.dataset.train_indices)
         lmb = 1.0  # Regularization parameter, adjust as needed
         chosen_indices = select_topk(
-            repr_unlabeled, k, fisher_unlabeled, fisher_labeled, lmb, num_labeled
+            repr_unlabeled, min(k, unlabeled_indices.shape[0]), fisher_unlabeled, fisher_labeled, lmb, num_labeled
         )
 
         return unlabeled_indices[chosen_indices]
