@@ -40,6 +40,7 @@ class DatasetType(Enum):
 
 class ImageDatasetName(Enum):
     MNIST = "mnist"
+    MNIST_ROTATE = "mnist_rotate"
     COCO_PEOPLE = "coco_people"
     AAF = "aaf"
     EVA = "eva"
@@ -47,6 +48,7 @@ class ImageDatasetName(Enum):
     OOD_MIXUP_COCO_PEOPLE = "ood_mixup_coco_people"
     OOD_LABEL_NOISE_COCO_PEOPLE = "ood_label_noise_coco_people"
     FG_NET = "fg_net"
+    CIFAR_100 = "cifar_100"
 
 
 class TextDatasetName(Enum):

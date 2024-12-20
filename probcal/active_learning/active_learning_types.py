@@ -1,10 +1,7 @@
 import abc
 from dataclasses import dataclass
 
-import torch
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import numpy as np
-from typing import List
 from probcal.evaluation.calibration_evaluator import CalibrationResults
 from probcal.models.discrete_regression_nn import DiscreteRegressionNN
 
@@ -27,14 +24,11 @@ class ModelAccuracyResults:
 
 @dataclass
 class ActiveLearningEvaluationResults:
+    kth_trial: int
     iteration: int
     train_set_size: int
+    test_set_size: int
     val_set_size: int
     unlabeled_set_size: int
-    calibration_results: CalibrationResults
     model_accuracy_results: ModelAccuracyResults
-
-
-@dataclass
-class RandomProcedureResults(ActiveLearningEvaluationResults):
-    pass
+    calibration_results: CalibrationResults | None = None

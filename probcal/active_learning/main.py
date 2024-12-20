@@ -1,12 +1,13 @@
 import os.path
 import torch
-import random
-import numpy as np
 import shutil
 from argparse import Namespace, ArgumentParser
 from logging import Logger
 
-from probcal.active_learning.configs import ActiveLearningConfig
+from probcal.active_learning.configs import (
+    ActiveLearningConfig,
+    ProcedureType,
+)
 from probcal.active_learning.active_learning_logger.active_learning_average_cce_logger import (
     ActiveLearningAverageCCELogger,
 )
@@ -22,23 +23,6 @@ from probcal.utils.configs import TrainingConfig
 from probcal.utils.experiment_utils import get_model, get_datamodule, get_chkp_callbacks
 from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger
 
-def setup_seed_params(cfg):
-    """Setup random seeds and other torch details
-    """
-    if cfg.disable_debug_apis:
-        torch.autograd.set_detect_anomaly(False)
-        torch.autograd.profiler.profile(False)
-        torch.autograd.profiler.emit_nvtx(False)
-
-    random.seed(cfg.seed)
-    torch.manual_seed(cfg.seed)
-    np.random.seed(cfg.seed)
-    if cfg.cudnn_deterministic:
-        torch.backends.cudnn.deterministic = cfg.cudnn_deterministic
-    if cfg.cudnn_benchmark:
-        torch.backends.cudnn.benchmark = cfg.cudnn_benchmark
-
-    return None
 
 def get_logger(
     train_config: TrainingConfig,
@@ -66,34 +50,34 @@ def pipeline(
     logger_type: str,
     log_dirname: str,
 ):
-    for al_iter in range(active_learn.config.num_iter):
-        al_iter_name = f"al_iter_{al_iter}"
-        model = get_model(_train_config)
-        chkp_dir = train_config.chkp_dir / log_dirname / al_iter_name
-        trainer = train_procedure(
-            model,
-            datamodule=active_learn.dataset,
-            config=train_config,
-            callbacks=(
-                get_chkp_callbacks(chkp_dir, chkp_freq=train_config.num_epochs)
-                if al_iter % active_learn.config.model_ckpt_freq == 0
-                else None
-            ),
-            logger=(
-                get_logger(train_config, logger_type, log_dirname, al_iter_name)
-                if al_iter % active_learn.config.model_ckpt_freq == 0
-                else None
-            ),
-            validation_rate=active_learn.config.model_ckpt_freq,
-        )
-        active_learn.eval(trainer, model)
-        active_learn.step(model)
+    for k in range(len(active_learn.config.seeds)):
+        for al_iter in range(active_learn.config.num_al_iter):
+            al_iter_name = f"{k}.{al_iter+1}"
+            model = get_model(_train_config)
+            chkp_dir = train_config.chkp_dir / log_dirname / al_iter_name
+            trainer = train_procedure(
+                model,
+                datamodule=active_learn.dataset,
+                config=train_config,
+                callbacks=get_chkp_callbacks(
+                    chkp_dir, chkp_freq=train_config.num_epochs
+                ),
+                logger=get_logger(train_config, logger_type, log_dirname, al_iter_name),
+            )
+            active_learn.eval(
+                trainer, best_path=os.path.join(chkp_dir, "best_mae.ckpt")
+            )
+            active_learn.step(model)
+        try:
+            active_learn.jump(seed=active_learn.config.seeds[k + 1])
+        except IndexError:
+            pass
 
 
 def parse_args() -> Namespace:
     parser = ArgumentParser()
     parser.add_argument("--train-config", type=str)
-    parser.add_argument("--al-config", type=str)
+    parser.add_argument("--procedure", type=ProcedureType)
     parser.add_argument("--logger", type=str, default="csv", help="csv|tboard")
     return parser.parse_args()
 
@@ -101,9 +85,10 @@ def parse_args() -> Namespace:
 if __name__ == "__main__":
     torch.set_float32_matmul_precision("medium")
     args = parse_args()
+    config_path = "configs/active_learning/config.yaml"
     _train_config = TrainingConfig.from_yaml(args.train_config)
-    al_config = ActiveLearningConfig.from_yaml(args.al_config)
-    setup_seed_params(al_config.deterministic_settings)
+    al_config = ActiveLearningConfig.from_yaml(config_path=config_path)
+    al_config.procedure_type = args.procedure
     Procedure: type[ActiveLearningProcedure] = get_active_learning_procedure(al_config)
     module = get_datamodule(
         _train_config.dataset_type,
@@ -115,6 +100,7 @@ if __name__ == "__main__":
     active_learning_data_module_args = {
         "full_dataset": module.full_dataset,
         "batch_size": _train_config.batch_size,
+        "seed": al_config.seeds[0],
         # "num_workers": _train_config.num_workers,
         "config": al_config,  # Assuming config is part of TrainingConfig
         # "persistent_workers": _train_config.persistent_workers,  # Add this field to TrainingConfig if not present
@@ -123,20 +109,23 @@ if __name__ == "__main__":
         dataset=ActiveLearningDataModule(**active_learning_data_module_args),
         config=al_config,
     )
-    _log_dirname = f"{al_config.procedure_type}__{_train_config.experiment_name}"
+    _log_dirname = (
+        f"{al_config.procedure_type.value.lower()}__{_train_config.experiment_name}"
+    )
     os.makedirs(os.path.join("logs", _log_dirname), exist_ok=True)
 
     _active_learn.attach(
-        [
-            ActiveLearningModelAccuracyLogger(
-                path=os.path.join("logs", _log_dirname, f"al_model_acc.log")
-            ),
-            ActiveLearningAverageCCELogger(
-                path=os.path.join("logs", _log_dirname, f"al_model_calibration.log")
-            ),
-        ]
+        ActiveLearningModelAccuracyLogger(
+            path=os.path.join("logs", _log_dirname, f"al_model_acc.csv")
+        ),
     )
-    shutil.copy(args.al_config, os.path.join("logs", _log_dirname, "al_config.yaml"))
+    if al_config.measure_calibration:
+        _active_learn.attach(
+            ActiveLearningAverageCCELogger(
+                path=os.path.join("logs", _log_dirname, f"al_model_calibration.csv")
+            ),
+        )
+    shutil.copy(config_path, os.path.join("logs", _log_dirname, "config.yaml"))
     pipeline(
         train_config=_train_config,
         active_learn=_active_learn,

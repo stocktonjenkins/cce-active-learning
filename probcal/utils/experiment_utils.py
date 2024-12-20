@@ -182,6 +182,13 @@ def get_datamodule(
                 num_workers=num_workers,
                 persistent_workers=True if num_workers > 0 else False,
             )
+        elif dataset_path_or_spec == ImageDatasetName.CIFAR_100:
+            return CIFAR100DataModule(
+                root_dir=GLOBAL_DATA_DIR,
+                batch_size=batch_size,
+                num_workers=num_workers,
+                persistent_workers=True if num_workers > 0 else False,
+            )
     elif dataset_type == DatasetType.TEXT:
         if dataset_path_or_spec == TextDatasetName.REVIEWS:
             return ValueError("Reviews not supported.")
