@@ -68,12 +68,8 @@ def pipeline(
             active_learn.eval(
                 trainer, best_path=os.path.join(chkp_dir, "best_mae.ckpt")
             )
-            if run_single_process():
-                active_learn.step(model)
-            torch.cuda.synchronize()
-        if run_single_process():
-            active_learn.jump(seed=active_learn.config.seeds[k + 1])
-        torch.cuda.synchronize()
+            active_learn.step(model)
+        active_learn.jump(seed=active_learn.config.seeds[k + 1])
 
 
 def parse_args() -> Namespace:
