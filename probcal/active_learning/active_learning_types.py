@@ -24,6 +24,7 @@ class ModelAccuracyResults:
 
 @dataclass
 class ActiveLearningEvaluationResults:
+    kth_trial: int
     iteration: int
     train_set_size: int
     val_set_size: int

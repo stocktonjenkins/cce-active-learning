@@ -67,9 +67,9 @@ class ActiveLearningDataModule(ProbCalDataModule):
             self.unlabeled_indices, unlabeled_indices_to_label
         )
 
-    def _init_indices(self, train_val_split: tuple[float, float], seed=1998):
+    def _init_indices(self, seed=1998):
         num_instances = len(self.full_dataset)
-        train_split, val_split = train_val_split
+        train_split, val_split = self.train_val_split
         test_split = 1 - val_split - train_split
         generator = np.random.default_rng(seed=seed)
         self.shuffled_indices = generator.permutation(np.arange(num_instances))
@@ -85,7 +85,9 @@ class ActiveLearningDataModule(ProbCalDataModule):
             labeled_indices[:num_train],
             labeled_indices[num_train:],
         )
-        self.unlabeled_indices = self.unlabeled_indices
+
+    def reset(self, seed: int):
+        self._init_indices(seed)
 
     def setup(self, stage):
         super().setup(stage)

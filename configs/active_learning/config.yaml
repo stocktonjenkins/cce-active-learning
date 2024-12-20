@@ -1,7 +1,8 @@
-num_iter: 10
+num_al_iter: 10
 label_k: 1000
 init_num_labeled: 1429
 update_validation_set: false
+seeds: [1, 2, 3, 4, 5]
 measure_calibration: false
 settings:
   device: cuda

@@ -14,6 +14,7 @@ class ActiveLearningModelAccuracyLogger(IObserver[ActiveLearningEvaluationResult
             writer = csv.writer(file)
             writer.writerow(
                 [
+                    "Kth Trial",
                     "A.L. Iteration",
                     "Training Set Size",
                     "Val. Set Size",
@@ -32,6 +33,7 @@ class ActiveLearningModelAccuracyLogger(IObserver[ActiveLearningEvaluationResult
             writer = csv.writer(file)
             writer.writerow(
                 [
+                    state.kth_trial,
                     state.iteration,
                     state.train_set_size,
                     state.val_set_size,

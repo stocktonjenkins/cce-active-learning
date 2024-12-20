@@ -27,7 +27,8 @@ class ActiveLearningProcedure(
 ):
     dataset: ActiveLearningDataModule
     config: ActiveLearningConfig
-    _iteration: int = 0
+    _k: int = 0
+    _al_iteration: int = 0
 
     def __init__(self, dataset: ActiveLearningDataModule, config: ActiveLearningConfig):
         super().__init__()
@@ -62,8 +63,9 @@ class ActiveLearningProcedure(
         )
         model_accuracy_results = ModelAccuracyResults(**results[0])
         eval_dict = {
+            "kth_trial": self._k,
             "model_accuracy_results": model_accuracy_results,
-            "iteration": self._iteration,
+            "iteration": self._al_iteration,
             "train_set_size": self.dataset.train_indices.shape[0],
             "val_set_size": self.dataset.val_indices.shape[0],
             "unlabeled_set_size": self.dataset.unlabeled_indices.shape[0],
@@ -95,8 +97,16 @@ class ActiveLearningProcedure(
             None
         """
         self.dataset.step(self, model)
-        self._iteration += 1
+        self._al_iteration += 1
         self.notify()
+
+    def jump(self, seed: int):
+        """
+        Jump to the next trial in the experiment (of k runs), using the given seed.
+        """
+        self._al_iteration = 0
+        self._k += 1
+        self.dataset.reset(seed)
 
     def update_state(self, evaluation: EvalState):
         """

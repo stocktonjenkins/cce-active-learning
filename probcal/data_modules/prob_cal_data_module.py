@@ -47,12 +47,13 @@ class ProbCalDataModule(LightningDataModule):
         self.num_workers = num_workers
         self.persistent_workers = persistent_workers
         self.full_dataset = full_dataset
-        self._init_indices(train_val_split, seed)
+        self.train_val_split = train_val_split
+        self._init_indices(seed)
         self._init_transforms()
 
-    def _init_indices(self, train_val_split: tuple[float, float], seed=1998):
+    def _init_indices(self, seed=1998):
         num_instances = len(self.full_dataset)
-        train_split, val_split = train_val_split
+        train_split, val_split = self.train_val_split
         num_train = int(train_split * num_instances)
         num_val = int(val_split * num_instances)
         generator = np.random.default_rng(seed=seed)

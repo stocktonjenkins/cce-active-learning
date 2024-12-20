@@ -29,14 +29,16 @@ class ActiveLearningConfig:
 
     def __init__(
         self,
-        num_iter: int,
+        seeds: list[int],
+        num_al_iter: int,
         label_k: int,
         init_num_labeled: int,
         settings: CalibrationEvaluatorSettings,
         measure_calibration: bool = False,
         update_validation_set: bool = False,
     ):
-        self.num_iter = num_iter
+        self.seeds = seeds
+        self.num_al_iter = num_al_iter
         self.label_k = label_k
         self.init_num_labeled = init_num_labeled
         self.settings = settings

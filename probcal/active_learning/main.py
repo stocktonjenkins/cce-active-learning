@@ -47,19 +47,25 @@ def pipeline(
     logger_type: str,
     log_dirname: str,
 ):
-    for al_iter in range(active_learn.config.num_iter):
-        al_iter_name = f"al_iter_{al_iter}"
-        model = get_model(_train_config)
-        chkp_dir = train_config.chkp_dir / log_dirname / al_iter_name
-        trainer = train_procedure(
-            model,
-            datamodule=active_learn.dataset,
-            config=train_config,
-            callbacks=get_chkp_callbacks(chkp_dir, chkp_freq=train_config.num_epochs),
-            logger=get_logger(train_config, logger_type, log_dirname, al_iter_name),
-        )
-        active_learn.eval(trainer, best_path=os.path.join(chkp_dir, "best_mae.ckpt"))
-        active_learn.step(model)
+    for k in range(len(active_learn.config.seeds)):
+        for al_iter in range(active_learn.config.num_al_iter):
+            al_iter_name = f"{k}.{al_iter+1}"
+            model = get_model(_train_config)
+            chkp_dir = train_config.chkp_dir / log_dirname / al_iter_name
+            trainer = train_procedure(
+                model,
+                datamodule=active_learn.dataset,
+                config=train_config,
+                callbacks=get_chkp_callbacks(
+                    chkp_dir, chkp_freq=train_config.num_epochs
+                ),
+                logger=get_logger(train_config, logger_type, log_dirname, al_iter_name),
+            )
+            active_learn.eval(
+                trainer, best_path=os.path.join(chkp_dir, "best_mae.ckpt")
+            )
+            active_learn.step(model)
+        active_learn.jump(seed=active_learn.config.seeds[k + 1])
 
 
 def parse_args() -> Namespace:
@@ -89,6 +95,7 @@ if __name__ == "__main__":
     active_learning_data_module_args = {
         "full_dataset": module.full_dataset,
         "batch_size": _train_config.batch_size,
+        "seed": al_config.seeds[0],
         # "num_workers": _train_config.num_workers,
         "config": al_config,  # Assuming config is part of TrainingConfig
         # "persistent_workers": _train_config.persistent_workers,  # Add this field to TrainingConfig if not present
@@ -101,15 +108,16 @@ if __name__ == "__main__":
     os.makedirs(os.path.join("logs", _log_dirname), exist_ok=True)
 
     _active_learn.attach(
-        [
-            ActiveLearningModelAccuracyLogger(
-                path=os.path.join("logs", _log_dirname, f"al_model_acc.log")
-            ),
+        ActiveLearningModelAccuracyLogger(
+            path=os.path.join("logs", _log_dirname, f"al_model_acc.log")
+        ),
+    )
+    if al_config.measure_calibration:
+        _active_learn.attach(
             ActiveLearningAverageCCELogger(
                 path=os.path.join("logs", _log_dirname, f"al_model_calibration.log")
             ),
-        ]
-    )
+        )
     shutil.copy(args.al_config, os.path.join("logs", _log_dirname, "al_config.yaml"))
     pipeline(
         train_config=_train_config,
