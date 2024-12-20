@@ -86,10 +86,9 @@ def parse_args() -> Namespace:
 if __name__ == "__main__":
     torch.set_float32_matmul_precision("medium")
     args = parse_args()
+    config_path = "configs/active_learning/config.yaml"
     _train_config = TrainingConfig.from_yaml(args.train_config)
-    al_config = ActiveLearningConfig.from_yaml(
-        config_path="configs/active_learning/config.yaml",
-    )
+    al_config = ActiveLearningConfig.from_yaml(config_path=config_path)
     al_config.procedure_type = args.procedure
     Procedure: type[ActiveLearningProcedure] = get_active_learning_procedure(al_config)
     module = get_datamodule(
@@ -125,7 +124,7 @@ if __name__ == "__main__":
                 path=os.path.join("logs", _log_dirname, f"al_model_calibration.log")
             ),
         )
-    shutil.copy(args.al_config, os.path.join("logs", _log_dirname, "al_config.yaml"))
+    shutil.copy(config_path, os.path.join("logs", _log_dirname, "config.yaml"))
     pipeline(
         train_config=_train_config,
         active_learn=_active_learn,
