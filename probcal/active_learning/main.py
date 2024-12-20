@@ -68,7 +68,10 @@ def pipeline(
                 trainer, best_path=os.path.join(chkp_dir, "best_mae.ckpt")
             )
             active_learn.step(model)
-        active_learn.jump(seed=active_learn.config.seeds[k + 1])
+        try:
+            active_learn.jump(seed=active_learn.config.seeds[k + 1])
+        except IndexError:
+            pass
 
 
 def parse_args() -> Namespace:
