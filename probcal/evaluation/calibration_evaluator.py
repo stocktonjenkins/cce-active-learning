@@ -388,7 +388,7 @@ class CalibrationEvaluator:
         with torch.no_grad():
             x = []
             for inputs, _ in tqdm(
-                data_loader, desc="Sampling from posteriors for MCMD..."
+                data_loader
             ):
                 if self.settings.dataset_type == DatasetType.TABULAR:
                     x.append(inputs)
