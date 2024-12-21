@@ -53,7 +53,7 @@ class ActiveLearningModelAccuracyLogger(IObserver[ActiveLearningEvaluationResult
         
         # Log to WandB using the parent logger
         self.wandb_logger.log_metrics(metrics)
-        
+        print(f"Logged metrics to WandB: {metrics}")
         # Log the results to the CSV file
         with FileLock(self.lock_path):
             df = pd.read_csv(self.path)
@@ -74,26 +74,3 @@ class ActiveLearningModelAccuracyLogger(IObserver[ActiveLearningEvaluationResult
             )
             df.drop_duplicates(inplace=True)
             df.to_csv(self.path, index=False)
-
-        if self.wandb_logger.experiment is not None:
-            # Create and log dataset size distribution chart
-            self.wandb_logger.experiment.log({
-                "dataset_distribution": wandb.plot.bar(
-                    "Dataset Split",
-                    "Size",
-                    [
-                        ["Train", "Val", "Test", "Unlabeled"],
-                        [state.train_set_size, state.val_set_size, 
-                            state.test_set_size, state.unlabeled_set_size]
-                    ],
-                    title="Dataset Size Distribution"
-                )
-            })
-            
-            # Log the CSV as an artifact
-            artifact = wandb.Artifact(
-                name=f"active_learning_metrics_{state.kth_trial}_{state.iteration}", 
-                type="metrics"
-            )
-            artifact.add_file(self.path)
-            self.wandb_logger.experiment.log_artifact(artifact)

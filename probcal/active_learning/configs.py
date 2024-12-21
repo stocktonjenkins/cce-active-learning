@@ -48,6 +48,7 @@ class ActiveLearningConfig:
         settings: CalibrationEvaluatorSettings,
         measure_calibration: bool = False,
         update_validation_set: bool = False,
+        wandb: bool = False,
     ):
         self.deterministic_settings = deterministic_settings
         self.seeds = seeds
@@ -58,3 +59,4 @@ class ActiveLearningConfig:
         self.settings.device = torch.device("cpu")
         self.update_validation_set = update_validation_set
         self.measure_calibration = measure_calibration
+        self.wandb= wandb

@@ -87,15 +87,16 @@ if __name__ == "__main__":
     torch.set_float32_matmul_precision("medium")
     
     args = parse_args()
-    wandb_logger = WandbLogger(
-            project="probcal",
-            name=args.experiment_name,
-            log_model=True
-        )
-    wandb_logger.log_hyperparams(vars(args))
     config_path = "configs/active_learning/config.yaml"
     _train_config = TrainingConfig.from_yaml(args.train_config)
     al_config = ActiveLearningConfig.from_yaml(config_path=config_path)
+    wandb_logger = WandbLogger(
+            project="probcal",
+            name=args.experiment_name,
+            log_model=al_config.wandb,
+        )
+    print(al_config.wandb)
+    wandb_logger.log_hyperparams(vars(args))
     al_config.procedure_type = args.procedure
     Procedure: type[ActiveLearningProcedure] = get_active_learning_procedure(al_config)
     module = get_datamodule(
