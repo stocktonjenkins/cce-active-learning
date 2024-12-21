@@ -92,6 +92,7 @@ if __name__ == "__main__":
     al_config = ActiveLearningConfig.from_yaml(config_path=config_path)
     wandb_logger = WandbLogger(
             project="probcal",
+            entity="gvpatil-uw"
             name=args.experiment_name,
             log_model=al_config.wandb,
         )
