@@ -17,6 +17,7 @@ class CCEProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
         k: int,
         model: DiscreteRegressionNN,
     ) -> np.ndarray:
+        self.get_state()
         """
         Randomly choose the next set of indices to add to label set
         Args:

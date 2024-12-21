@@ -387,9 +387,7 @@ class CalibrationEvaluator:
     def _get_unlabelled_samples_for_mcmd(self, data_loader: DataLoader) -> torch.Tensor:
         with torch.no_grad():
             x = []
-            for inputs, _ in tqdm(
-                data_loader
-            ):
+            for inputs, _ in tqdm(data_loader):
                 if self.settings.dataset_type == DatasetType.TABULAR:
                     x.append(inputs)
                 elif self.settings.dataset_type == DatasetType.IMAGE:
