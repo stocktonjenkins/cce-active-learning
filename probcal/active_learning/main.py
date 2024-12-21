@@ -22,9 +22,7 @@ from probcal.data_modules.prob_cal_data_module import ProbCalDataModule
 from probcal.training.train_model import train_procedure
 from probcal.utils.configs import TrainingConfig
 from probcal.utils.experiment_utils import get_model, get_datamodule, get_chkp_callbacks
-from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger
-
-
+from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger, WandbLogger
 def get_logger(
     train_config: TrainingConfig,
     logger_type: str,
@@ -81,12 +79,20 @@ def parse_args() -> Namespace:
     parser.add_argument("--train-config", type=str)
     parser.add_argument("--procedure", type=ProcedureType)
     parser.add_argument("--logger", type=str, default="csv", help="csv|tboard")
+    parser.add_argument("--experiment-name", type=str)
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     torch.set_float32_matmul_precision("medium")
+    
     args = parse_args()
+    wandb_logger = WandbLogger(
+            project="probcal",
+            name=args.experiment_name,
+            log_model=True
+        )
+    wandb_logger.log_hyperparams(vars(args))
     config_path = "configs/active_learning/config.yaml"
     _train_config = TrainingConfig.from_yaml(args.train_config)
     al_config = ActiveLearningConfig.from_yaml(config_path=config_path)
@@ -107,6 +113,7 @@ if __name__ == "__main__":
         "config": al_config,  # Assuming config is part of TrainingConfig
         # "persistent_workers": _train_config.persistent_workers,  # Add this field to TrainingConfig if not present
     }
+    
     _active_learn = Procedure(
         dataset=ActiveLearningDataModule(**active_learning_data_module_args),
         config=al_config,
@@ -118,7 +125,7 @@ if __name__ == "__main__":
 
     _active_learn.attach(
         ActiveLearningModelAccuracyLogger(
-            path=os.path.join("logs", _log_dirname, f"al_model_acc.csv")
+            path=os.path.join("logs", _log_dirname, f"al_model_acc.csv"), wandb_logger=wandb_logger
         ),
     )
     if al_config.measure_calibration:

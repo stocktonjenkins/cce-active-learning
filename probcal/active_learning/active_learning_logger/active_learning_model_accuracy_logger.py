@@ -8,13 +8,15 @@ from probcal.active_learning.active_learning_types import (
 )
 from probcal.lib.observer import IObserver, ISubject
 import csv
-
+import wandb
+from pytorch_lightning.loggers import WandbLogger
 
 class ActiveLearningModelAccuracyLogger(IObserver[ActiveLearningEvaluationResults]):
-    def __init__(self, path: Path | str):
+    def __init__(self, path: Path | str, wandb_logger: WandbLogger):
         self.path = path
         lock_path = path.split(".")[0] + ".lock"
         self.lock_path = lock_path
+        self.wandb_logger= wandb_logger
         with FileLock(self.lock_path):
             with open(self.path, mode="w", newline="") as file:
                 writer = csv.writer(file)
@@ -35,6 +37,23 @@ class ActiveLearningModelAccuracyLogger(IObserver[ActiveLearningEvaluationResult
 
     def update(self, subject: ISubject[ActiveLearningEvaluationResults]) -> None:
         state = subject.get_state()
+
+        metrics = {
+            "active_learning/kth_trial": state.kth_trial,
+            "active_learning/iteration": state.iteration,
+            "dataset_sizes/train": state.train_set_size,
+            "dataset_sizes/val": state.val_set_size,
+            "dataset_sizes/test": state.test_set_size,
+            "dataset_sizes/unlabeled": state.unlabeled_set_size,
+            "metrics/mae": state.model_accuracy_results.test_mae,
+            "metrics/rmse": state.model_accuracy_results.test_rmse,
+            "metrics/loss": state.model_accuracy_results.test_loss,
+            "metrics/nll": state.model_accuracy_results.nll,
+        }
+        
+        # Log to WandB using the parent logger
+        self.wandb_logger.log_metrics(metrics)
+        
         # Log the results to the CSV file
         with FileLock(self.lock_path):
             df = pd.read_csv(self.path)
@@ -55,3 +74,26 @@ class ActiveLearningModelAccuracyLogger(IObserver[ActiveLearningEvaluationResult
             )
             df.drop_duplicates(inplace=True)
             df.to_csv(self.path, index=False)
+
+        if self.wandb_logger.experiment is not None:
+            # Create and log dataset size distribution chart
+            self.wandb_logger.experiment.log({
+                "dataset_distribution": wandb.plot.bar(
+                    "Dataset Split",
+                    "Size",
+                    [
+                        ["Train", "Val", "Test", "Unlabeled"],
+                        [state.train_set_size, state.val_set_size, 
+                            state.test_set_size, state.unlabeled_set_size]
+                    ],
+                    title="Dataset Size Distribution"
+                )
+            })
+            
+            # Log the CSV as an artifact
+            artifact = wandb.Artifact(
+                name=f"active_learning_metrics_{state.kth_trial}_{state.iteration}", 
+                type="metrics"
+            )
+            artifact.add_file(self.path)
+            self.wandb_logger.experiment.log_artifact(artifact)
