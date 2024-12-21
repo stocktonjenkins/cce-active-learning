@@ -11,3 +11,4 @@ deterministic_settings:
   cudnn_deterministic : True
   cudnn_benchmark : False
   disable_debug_apis: True
+wandb: True

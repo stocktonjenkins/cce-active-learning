@@ -1,7 +1,7 @@
 from typing import Callable
 from typing import Optional
 from typing import Type
-
+import wandb
 import lightning as L
 import torch
 from torchmetrics import MeanAbsoluteError
@@ -36,6 +36,9 @@ class DiscreteRegressionNN(L.LightningModule):
         optim_kwargs: Optional[dict] = None,
         lr_scheduler_type: Optional[LRSchedulerType] = None,
         lr_scheduler_kwargs: Optional[dict] = None,
+        project_name: str = "discrete-regression",  # WandB project name
+        experiment_name: Optional[str] = None,  
+        log_model: bool = True   
     ):
         """Instantiate a regression NN.
 
@@ -159,14 +162,12 @@ class DiscreteRegressionNN(L.LightningModule):
         y_hat = self(x)
         loss = self.loss_fn(y_hat, y.view(-1, 1).float())
         self.log("train_loss", loss, prog_bar=True, on_epoch=True)
-
         with torch.no_grad():
             point_predictions = self.point_prediction(y_hat, training=True).flatten()
             self.train_rmse.update(point_predictions, y.flatten().float())
             self.train_mae.update(point_predictions, y.flatten().float())
             self.log("train_rmse", self.train_rmse, on_epoch=True)
             self.log("train_mae", self.train_mae, on_epoch=True)
-
         return loss
 
     def validation_step(self, batch: torch.Tensor) -> torch.Tensor:
@@ -174,14 +175,12 @@ class DiscreteRegressionNN(L.LightningModule):
         y_hat = self(x)
         loss = self.loss_fn(y_hat, y.view(-1, 1).float())
         self.log("val_loss", loss, prog_bar=True, on_epoch=True, sync_dist=True)
-
         # Since we used the model's forward method, we specify training=True to get the proper transforms.
         point_predictions = self.point_prediction(y_hat, training=True).flatten()
         self.val_rmse.update(point_predictions, y.flatten().float())
         self.val_mae.update(point_predictions, y.flatten().float())
         self.log("val_rmse", self.val_rmse, on_epoch=True)
         self.log("val_mae", self.val_mae, on_epoch=True)
-
         return loss
 
     def test_step(self, batch: torch.Tensor):
@@ -189,7 +188,6 @@ class DiscreteRegressionNN(L.LightningModule):
         y_hat = self.predict(x)
         loss = self.loss_fn(y_hat, y.view(-1, 1).float())
         self.log("test_loss", loss, prog_bar=True, on_epoch=True, sync_dist=True)
-
         point_predictions = self.point_prediction(y_hat, training=False).flatten()
         self.test_rmse.update(point_predictions, y.flatten().float())
         self.test_mae.update(point_predictions, y.flatten().float())
@@ -304,3 +302,4 @@ class DiscreteRegressionNN(L.LightningModule):
                 grad_embeddings.append(grad.flatten().detach().cpu())
 
         return torch.stack(grad_embeddings)
+    

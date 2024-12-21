@@ -6,12 +6,14 @@ from typing import Callable
 
 import pandas as pd
 import wget
-from imgdl import download
+# from imgdl import download
 from PIL import Image
 from PIL.Image import Image as PILImage
 from pycocotools.coco import COCO
 from torch.utils.data import Dataset
-
+import httpx
+from pathlib import Path
+import asyncio
 
 class COCOPeopleDataset(Dataset):
     """Subset of COCO with images containing people (labeled with the count of people in each image)."""
@@ -71,6 +73,26 @@ class COCOPeopleDataset(Dataset):
             and self.image_dir.exists()
             and any(self.image_dir.iterdir())
         )
+    
+    async def download_image(url, path):
+        """Download a single image asynchronously."""
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url)
+            response.raise_for_status()  # Raise exception for HTTP errors
+            with open(path, "wb") as file:
+                file.write(response.content)
+
+    async def download_images(image_urls, image_paths, n_workers=10):
+        """Download multiple images concurrently."""
+        tasks = [
+            asyncio.create_task(download_image(url, path))
+            for url, path in zip(image_urls, image_paths)
+        ]
+
+        # Use asyncio to limit concurrent downloads
+        for i in range(0, len(tasks), n_workers):
+            await asyncio.gather(*tasks[i:i + n_workers])
+
 
     def _download(self):
         if not self.annotations_json_path.exists():
@@ -90,7 +112,8 @@ class COCOPeopleDataset(Dataset):
         for image in images:
             image_urls.append(image["coco_url"])
             self.image_paths.append(str(self.image_dir / image["file_name"]))
-        self.image_paths = download(image_urls, paths=self.image_paths, n_workers=50)
+        asyncio.run(download_images(image_urls, self.image_paths, n_workers=50))
+        # self.image_paths = download(image_urls, paths=self.image_paths, n_workers=50)
 
     def _get_instances_df(self) -> pd.DataFrame:
         instances = {"image_path": [], "count": []}
