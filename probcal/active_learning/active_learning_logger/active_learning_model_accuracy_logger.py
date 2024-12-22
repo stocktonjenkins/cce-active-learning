@@ -12,10 +12,11 @@ import wandb
 from pytorch_lightning.loggers import WandbLogger
 
 class ActiveLearningModelAccuracyLogger(IObserver[ActiveLearningEvaluationResults]):
-    def __init__(self, path: Path | str, wandb_logger: WandbLogger):
+    def __init__(self, path: Path | str, wandb_logger: WandbLogger,logging: bool = True):
         self.path = path
         lock_path = path.split(".")[0] + ".lock"
         self.lock_path = lock_path
+        self.logging = logging 
         self.wandb_logger= wandb_logger
         with FileLock(self.lock_path):
             with open(self.path, mode="w", newline="") as file:
@@ -37,23 +38,23 @@ class ActiveLearningModelAccuracyLogger(IObserver[ActiveLearningEvaluationResult
 
     def update(self, subject: ISubject[ActiveLearningEvaluationResults]) -> None:
         state = subject.get_state()
-
-        metrics = {
-            "active_learning/kth_trial": state.kth_trial,
-            "active_learning/iteration": state.iteration,
-            "dataset_sizes/train": state.train_set_size,
-            "dataset_sizes/val": state.val_set_size,
-            "dataset_sizes/test": state.test_set_size,
-            "dataset_sizes/unlabeled": state.unlabeled_set_size,
-            "metrics/mae": state.model_accuracy_results.test_mae,
-            "metrics/rmse": state.model_accuracy_results.test_rmse,
-            "metrics/loss": state.model_accuracy_results.test_loss,
-            "metrics/nll": state.model_accuracy_results.nll,
-        }
-        
-        # Log to WandB using the parent logger
-        self.wandb_logger.log_metrics(metrics)
-        print(f"Logged metrics to WandB: {metrics}")
+        if self.logging:
+            metrics = {
+                "active_learning/kth_trial": state.kth_trial,
+                "active_learning/iteration": state.iteration,
+                "dataset_sizes/train": state.train_set_size,
+                "dataset_sizes/val": state.val_set_size,
+                "dataset_sizes/test": state.test_set_size,
+                "dataset_sizes/unlabeled": state.unlabeled_set_size,
+                "metrics/mae": state.model_accuracy_results.test_mae,
+                "metrics/rmse": state.model_accuracy_results.test_rmse,
+                "metrics/loss": state.model_accuracy_results.test_loss,
+                "metrics/nll": state.model_accuracy_results.nll,
+            }
+            
+            # Log to WandB using the parent logger
+            self.wandb_logger.log_metrics(metrics)
+            print(f"Logged metrics to WandB: {metrics}")
         # Log the results to the CSV file
         with FileLock(self.lock_path):
             df = pd.read_csv(self.path)
