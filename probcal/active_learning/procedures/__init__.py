@@ -15,6 +15,9 @@ from probcal.active_learning.procedures.badge_procedure import (
 from probcal.active_learning.procedures.reverse_cce_active_learning_procedure import (
     ReverseCCEProcedure,
 )
+from probcal.active_learning.procedures.coreset_procedure import (
+    CoreSetProcedure,
+)
 
 
 def get_active_learning_procedure(config: ActiveLearningConfig):
@@ -24,6 +27,8 @@ def get_active_learning_procedure(config: ActiveLearningConfig):
         return CCEProcedure
     if config.procedure_type == ProcedureType.BAIT:
         return BAITProcedure
+    if config.procedure_type == ProcedureType.CORESET:
+        return CoreSetProcedure
     if config.procedure_type == ProcedureType.BADGE:
         return BadgeProcedure
     if config.procedure_type == ProcedureType.REVERSE_CCE:

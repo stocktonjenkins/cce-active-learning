@@ -22,6 +22,7 @@ class ProcedureType(Enum):
     BADGE = "badge"
     REVERSE_CCE = "reverse_cce"
     CONFIDENCE = "confidence"
+    CORESET = "coreset"
 
 
 class ActiveLearningConfig:
