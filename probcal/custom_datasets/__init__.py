@@ -5,3 +5,4 @@ from .fg_net_dataset import FGNetDataset
 from .image_dataset_wrapper import ImageDatasetWrapper
 from .image_dataset_wrapper import LabelNoiseImageDatasetWrapper
 from .image_dataset_wrapper import MixupImageDatasetWrapper
+from .wiki_dataset import WikiDataset
