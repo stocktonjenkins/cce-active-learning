@@ -19,7 +19,7 @@ class ModelAccuracyResults:
     test_loss: float
     test_mae: float
     test_rmse: float
-    nll: float
+    nll: float | None = None
 
 
 @dataclass

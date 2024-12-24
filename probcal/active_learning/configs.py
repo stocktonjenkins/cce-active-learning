@@ -23,6 +23,7 @@ class ProcedureType(Enum):
     REVERSE_CCE = "reverse_cce"
     CONFIDENCE = "confidence"
     CORESET = "coreset"
+    DROPOUT = "dropout"
 
 
 class ActiveLearningConfig:

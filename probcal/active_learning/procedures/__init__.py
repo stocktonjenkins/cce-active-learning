@@ -12,6 +12,9 @@ from probcal.active_learning.procedures.bait_procedure import (
 from probcal.active_learning.procedures.badge_procedure import (
     BadgeProcedure,
 )
+from probcal.active_learning.procedures.dropout_procedure import (
+    DropoutProcedure,
+)
 from probcal.active_learning.procedures.reverse_cce_active_learning_procedure import (
     ReverseCCEProcedure,
 )
@@ -35,6 +38,8 @@ def get_active_learning_procedure(config: ActiveLearningConfig):
         return ReverseCCEProcedure
     if config.procedure_type == ProcedureType.CONFIDENCE:
         return ConfidenceProcedure
+    if config.procedure_type == ProcedureType.DROPOUT:
+        return DropoutProcedure
     else:
         raise ValueError(
             f"Unknown active learning procedure type: {config.procedure_type}"

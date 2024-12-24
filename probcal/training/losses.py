@@ -86,6 +86,30 @@ def gaussian_nll(
 
     return losses.mean()
 
+def mse_loss(
+    outputs: torch.Tensor, targets: torch.Tensor | None = None
+) -> torch.Tensor:
+    """Compute the MSE loss over the given targets.
+
+    Args:
+        output (torch.Tensor): The (n, 1) output from a Feed Forward Network.
+        targets (torch.Tensor): Regression targets for the Network. Shape: (n, 1).
+
+    Returns:
+        torch.Tensor: Avg. loss across all targets. Zero-dimensional tensor (torch.Size([])).
+    """
+    if targets.dim() == 1:
+        targets = targets.unsqueeze(1)  # Ensure targets have the correct dimensions
+
+    if targets.size(1) != 1:
+        warnings.warn(
+            f"Targets tensor for `mse_loss` expected to be of shape (n, 1) but got shape {targets.shape}. This may result in unexpected training behavior."
+        )
+
+    losses = 0.5 * ((targets - outputs) ** 2)
+
+    return losses.mean()
+
 
 def neg_binom_nll(outputs: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
     """Compute the mean Negative Binomial negative log likelihood over the given targets.

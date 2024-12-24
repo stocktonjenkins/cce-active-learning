@@ -28,6 +28,7 @@ from probcal.models import GaussianNN
 from probcal.models import NaturalGaussianNN
 from probcal.models import NegBinomNN
 from probcal.models import PoissonNN
+from probcal.models import FeedForwardNN
 from probcal.models.backbones import DistilBert
 from probcal.models.backbones import LargerMLP
 from probcal.models.backbones import MLP
@@ -63,6 +64,8 @@ def get_model(
         initializer = FaithfulGaussianNN
     elif config.head_type == HeadType.NATURAL_GAUSSIAN:
         initializer = NaturalGaussianNN
+    elif config.head_type == HeadType.FEED_FORWARD:
+        initializer = FeedForwardNN
     elif config.head_type == HeadType.POISSON:
         initializer = PoissonNN
     elif config.head_type == HeadType.DOUBLE_POISSON:
@@ -98,6 +101,7 @@ def get_model(
     backbone_kwargs["output_dim"] = config.hidden_dim
 
     if isinstance(config, TrainingConfig):
+
         model = initializer(
             backbone_type=backbone_type,
             backbone_kwargs=backbone_kwargs,

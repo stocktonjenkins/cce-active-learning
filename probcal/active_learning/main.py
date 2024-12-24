@@ -23,6 +23,7 @@ from probcal.training.train_model import train_procedure
 from probcal.utils.configs import TrainingConfig
 from probcal.utils.experiment_utils import get_model, get_datamodule, get_chkp_callbacks
 from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger, WandbLogger
+
 def get_logger(
     train_config: TrainingConfig,
     logger_type: str,
@@ -92,7 +93,7 @@ if __name__ == "__main__":
     al_config = ActiveLearningConfig.from_yaml(config_path=config_path)
     wandb_logger = WandbLogger(
             project="probcal",
-            entity="gvpatil-uw"
+            entity="gvpatil-uw",
             name=args.experiment_name,
             log_model=al_config.wandb,
         )
