@@ -35,6 +35,24 @@ class ActiveLearningAverageCCELogger(IObserver):
     def update(self, subject: ISubject[ActiveLearningEvaluationResults]) -> None:
         state = subject.get_state()
         assert state.calibration_results is not None, "Calibration results not saved!"
+        if self.logging:
+            metrics = {
+                "active_learning/kth_trial_cal": state.kth_trial,
+                "active_learning/iteration_cal": state.iteration,
+                "dataset_sizes/train_cal": state.train_set_size,
+                "dataset_sizes/val_cal": state.val_set_size,
+                "dataset_sizes/test_cal": state.test_set_size,
+                "dataset_sizes/unlabeled_cal": state.unlabeled_set_size,
+                "metrics/mcmd": np.concatenate(
+                    [vals.mcmd_vals for vals in state.calibration_results.mcmd_results]
+                ).mean(),
+                "metrics/ece": state.calibration_results.ece,
+            }
+
+            # Log to WandB using the parent logger
+            self.wandb_logger.log_metrics(metrics)
+            print(f"Logged metrics to WandB: {metrics}")
+        # Log the results to the CSV file
         with FileLock(self.lock_path):
             df = pd.read_csv(self.path)
             df.loc[len(df)] = [
