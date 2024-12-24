@@ -1,15 +1,15 @@
-experiment_name: aaf_gaussian
+experiment_name: wiki_seitzer
 random_seed: 1998
 head_type: gaussian
 dataset:
   type: image
-  spec: aaf
+  spec: wiki
 training:
   accelerator: gpu
   batch_size: 32
   chkp_dir: chkp
   chkp_freq: 200
-  num_epochs: 1
+  num_epochs: 200
   precision: bf16-mixed
   optimizer:
     type: adam_w
@@ -21,6 +21,12 @@ training:
     kwargs:
       T_max: 200
       eta_min: 0
+      last_epoch: -1
+  beta_scheduler:
+    type: linear
+    kwargs:
+      beta_0: 0.5
+      beta_1: 0.5
       last_epoch: -1
 evaluation:
   num_trials: 1

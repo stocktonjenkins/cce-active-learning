@@ -97,8 +97,6 @@ if __name__ == "__main__":
             name=args.experiment_name,
             log_model=al_config.wandb,
         )
-    print(al_config.wandb)
-    wandb_logger.log_hyperparams(vars(args))
     al_config.procedure_type = args.procedure
     Procedure: type[ActiveLearningProcedure] = get_active_learning_procedure(al_config)
     module = get_datamodule(
@@ -128,7 +126,7 @@ if __name__ == "__main__":
 
     _active_learn.attach(
         ActiveLearningModelAccuracyLogger(
-            path=os.path.join("logs", _log_dirname, f"al_model_acc.csv"), wandb_logger=wandb_logger
+            path=os.path.join("logs", _log_dirname, f"al_model_acc.csv"), wandb_logger=wandb_logger, logging=al_config.wandb
         ),
     )
     if al_config.measure_calibration:

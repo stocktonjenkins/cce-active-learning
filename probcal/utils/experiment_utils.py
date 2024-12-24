@@ -19,6 +19,7 @@ from probcal.data_modules import (
     OodLabelNoiseCocoPeopleDataModule,
     OodMixupCocoPeopleDataModule,
     TabularDataModule,
+    WikiDataModule,
 )
 from probcal.data_modules.prob_cal_data_module import ProbCalDataModule
 from probcal.enums import DatasetType, HeadType, ImageDatasetName, TextDatasetName
@@ -168,6 +169,13 @@ def get_datamodule(
         elif dataset_path_or_spec == ImageDatasetName.AAF:
             return AAFDataModule(
                 root_dir=os.path.join(GLOBAL_DATA_DIR, "aaf"),
+                batch_size=batch_size,
+                num_workers=num_workers,
+                persistent_workers=True if num_workers > 0 else False,
+            )
+        elif dataset_path_or_spec == ImageDatasetName.WIKI:
+            return WikiDataModule(
+                root_dir=os.path.join(GLOBAL_DATA_DIR, "wiki"),
                 batch_size=batch_size,
                 num_workers=num_workers,
                 persistent_workers=True if num_workers > 0 else False,
