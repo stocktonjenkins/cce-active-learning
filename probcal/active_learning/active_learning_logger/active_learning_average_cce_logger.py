@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from filelock import FileLock
+from pytorch_lightning.loggers import WandbLogger
 
 from probcal.active_learning.active_learning_types import (
     ActiveLearningEvaluationResults,
@@ -12,10 +13,14 @@ from probcal.lib.observer import IObserver, ISubject
 
 
 class ActiveLearningAverageCCELogger(IObserver):
-    def __init__(self, path: Path | str):
+    def __init__(
+        self, path: Path | str, wandb_logger: WandbLogger, logging: bool = True
+    ):
         self.path = path
         lock_path = path.split(".")[0] + ".lock"
         self.lock_path = lock_path
+        self.logging = logging
+        self.wandb_logger = wandb_logger
         with FileLock(self.lock_path):
             with open(self.path, mode="w", newline="") as file:
                 writer = csv.writer(file)
