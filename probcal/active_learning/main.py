@@ -59,6 +59,7 @@ def pipeline(
         for al_iter in range(active_learn.config.num_al_iter):
             al_iter_name = f"{k}.{al_iter+1}"
             model = get_model(_train_config)
+            model = model.to(active_learn.config.settings.device)
             chkp_dir = train_config.chkp_dir / log_dirname / al_iter_name
             trainer = train_procedure(
                 model,

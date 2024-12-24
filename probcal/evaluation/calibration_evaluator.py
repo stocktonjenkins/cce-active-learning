@@ -364,8 +364,8 @@ class CalibrationEvaluator:
                             inputs.to(self.device), normalize=False
                         )
                     )
-                y.append(targets.to(self.device))
-                y_hat = model.predict(inputs.to(self.device))
+                y.append(targets.to(model.device))
+                y_hat = model.predict(inputs.to(model.device))
                 x_prime.append(
                     torch.repeat_interleave(
                         x[-1], repeats=self.settings.mcmd_num_samples, dim=0

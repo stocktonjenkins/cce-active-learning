@@ -29,8 +29,6 @@ class BadgeProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
         Returns:
             A subset of unlabeled indices selected based on Badge sampling.
         """
-        model = model.to("cpu")
-
         # Get the DataLoader for unlabeled data
         unlabeled_dataloader = self.dataset.unlabeled_dataloader()
 
