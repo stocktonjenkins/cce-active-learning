@@ -11,13 +11,16 @@ import csv
 import wandb
 from pytorch_lightning.loggers import WandbLogger
 
+
 class ActiveLearningModelAccuracyLogger(IObserver[ActiveLearningEvaluationResults]):
-    def __init__(self, path: Path | str, wandb_logger: WandbLogger,logging: bool = True):
+    def __init__(
+        self, path: Path | str, wandb_logger: WandbLogger, logging: bool = True
+    ):
         self.path = path
         lock_path = path.split(".")[0] + ".lock"
         self.lock_path = lock_path
-        self.logging = logging 
-        self.wandb_logger= wandb_logger
+        self.logging = logging
+        self.wandb_logger = wandb_logger
         with FileLock(self.lock_path):
             with open(self.path, mode="w", newline="") as file:
                 writer = csv.writer(file)
@@ -51,7 +54,7 @@ class ActiveLearningModelAccuracyLogger(IObserver[ActiveLearningEvaluationResult
                 "metrics/loss": state.model_accuracy_results.test_loss,
                 "metrics/nll": state.model_accuracy_results.nll,
             }
-            
+
             # Log to WandB using the parent logger
             self.wandb_logger.log_metrics(metrics)
             print(f"Logged metrics to WandB: {metrics}")

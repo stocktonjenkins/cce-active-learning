@@ -102,7 +102,6 @@ def get_model(
     backbone_kwargs["output_dim"] = config.hidden_dim
 
     if isinstance(config, TrainingConfig):
-
         model = initializer(
             backbone_type=backbone_type,
             backbone_kwargs=backbone_kwargs,

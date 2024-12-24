@@ -16,35 +16,30 @@ from probcal.active_learning.active_learning_types import (
 from probcal.models.discrete_regression_nn import DiscreteRegressionNN
 from sklearn.metrics import pairwise_distances
 
+
 class CoreSetProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
-    def __init__(
-        self,
-        dataset,
-        config
-    ):
+    def __init__(self, dataset, config):
         super().__init__(dataset, config)
 
     def get_embedding(self, model, dataloader):
-        loader_te = dataloader 
+        loader_te = dataloader
         embedding = []
         model.eval()
         with torch.no_grad():
-            print('Getting embedings')
+            print("Getting embedings")
             for inputs, _ in tqdm(loader_te):
-                
                 emb = model.get_last_layer_representation(inputs)
                 embedding.append(emb.data.cpu())
         embedding = torch.cat(embedding, dim=0)
-    
+
         return embedding
-    
+
     def get_next_label_set(
         self,
         unlabeled_indices: np.ndarray,
         k: int,
         model: DiscreteRegressionNN,
     ) -> np.ndarray:
-        
         """
         Choose the next set of indices to add to the label set based on Fisher Information.
 
@@ -84,4 +79,3 @@ class CoreSetProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults])
                 min_dist[j] = min(min_dist[j], dist_new_ctr[j, 0])
 
         return idxs
-

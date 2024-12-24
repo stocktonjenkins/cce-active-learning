@@ -37,8 +37,8 @@ class DiscreteRegressionNN(L.LightningModule):
         lr_scheduler_type: Optional[LRSchedulerType] = None,
         lr_scheduler_kwargs: Optional[dict] = None,
         project_name: str = "discrete-regression",  # WandB project name
-        experiment_name: Optional[str] = None,  
-        log_model: bool = True   
+        experiment_name: Optional[str] = None,
+        log_model: bool = True,
     ):
         """Instantiate a regression NN.
 
@@ -302,4 +302,3 @@ class DiscreteRegressionNN(L.LightningModule):
                 grad_embeddings.append(grad.flatten().detach().cpu())
 
         return torch.stack(grad_embeddings)
-    

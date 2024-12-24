@@ -86,6 +86,7 @@ def gaussian_nll(
 
     return losses.mean()
 
+
 def mse_loss(
     outputs: torch.Tensor, targets: torch.Tensor | None = None
 ) -> torch.Tensor:

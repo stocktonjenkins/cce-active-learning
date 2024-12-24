@@ -61,4 +61,4 @@ class ActiveLearningConfig:
         self.settings.device = torch.device("cpu")
         self.update_validation_set = update_validation_set
         self.measure_calibration = measure_calibration
-        self.wandb= wandb
+        self.wandb = wandb

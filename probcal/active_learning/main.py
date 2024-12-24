@@ -24,6 +24,7 @@ from probcal.utils.configs import TrainingConfig
 from probcal.utils.experiment_utils import get_model, get_datamodule, get_chkp_callbacks
 from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger, WandbLogger
 
+
 def get_logger(
     train_config: TrainingConfig,
     logger_type: str,
@@ -50,7 +51,10 @@ def pipeline(
     logger_type: str,
     log_dirname: str,
 ):
-    seed_torch(seed=active_learn.config.seeds[0], settings=active_learn.config.deterministic_settings)
+    seed_torch(
+        seed=active_learn.config.seeds[0],
+        settings=active_learn.config.deterministic_settings,
+    )
     for k in range(len(active_learn.config.seeds)):
         for al_iter in range(active_learn.config.num_al_iter):
             al_iter_name = f"{k}.{al_iter+1}"
@@ -86,17 +90,17 @@ def parse_args() -> Namespace:
 
 if __name__ == "__main__":
     torch.set_float32_matmul_precision("medium")
-    
+
     args = parse_args()
     config_path = "configs/active_learning/config.yaml"
     _train_config = TrainingConfig.from_yaml(args.train_config)
     al_config = ActiveLearningConfig.from_yaml(config_path=config_path)
     wandb_logger = WandbLogger(
-            project="probcal",
-            entity="gvpatil-uw",
-            name=args.experiment_name,
-            log_model=al_config.wandb,
-        )
+        project="probcal",
+        entity="gvpatil-uw",
+        name=args.experiment_name,
+        log_model=al_config.wandb,
+    )
     al_config.procedure_type = args.procedure
     Procedure: type[ActiveLearningProcedure] = get_active_learning_procedure(al_config)
     module = get_datamodule(
@@ -114,7 +118,7 @@ if __name__ == "__main__":
         "config": al_config,  # Assuming config is part of TrainingConfig
         # "persistent_workers": _train_config.persistent_workers,  # Add this field to TrainingConfig if not present
     }
-    
+
     _active_learn = Procedure(
         dataset=ActiveLearningDataModule(**active_learning_data_module_args),
         config=al_config,
@@ -126,7 +130,9 @@ if __name__ == "__main__":
 
     _active_learn.attach(
         ActiveLearningModelAccuracyLogger(
-            path=os.path.join("logs", _log_dirname, f"al_model_acc.csv"), wandb_logger=wandb_logger, logging=al_config.wandb
+            path=os.path.join("logs", _log_dirname, f"al_model_acc.csv"),
+            wandb_logger=wandb_logger,
+            logging=al_config.wandb,
         ),
     )
     if al_config.measure_calibration:

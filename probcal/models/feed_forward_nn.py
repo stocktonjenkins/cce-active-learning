@@ -171,7 +171,7 @@ class FeedForwardNN(FFRegressionNN):
             return self.backbone(x)
         else:
             raise AttributeError("Model does not have a 'layer1' or 'backbone'.")
-    
+
     def _addl_test_metrics_dict(self) -> dict[str, Metric]:
         return {"mse": self.mse}
 

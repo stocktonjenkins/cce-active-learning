@@ -6,6 +6,7 @@ from typing import Callable
 
 import pandas as pd
 import wget
+
 # from imgdl import download
 from PIL import Image
 from PIL.Image import Image as PILImage
@@ -14,6 +15,7 @@ from torch.utils.data import Dataset
 import httpx
 from pathlib import Path
 import asyncio
+
 
 class COCOPeopleDataset(Dataset):
     """Subset of COCO with images containing people (labeled with the count of people in each image)."""
@@ -73,7 +75,7 @@ class COCOPeopleDataset(Dataset):
             and self.image_dir.exists()
             and any(self.image_dir.iterdir())
         )
-    
+
     async def download_image(url, path):
         """Download a single image asynchronously."""
         async with httpx.AsyncClient() as client:
@@ -91,8 +93,7 @@ class COCOPeopleDataset(Dataset):
 
         # Use asyncio to limit concurrent downloads
         for i in range(0, len(tasks), n_workers):
-            await asyncio.gather(*tasks[i:i + n_workers])
-
+            await asyncio.gather(*tasks[i : i + n_workers])
 
     def _download(self):
         if not self.annotations_json_path.exists():
