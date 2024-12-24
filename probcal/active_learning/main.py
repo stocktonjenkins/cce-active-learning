@@ -145,7 +145,9 @@ if __name__ == "__main__":
     if al_config.measure_calibration:
         _active_learn.attach(
             ActiveLearningAverageCCELogger(
-                path=os.path.join("logs", _log_dirname, f"al_model_calibration.csv")
+                path=os.path.join("logs", _log_dirname, f"al_model_calibration.csv"),
+                wandb_logger=wandb_logger,
+                logging=al_config.wandb,
             ),
         )
     shutil.copy(config_path, os.path.join("logs", _log_dirname, "config.yaml"))
