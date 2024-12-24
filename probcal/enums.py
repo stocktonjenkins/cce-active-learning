@@ -49,6 +49,7 @@ class ImageDatasetName(Enum):
     OOD_LABEL_NOISE_COCO_PEOPLE = "ood_label_noise_coco_people"
     FG_NET = "fg_net"
     CIFAR_100 = "cifar_100"
+    WIKI = "wiki"
 
 
 class TextDatasetName(Enum):

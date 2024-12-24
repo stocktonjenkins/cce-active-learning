@@ -1,9 +1,9 @@
-experiment_name: aaf_gaussian
+experiment_name: wiki_gaussian
 random_seed: 1998
 head_type: gaussian
 dataset:
   type: image
-  spec: aaf
+  spec: wiki
 training:
   accelerator: gpu
   batch_size: 32

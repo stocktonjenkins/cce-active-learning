@@ -1,15 +1,15 @@
-experiment_name: aaf_gaussian
+experiment_name: wiki_faithful_gaussian
 random_seed: 1998
-head_type: gaussian
+head_type: faithful_gaussian
 dataset:
   type: image
-  spec: aaf
+  spec: wiki
 training:
   accelerator: gpu
   batch_size: 32
   chkp_dir: chkp
   chkp_freq: 200
-  num_epochs: 1
+  num_epochs: 200
   precision: bf16-mixed
   optimizer:
     type: adam_w
