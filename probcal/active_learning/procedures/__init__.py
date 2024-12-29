@@ -21,7 +21,9 @@ from probcal.active_learning.procedures.reverse_cce_active_learning_procedure im
 from probcal.active_learning.procedures.coreset_procedure import (
     CoreSetProcedure,
 )
-
+from probcal.active_learning.procedures.batchbald_procedure import (
+    BatchBALDProcedure,
+)
 
 def get_active_learning_procedure(config: ActiveLearningConfig):
     if config.procedure_type == ProcedureType.RANDOM:
@@ -40,6 +42,8 @@ def get_active_learning_procedure(config: ActiveLearningConfig):
         return ConfidenceProcedure
     if config.procedure_type == ProcedureType.DROPOUT:
         return DropoutProcedure
+    if config.procedure_type == ProcedureType.BATCHBALD:
+        return BatchBALDProcedure
     else:
         raise ValueError(
             f"Unknown active learning procedure type: {config.procedure_type}"
