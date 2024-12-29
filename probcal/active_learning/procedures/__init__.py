@@ -5,6 +5,7 @@ from probcal.active_learning.procedures.cce_active_learning_procedure import (
 from probcal.active_learning.procedures.confidence_active_learning_procedure import (
     ConfidenceProcedure,
 )
+from probcal.active_learning.procedures.lcmd.lcmd_procedure import LCMDProcedure
 from probcal.active_learning.procedures.random_procedure import RandomProcedure
 from probcal.active_learning.procedures.bait_procedure import (
     BAITProcedure,
@@ -40,6 +41,8 @@ def get_active_learning_procedure(config: ActiveLearningConfig):
         return ConfidenceProcedure
     if config.procedure_type == ProcedureType.DROPOUT:
         return DropoutProcedure
+    if config.procedure_type == ProcedureType.LCMD:
+        return LCMDProcedure
     else:
         raise ValueError(
             f"Unknown active learning procedure type: {config.procedure_type}"

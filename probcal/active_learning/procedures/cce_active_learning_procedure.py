@@ -17,17 +17,6 @@ class CCEProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
         k: int,
         model: DiscreteRegressionNN,
     ) -> np.ndarray:
-        self.get_state()
-        """
-        Randomly choose the next set of indices to add to label set
-        Args:
-            unlabeled_indices: np.ndarray
-            k: int
-            model: the model used to compute CCE
-
-        Returns:
-            A random subset of unlabeled indices.
-        """
         model = model.to("cpu")
         train_dataloader = self.dataset.train_dataloader()
         unlabeled_dataloader = self.dataset.unlabeled_dataloader()

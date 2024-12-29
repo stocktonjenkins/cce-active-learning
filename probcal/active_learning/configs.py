@@ -24,6 +24,7 @@ class ProcedureType(Enum):
     CONFIDENCE = "confidence"
     CORESET = "coreset"
     DROPOUT = "dropout"
+    LCMD = "lcmd"
 
 
 class ActiveLearningConfig:
