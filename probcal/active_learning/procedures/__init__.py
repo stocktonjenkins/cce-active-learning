@@ -25,6 +25,7 @@ from probcal.active_learning.procedures.batchbald_procedure import (
     BatchBALDProcedure,
 )
 
+
 def get_active_learning_procedure(config: ActiveLearningConfig):
     if config.procedure_type == ProcedureType.RANDOM:
         return RandomProcedure

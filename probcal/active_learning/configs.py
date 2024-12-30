@@ -27,6 +27,7 @@ class ProcedureType(Enum):
     LCMD = "lcmd"
     BATCHBALD = "batchbald"
 
+
 class ActiveLearningConfig:
     procedure_type: ProcedureType
 

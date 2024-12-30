@@ -62,9 +62,11 @@ def pipeline(
             al_iter_name = f"{k}.{al_iter+1}"
             model = get_model(_train_config)
             chkp_dir = train_config.chkp_dir / log_dirname / al_iter_name
-            logger=wandb_logger
-            if wandb==0:
-                logger=get_logger(train_config, logger_type, log_dirname, al_iter_name),
+            logger = wandb_logger
+            if wandb == 0:
+                logger = (
+                    get_logger(train_config, logger_type, log_dirname, al_iter_name),
+                )
             trainer = train_procedure(
                 model,
                 datamodule=active_learn.dataset,

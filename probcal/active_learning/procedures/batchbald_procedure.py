@@ -21,19 +21,6 @@ class BatchBALDProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults
         self.noise_sigma = noise_sigma
         self.l = None
 
-    def get_embedding(self, model, dataloader):
-        loader_te = dataloader
-        embedding = []
-        model.eval()
-        with torch.no_grad():
-            print("Getting embeddings")
-            for inputs, _ in tqdm(loader_te):
-                emb = model.get_last_layer_representation(inputs)
-                embedding.append(emb.data.cpu())
-        embedding = torch.cat(embedding, dim=0)
-
-        return embedding
-
     def get_next_label_set(
         self,
         unlabeled_indices: np.ndarray,
@@ -77,7 +64,7 @@ class BatchBALDProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults
         if np.shape(X_set)[0] == 0:
             diag = np.tile(float("inf"), m)
         else:
-            kernel_matrix = pairwise_distances(X, X_set, metric='euclidean')
+            kernel_matrix = pairwise_distances(X, X_set, metric="euclidean")
             diag = np.diag(kernel_matrix) + self.noise_sigma**2
 
         idxs = []
@@ -85,13 +72,13 @@ class BatchBALDProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults
         for i in range(n):
             idx = diag.argmax()
             idxs.append(idx)
-            l = None if self.l is None else self.l[:, :len(idxs)]
+            l = None if self.l is None else self.l[:, : len(idxs)]
             lTl = 0.0 if l is None else l @ l[idx, :]
             mat_col = kernel_matrix[idx, :]
             if self.noise_sigma > 0.0:
                 mat_col[idx] += self.noise_sigma**2
             update = (1.0 / np.sqrt(diag[idx])) * (mat_col - lTl)
-            diag -= update ** 2
+            diag -= update**2
             if self.l is None:
                 self.l = update[:, None]
             else:
