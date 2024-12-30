@@ -2,6 +2,10 @@ from abc import ABC
 from typing import TypeVar, Union, Any
 
 import lightning
+import torch
+from torch import Tensor
+from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 from probcal.active_learning.configs import ActiveLearningConfig
 from probcal.active_learning.active_learning_types import (
@@ -117,3 +121,16 @@ class ActiveLearningProcedure(
             Evaluation results of the active learning procedure
         """
         self._state = evaluation
+
+    @staticmethod
+    def get_embedding(model: DiscreteRegressionNN, loader: DataLoader) -> Tensor:
+        """
+        Returns the embedding of the given model by extracting last layer representations
+        """
+        embedding = []
+        model.eval()
+        with torch.no_grad():
+            for inputs, _ in tqdm(loader):
+                emb = model.get_last_layer_representation(inputs)
+                embedding.append(emb.data.cpu())
+        return torch.cat(embedding, dim=0)

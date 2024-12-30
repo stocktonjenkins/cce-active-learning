@@ -30,19 +30,6 @@ class BAITProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
         self.device = device
         self.lamb = lamb
 
-    def get_embedding(self, model, dataloader):
-        loader_te = dataloader
-        embedding = []
-        model.eval()
-        with torch.no_grad():
-            print("Getting embeddings to compute fisher information")
-            for inputs, _ in tqdm(loader_te):
-                emb = model.get_last_layer_representation(inputs)
-                embedding.append(emb.data.cpu())
-        embedding = torch.cat(embedding, dim=0)
-
-        return embedding.unsqueeze(1)
-
     def get_next_label_set(
         self,
         unlabeled_indices: np.ndarray,
@@ -64,8 +51,8 @@ class BAITProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
         unlabeled_dataloader = self.dataset.unlabeled_dataloader()
 
         # get low-rank point-wise fishers
-        xt_unlabeled = self.get_embedding(model, unlabeled_dataloader)
-        xt_labeled = self.get_embedding(model, train_dataloader)
+        xt_unlabeled = self.get_embedding(model, unlabeled_dataloader).unsqueeze(1)
+        xt_labeled = self.get_embedding(model, train_dataloader).unsqueeze(1)
         xt = torch.cat([xt_unlabeled, xt_labeled], dim=0)
 
         # get fisher

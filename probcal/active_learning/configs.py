@@ -25,6 +25,7 @@ class ProcedureType(Enum):
     CORESET = "coreset"
     DROPOUT = "dropout"
     LCMD = "lcmd"
+    BATCHBALD = "batchbald"
 
 
 class ActiveLearningConfig:

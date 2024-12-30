@@ -21,19 +21,6 @@ class CoreSetProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults])
     def __init__(self, dataset, config):
         super().__init__(dataset, config)
 
-    def get_embedding(self, model, dataloader):
-        loader_te = dataloader
-        embedding = []
-        model.eval()
-        with torch.no_grad():
-            print("Getting embedings")
-            for inputs, _ in tqdm(loader_te):
-                emb = model.get_last_layer_representation(inputs)
-                embedding.append(emb.data.cpu())
-        embedding = torch.cat(embedding, dim=0)
-
-        return embedding
-
     def get_next_label_set(
         self,
         unlabeled_indices: np.ndarray,
