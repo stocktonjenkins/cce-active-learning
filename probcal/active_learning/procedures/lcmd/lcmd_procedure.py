@@ -20,7 +20,6 @@ class LCMDProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
     def get_next_label_set(
         self, unlabeled_indices: np.ndarray, k: int, model: DiscreteRegressionNN
     ) -> np.ndarray:
-        breakpoint()
         feature_data = self.get_tensor_features(model)
         feature_map = IdentityFeatureMap(
             n_features=feature_data["train"].get_tensor(0).shape[-1]
@@ -32,7 +31,12 @@ class LCMDProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
             pool_features=features["pool"],
             train_features=features["train"],
         )
-        selected_indices = alg.select(batch_size=1).detach().cpu().numpy()
+        selected_indices = (
+            alg.select(batch_size=min(k, unlabeled_indices.shape[0]))
+            .detach()
+            .cpu()
+            .numpy()
+        )
         return unlabeled_indices[selected_indices]
 
     def get_tensor_features(
