@@ -73,7 +73,6 @@ def pipeline(
                     get_chkp_callbacks(chkp_dir, chkp_freq=train_config.num_epochs),
                 )
             )
-            breakpoint()
             trainer = train_procedure(
                 model,
                 datamodule=active_learn.dataset,
