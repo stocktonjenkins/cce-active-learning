@@ -26,6 +26,7 @@ from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger, WandbLogger
 T = TypeVar("T")
 EvalState = Union[ActiveLearningEvaluationResults, T]
 
+
 def get_logger(
     train_config: TrainingConfig,
     logger_type: str,
@@ -45,6 +46,7 @@ def get_logger(
         else True
     )
 
+
 class DropoutProcedure(ActiveLearningProcedure[ActiveLearningProcedure]):
     def get_next_label_set(
         self, unlabeled_indices: np.ndarray, k: int, model: FFRegressionNN
@@ -61,29 +63,28 @@ class DropoutProcedure(ActiveLearningProcedure[ActiveLearningProcedure]):
         """
         print("training selection model")
 
-        _train_config = TrainingConfig.from_yaml("configs/train/aaf/feed_forward_cfg.yaml")
+        _train_config = TrainingConfig.from_yaml(
+            "configs/train/aaf/feed_forward_cfg.yaml"
+        )
         ff_model = get_model(_train_config)
 
-        ckpt = _train_config.chkp_dir / 'selection_model'
-        logger=get_logger(_train_config, 'csv', ckpt / 'logger', 'dummy_gaussian')
+        ckpt = _train_config.chkp_dir / "selection_model"
+        logger = get_logger(_train_config, "csv", ckpt / "logger", "dummy_gaussian")
 
         trainer = L.Trainer(
-            devices='auto',
+            devices="auto",
             accelerator=_train_config.accelerator_type.value,
             min_epochs=_train_config.num_epochs,
             max_epochs=_train_config.num_epochs,
             log_every_n_steps=5,
             check_val_every_n_epoch=1,
             enable_model_summary=False,
-            callbacks=get_chkp_callbacks(
-                    ckpt, chkp_freq=_train_config.num_epochs
-                ),
+            callbacks=get_chkp_callbacks(ckpt, chkp_freq=_train_config.num_epochs),
             logger=logger,
             precision=_train_config.precision,
         )
         trainer.fit(model=ff_model, datamodule=self.dataset)
         print("selection model training complete")
-
 
         # ff_model_trainer = train_procedure(
         #         ff_model,
@@ -95,7 +96,7 @@ class DropoutProcedure(ActiveLearningProcedure[ActiveLearningProcedure]):
         #         logger='csv',
         #         al_iter=0,
         #     )
-        
+
         unlabeled_dataloader = self.dataset.unlabeled_dataloader()
         confidence = self.get_confidence_score_from_model(
             ff_model,

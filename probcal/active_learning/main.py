@@ -62,16 +62,23 @@ def pipeline(
             al_iter_name = f"{k}.{al_iter+1}"
             model = get_model(_train_config)
             chkp_dir = train_config.chkp_dir / log_dirname / al_iter_name
-            logger=wandb_logger
-            if wandb==0:
-                logger=get_logger(train_config, logger_type, log_dirname, al_iter_name),
+            logger = wandb_logger
+            if wandb == 0:
+                logger = (
+                    get_logger(train_config, logger_type, log_dirname, al_iter_name),
+                )
+            callbacks = list(
+                filter(
+                    lambda cb: cb.filename == "best_mae",
+                    get_chkp_callbacks(chkp_dir, chkp_freq=train_config.num_epochs),
+                )
+            )
+            breakpoint()
             trainer = train_procedure(
                 model,
                 datamodule=active_learn.dataset,
                 config=train_config,
-                callbacks=get_chkp_callbacks(
-                    chkp_dir, chkp_freq=train_config.num_epochs
-                ),
+                callbacks=callbacks,
                 logger=logger,
                 al_iter=al_iter,
                 wandb=wandb,

@@ -15,6 +15,7 @@ from probcal.utils.experiment_utils import get_datamodule
 from probcal.utils.experiment_utils import get_model
 import torch
 
+
 def train_procedure(
     model: DiscreteRegressionNN,
     datamodule: LightningDataModule,
@@ -30,10 +31,13 @@ def train_procedure(
         def on_train_epoch_end(self, trainer, pl_module):
             metrics = {f"AL{al_iter}/epoch": trainer.current_epoch}
             for key, value in trainer.callback_metrics.items():
-                metrics[f"AL{al_iter}/{key}"] = value.item() if isinstance(value, torch.Tensor) else value
+                metrics[f"AL{al_iter}/{key}"] = (
+                    value.item() if isinstance(value, torch.Tensor) else value
+                )
             logger.log_metrics(metrics, step=trainer.current_epoch)
+
     if wandb:
-        callbacks=callbacks + [ALIterationLogger()]
+        callbacks = callbacks + [ALIterationLogger()]
     trainer = L.Trainer(
         devices=devices,
         accelerator=config.accelerator_type.value,
