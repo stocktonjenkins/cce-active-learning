@@ -1,5 +1,5 @@
 # Derived implementation from https://github.com/dholzmueller/bmdal_reg
-from typing import Iterable, Any
+from typing import Iterable, Any, Union
 
 import numpy as np
 import torch
@@ -44,7 +44,7 @@ class Indexes:
     """
 
     def __init__(
-        self, n_samples: int, idxs: torch.Tensor | slice | int | "Indexes" | None
+        self, n_samples: int, idxs: Union[torch.Tensor, slice, int, "Indexes", None]
     ):
         """
         :param n_samples: Total size of the dimension of tensors that should be indexed.
@@ -216,7 +216,7 @@ class FeatureData:
         """
         return self.get_n_samples()
 
-    def __getitem__(self, idxs: torch.Tensor | slice | int | "Indexes" | np.ndarray):
+    def __getitem__(self, idxs: Union[torch.Tensor, slice, int, "Indexes", np.ndarray]):
         """
         :param idxs: Represents the subset of samples that should be returned.
         Note that if idxs is an int, the dimension will not be collapsed.
@@ -361,12 +361,12 @@ class TensorFeatureData(FeatureData):
             tensor = tensor.to(self.output_device)
         return tensor
 
-    def simplify_impl_(self, idxs: Indexes) -> "FeatureData":
+    def simplify_impl_(self, idxs: Indexes) -> FeatureData:
         return TensorFeatureData(self.data[idxs.get_idxs()])
 
     def simplify_multi_(
         self, feature_data_list: list["TensorFeatureData"], idxs_list: list[Indexes]
-    ) -> "FeatureData":
+    ) -> FeatureData:
         return TensorFeatureData(
             torch_cat(
                 [
@@ -377,7 +377,7 @@ class TensorFeatureData(FeatureData):
             )
         )
 
-    def cast_to(self, dtype) -> "FeatureData":
+    def cast_to(self, dtype) -> FeatureData:
         return TensorFeatureData(self.data.type(dtype))
 
 
@@ -412,12 +412,12 @@ class ListFeatureData(FeatureData):  # does not concatenate along batch dimensio
             "get_tensor() cannot be called on ListFeatureData since it would need to return multiple tensors"
         )
 
-    def simplify_impl_(self, idxs: Indexes) -> "FeatureData":
+    def simplify_impl_(self, idxs: Indexes) -> FeatureData:
         return ListFeatureData([fd.simplify(idxs) for fd in self.feature_data_list])
 
     def simplify_multi_(
         self, feature_data_list: list["ListFeatureData"], idxs_list: list[Indexes]
-    ) -> "FeatureData":
+    ) -> FeatureData:
         if len(feature_data_list) == 0:
             return EmptyFeatureData(device=self.device, dtype=self.dtype)
         return ListFeatureData(
@@ -432,7 +432,7 @@ class ListFeatureData(FeatureData):  # does not concatenate along batch dimensio
             ]
         )
 
-    def cast_to(self, dtype) -> "FeatureData":
+    def cast_to(self, dtype) -> FeatureData:
         return ListFeatureData([fd.cast_to(dtype) for fd in self.feature_data_list])
 
 
@@ -463,12 +463,12 @@ class ConcatFeatureData(FeatureData):
             fd.to(device)
         self.device = device
 
-    def iterate(self, idxs: Indexes) -> Iterable[tuple[Indexes, "FeatureData"]]:
+    def iterate(self, idxs: Indexes) -> Iterable[tuple[Indexes, FeatureData]]:
         for i, sub_idxs in idxs.split_by_sizes(self.sample_sizes):
             for sub_idxs_2, feature_data in self.feature_data_list[i].iterate(sub_idxs):
                 yield sub_idxs_2, feature_data
 
-    def simplify_impl_(self, idxs: Indexes) -> "FeatureData":
+    def simplify_impl_(self, idxs: Indexes) -> FeatureData:
         simplified = [
             self.feature_data_list[i].simplify(sub_idxs)
             for i, sub_idxs in idxs.split_by_sizes(self.sample_sizes)
@@ -495,7 +495,7 @@ class ConcatFeatureData(FeatureData):
 
     def simplify_multi_(
         self, feature_data_list: list["ConcatFeatureData"], idxs_list: list[Indexes]
-    ) -> "FeatureData":
+    ) -> FeatureData:
         if len(feature_data_list) == 0:
             return EmptyFeatureData(device=self.device)
         # use simplify() to implement simplify_multi_()
@@ -507,7 +507,7 @@ class ConcatFeatureData(FeatureData):
             ]
         ).simplify()
 
-    def cast_to(self, dtype) -> "FeatureData":
+    def cast_to(self, dtype) -> FeatureData:
         return ConcatFeatureData([fd.cast_to(dtype) for fd in self.feature_data_list])
 
 
@@ -536,23 +536,23 @@ class SubsetFeatureData(FeatureData):
 
     def iterate(
         self, idxs: Indexes | None = None
-    ) -> Iterable[tuple[Indexes, "FeatureData"]]:
+    ) -> Iterable[tuple[Indexes, FeatureData]]:
         for sub_idxs, feature_data in self.feature_data.iterate(
             self.idxs.compose(idxs)
         ):
             yield sub_idxs, feature_data
 
-    def simplify_impl_(self, idxs: Indexes) -> "FeatureData":
+    def simplify_impl_(self, idxs: Indexes) -> FeatureData:
         return self.feature_data.simplify(self.idxs.compose(idxs))
 
     def simplify_multi_(
         self, feature_data_list: list["SubsetFeatureData"], idxs_list: list[Indexes]
-    ) -> "FeatureData":
+    ) -> FeatureData:
         return ConcatFeatureData(
             [fd.simplify(idxs) for fd, idxs in zip(feature_data_list, idxs_list)]
         ).simplify()
 
-    def cast_to(self, dtype) -> "FeatureData":
+    def cast_to(self, dtype) -> FeatureData:
         return SubsetFeatureData(self.feature_data.cast_to(dtype), self.idxs)
 
 
@@ -574,8 +574,8 @@ class EmptyFeatureData(FeatureData):
 
     def simplify_multi_(
         self, feature_data_list: list["EmptyFeatureData"], idxs_list: list[Indexes]
-    ) -> "FeatureData":
+    ) -> FeatureData:
         return EmptyFeatureData(device=self.device, dtype=self.dtype)
 
-    def cast_to(self, dtype) -> "FeatureData":
+    def cast_to(self, dtype) -> FeatureData:
         return self
