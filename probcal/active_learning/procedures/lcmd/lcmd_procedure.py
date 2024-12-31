@@ -6,7 +6,6 @@ from probcal.active_learning.active_learning_types import (
 from probcal.active_learning.procedures.base import ActiveLearningProcedure
 from probcal.active_learning.procedures.lcmd.feature_data import (
     TensorFeatureData,
-    SubsetFeatureData,
 )
 from probcal.active_learning.procedures.lcmd.feature_maps import IdentityFeatureMap
 from probcal.active_learning.procedures.lcmd.features import Features
@@ -32,6 +31,7 @@ class LCMDProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
             train_features=features["train"],
         )
         selected_indices = (
+            # The select method returns indices of the "pool" set (unlabeled set)
             alg.select(batch_size=min(k, unlabeled_indices.shape[0]))
             .detach()
             .cpu()
