@@ -108,7 +108,7 @@ if __name__ == "__main__":
         project="probcal",
         entity="gvpatil-uw",
         name=args.experiment_name,
-        log_model=al_config.wandb,
+        log_model=False,
     )
     al_config.procedure_type = args.procedure
     Procedure: type[ActiveLearningProcedure] = get_active_learning_procedure(al_config)
