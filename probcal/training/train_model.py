@@ -5,7 +5,7 @@ from argparse import Namespace
 import lightning as L
 from lightning import LightningDataModule, Callback
 from lightning.pytorch.loggers.logger import Logger
-from lightning.pytorch.loggers import CSVLogger
+from lightning.pytorch.loggers import CSVLogger, WandbLogger
 
 from probcal.models.discrete_regression_nn import DiscreteRegressionNN
 from probcal.utils.configs import TrainingConfig
@@ -13,7 +13,6 @@ from probcal.utils.experiment_utils import fix_random_seed
 from probcal.utils.experiment_utils import get_chkp_callbacks
 from probcal.utils.experiment_utils import get_datamodule
 from probcal.utils.experiment_utils import get_model
-import torch
 
 
 def train_procedure(
@@ -21,23 +20,10 @@ def train_procedure(
     datamodule: LightningDataModule,
     config: TrainingConfig,
     callbacks: list[Callback] | None,
-    logger: Logger | bool,
+    logger: WandbLogger | Logger | bool,
     validation_rate: int = 1,
     devices: list[int] | str | int = "auto",
-    al_iter: int = 0,
-    wandb: bool = False,
 ):
-    class ALIterationLogger(L.Callback):
-        def on_train_epoch_end(self, trainer, pl_module):
-            metrics = {f"AL{al_iter}/epoch": trainer.current_epoch}
-            for key, value in trainer.callback_metrics.items():
-                metrics[f"AL{al_iter}/{key}"] = (
-                    value.item() if isinstance(value, torch.Tensor) else value
-                )
-            logger.log_metrics(metrics, step=trainer.current_epoch)
-
-    if wandb:
-        callbacks = callbacks + [ALIterationLogger()]
     trainer = L.Trainer(
         devices=devices,
         accelerator=config.accelerator_type.value,

@@ -1,8 +1,10 @@
 import os.path
 import torch
 import shutil
+import lightning as L
 from argparse import Namespace, ArgumentParser
 from logging import Logger
+from lightning.pytorch.loggers.logger import Logger as LightningLogger
 
 from probcal.active_learning.configs import (
     ActiveLearningConfig,
@@ -23,6 +25,21 @@ from probcal.training.train_model import train_procedure
 from probcal.utils.configs import TrainingConfig
 from probcal.utils.experiment_utils import get_model, get_datamodule, get_chkp_callbacks
 from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger, WandbLogger
+
+
+class ALIterationLogger(L.Callback):
+    def __init__(self, logger: LightningLogger, al_iter: int):
+        super(ALIterationLogger, self).__init__()
+        self.logger = logger
+        self.al_iter = al_iter
+
+    def on_train_epoch_end(self, trainer, pl_module):
+        metrics = {f"AL{self.al_iter}/epoch": trainer.current_epoch}
+        for key, value in trainer.callback_metrics.items():
+            metrics[f"AL{self.al_iter}/{key}"] = (
+                value.item() if isinstance(value, torch.Tensor) else value
+            )
+        self.logger.log_metrics(metrics, step=trainer.current_epoch)
 
 
 def get_logger(
@@ -62,25 +79,26 @@ def pipeline(
             al_iter_name = f"{k}.{al_iter+1}"
             model = get_model(_train_config)
             chkp_dir = train_config.chkp_dir / log_dirname / al_iter_name
-            logger = wandb_logger
-            if wandb == 0:
+            if not wandb:
                 logger = (
                     get_logger(train_config, logger_type, log_dirname, al_iter_name),
                 )
+            else:
+                logger = wandb_logger
+
             callbacks = list(
                 filter(
                     lambda cb: cb.filename == active_learn.config.chkp_type.value,
                     get_chkp_callbacks(chkp_dir, chkp_freq=train_config.num_epochs),
                 )
             )
+            callbacks.append(ALIterationLogger(logger, al_iter=al_iter))
             trainer = train_procedure(
                 model,
                 datamodule=active_learn.dataset,
                 config=train_config,
                 callbacks=callbacks,
                 logger=logger,
-                al_iter=al_iter,
-                wandb=wandb,
             )
             active_learn.eval(
                 trainer, best_path=os.path.join(chkp_dir, "best_mae.ckpt")
@@ -108,7 +126,7 @@ if __name__ == "__main__":
     config_path = "configs/active_learning/config.yaml"
     _train_config = TrainingConfig.from_yaml(args.train_config)
     al_config = ActiveLearningConfig.from_yaml(config_path=config_path)
-    wandb_logger = WandbLogger(
+    _wandb_logger = WandbLogger(
         project="probcal",
         entity="gvpatil-uw",
         name=args.experiment_name,
@@ -144,7 +162,7 @@ if __name__ == "__main__":
     _active_learn.attach(
         ActiveLearningModelAccuracyLogger(
             path=os.path.join("logs", _log_dirname, f"al_model_acc.csv"),
-            wandb_logger=wandb_logger,
+            wandb_logger=_wandb_logger,
             logging=al_config.wandb,
         ),
     )
@@ -152,7 +170,7 @@ if __name__ == "__main__":
         _active_learn.attach(
             ActiveLearningAverageCCELogger(
                 path=os.path.join("logs", _log_dirname, f"al_model_calibration.csv"),
-                wandb_logger=wandb_logger,
+                wandb_logger=_wandb_logger,
                 logging=al_config.wandb,
             ),
         )
@@ -162,6 +180,6 @@ if __name__ == "__main__":
         active_learn=_active_learn,
         logger_type=args.logger,
         log_dirname=_log_dirname,
-        wandb_logger=wandb_logger,
+        wandb_logger=_wandb_logger,
         wandb=al_config.wandb,
     )
