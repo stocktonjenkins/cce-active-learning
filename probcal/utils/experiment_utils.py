@@ -10,6 +10,8 @@ import torch
 import yaml
 
 from lightning.pytorch.callbacks import ModelCheckpoint
+
+from probcal.active_learning.configs import CheckpointType
 from probcal.data_modules import (
     AAFDataModule,
     COCOPeopleDataModule,
@@ -193,13 +195,6 @@ def get_datamodule(
                 num_workers=num_workers,
                 persistent_workers=True if num_workers > 0 else False,
             )
-        elif dataset_path_or_spec == ImageDatasetName.CIFAR_100:
-            return CIFAR100DataModule(
-                root_dir=GLOBAL_DATA_DIR,
-                batch_size=batch_size,
-                num_workers=num_workers,
-                persistent_workers=True if num_workers > 0 else False,
-            )
     elif dataset_type == DatasetType.TEXT:
         if dataset_path_or_spec == TextDatasetName.REVIEWS:
             return ValueError("Reviews not supported.")
@@ -224,7 +219,7 @@ def get_chkp_callbacks(chkp_dir: Path, chkp_freq: int) -> list[ModelCheckpoint]:
         dirpath=chkp_dir,
         monitor="val_loss",
         every_n_epochs=1,
-        filename="best_loss",
+        filename=CheckpointType.BEST_LOSS.value,
         save_top_k=1,
         enable_version_counter=False,
     )
@@ -232,7 +227,7 @@ def get_chkp_callbacks(chkp_dir: Path, chkp_freq: int) -> list[ModelCheckpoint]:
         dirpath=chkp_dir,
         monitor="val_mae",
         every_n_epochs=1,
-        filename="best_mae",
+        filename=CheckpointType.BEST_MAE.value,
         save_top_k=1,
         enable_version_counter=False,
     )

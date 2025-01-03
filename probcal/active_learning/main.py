@@ -69,7 +69,7 @@ def pipeline(
                 )
             callbacks = list(
                 filter(
-                    lambda cb: cb.filename == "best_mae",
+                    lambda cb: cb.filename == active_learn.config.chkp_type.value,
                     get_chkp_callbacks(chkp_dir, chkp_freq=train_config.num_epochs),
                 )
             )

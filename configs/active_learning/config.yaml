@@ -4,6 +4,7 @@ init_num_labeled: 1429
 update_validation_set: false
 seeds: [1998, 2024, 1776, 33, 2022]
 measure_calibration: false
+chkp_type: best_loss  # best_loss or best_mae
 settings:
   device: cuda
   mcmd_num_trials: 5
