@@ -1,10 +1,8 @@
 import os.path
 import torch
 import shutil
-import lightning as L
 from argparse import Namespace, ArgumentParser
 from logging import Logger
-from lightning.pytorch.loggers.logger import Logger as LightningLogger
 
 from probcal.active_learning.configs import (
     ActiveLearningConfig,
@@ -21,25 +19,11 @@ from probcal.active_learning.procedures.base import ActiveLearningProcedure
 from probcal.active_learning.procedures.utils import seed_torch
 from probcal.data_modules.active_learning_data_module import ActiveLearningDataModule
 from probcal.data_modules.prob_cal_data_module import ProbCalDataModule
+from probcal.lib.logging import WandBActiveLearningCallback
 from probcal.training.train_model import train_procedure
 from probcal.utils.configs import TrainingConfig
 from probcal.utils.experiment_utils import get_model, get_datamodule, get_chkp_callbacks
 from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger, WandbLogger
-
-
-class ALIterationLogger(L.Callback):
-    def __init__(self, logger: WandbLogger, al_iter: int):
-        super(ALIterationLogger, self).__init__()
-        self.logger = logger
-        self.al_iter = al_iter
-
-    def on_train_epoch_end(self, trainer, pl_module):
-        metrics = {f"AL{self.al_iter}/epoch": trainer.current_epoch}
-        for key, value in trainer.callback_metrics.items():
-            metrics[f"AL{self.al_iter}/{key}"] = (
-                value.item() if isinstance(value, torch.Tensor) else value
-            )
-        self.logger.log_metrics(metrics, step=trainer.current_epoch)
 
 
 def get_logger(
@@ -91,7 +75,9 @@ def pipeline(
                 )
             else:
                 logger = wandb_logger
-                callbacks.append(ALIterationLogger(wandb_logger, al_iter=al_iter))
+                callbacks.append(
+                    WandBActiveLearningCallback(wandb_logger, al_iter=al_iter)
+                )
 
             trainer = train_procedure(
                 model,

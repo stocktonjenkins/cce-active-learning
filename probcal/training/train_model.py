@@ -4,9 +4,11 @@ from argparse import Namespace
 
 import lightning as L
 from lightning import LightningDataModule, Callback
+from lightning.pytorch.callbacks import EarlyStopping
 from lightning.pytorch.loggers.logger import Logger
 from lightning.pytorch.loggers import CSVLogger, WandbLogger
 
+from probcal.lib.logging import WandBLoggingCallback
 from probcal.models.discrete_regression_nn import DiscreteRegressionNN
 from probcal.utils.configs import TrainingConfig
 from probcal.utils.experiment_utils import fix_random_seed
@@ -47,18 +49,29 @@ def main(config: TrainingConfig):
         config.dataset_path_or_spec,
         config.batch_size,
     )
-
     for i in range(config.num_trials):
         model = get_model(config)
         chkp_dir = config.chkp_dir / config.experiment_name / f"version_{i}"
         chkp_callbacks = get_chkp_callbacks(chkp_dir, config.chkp_freq)
-        logger = CSVLogger(save_dir=config.log_dir, name=config.experiment_name)
+        if config.early_stopping:
+            chkp_callbacks.append(EarlyStopping(monitor="val_loss", mode="min"))
+        if config.wandb:
+            logger = WandbLogger(
+                project="probcal",
+                entity="gvpatil-uw",
+                name=config.experiment_name,
+                log_model=False,
+            )
+            chkp_callbacks.append(
+                WandBLoggingCallback(exp_name=f"{config.experiment_name}:trial-{i+1}", logger=logger)
+            )
+        else:
+            logger = CSVLogger(save_dir=config.log_dir, name=config.experiment_name)
         train_procedure(
             model=model,
             datamodule=datamodule,
             config=config,
             callbacks=chkp_callbacks,
-            validation_rate=math.ceil(config.num_epochs / 200),
             logger=logger,
         )
 
