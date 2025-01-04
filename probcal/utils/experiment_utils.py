@@ -8,6 +8,7 @@ import lightning as L
 import numpy as np
 import torch
 import yaml
+from lightning import Callback
 
 from lightning.pytorch.callbacks import ModelCheckpoint
 
@@ -207,7 +208,7 @@ def fix_random_seed(random_seed: int | None):
         torch.manual_seed(random_seed)
 
 
-def get_chkp_callbacks(chkp_dir: Path, chkp_freq: int) -> list[ModelCheckpoint]:
+def get_chkp_callbacks(chkp_dir: Path, chkp_freq: int) -> list[Callback]:
     temporal_checkpoint_callback = ModelCheckpoint(
         dirpath=chkp_dir,
         every_n_epochs=chkp_freq,

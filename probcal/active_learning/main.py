@@ -28,7 +28,7 @@ from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger, WandbLogger
 
 
 class ALIterationLogger(L.Callback):
-    def __init__(self, logger: LightningLogger, al_iter: int):
+    def __init__(self, logger: WandbLogger, al_iter: int):
         super(ALIterationLogger, self).__init__()
         self.logger = logger
         self.al_iter = al_iter
@@ -79,20 +79,20 @@ def pipeline(
             al_iter_name = f"{k}.{al_iter+1}"
             model = get_model(_train_config)
             chkp_dir = train_config.chkp_dir / log_dirname / al_iter_name
-            if not wandb:
-                logger = (
-                    get_logger(train_config, logger_type, log_dirname, al_iter_name),
-                )
-            else:
-                logger = wandb_logger
-
             callbacks = list(
                 filter(
                     lambda cb: cb.filename == active_learn.config.chkp_type.value,
                     get_chkp_callbacks(chkp_dir, chkp_freq=train_config.num_epochs),
                 )
             )
-            callbacks.append(ALIterationLogger(logger, al_iter=al_iter))
+            if not wandb:
+                logger = (
+                    get_logger(train_config, logger_type, log_dirname, al_iter_name),
+                )
+            else:
+                logger = wandb_logger
+                callbacks.append(ALIterationLogger(wandb_logger, al_iter=al_iter))
+
             trainer = train_procedure(
                 model,
                 datamodule=active_learn.dataset,
