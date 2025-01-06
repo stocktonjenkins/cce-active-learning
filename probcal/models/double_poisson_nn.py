@@ -14,8 +14,8 @@ from probcal.evaluation.custom_torchmetrics import MedianPrecision
 from probcal.models.backbones import Backbone
 from probcal.models.discrete_regression_nn import DiscreteRegressionNN
 from probcal.random_variables import DoublePoisson
-from probcal.training.beta_schedulers import CosineAnnealingBetaScheduler
-from probcal.training.beta_schedulers import LinearBetaScheduler
+from probcal.training.hyperparam_schedulers import CosineAnnealingScheduler
+from probcal.training.hyperparam_schedulers import LinearScheduler
 from probcal.training.losses import double_poisson_nll
 
 
@@ -57,9 +57,17 @@ class DoublePoissonNN(DiscreteRegressionNN):
             beta_scheduler_kwargs (dict | None, optional): If specified, key-value argument specifications for the chosen beta scheduler, e.g. {"beta_0": 1.0, "beta_1": 0.5}. Defaults to None.
         """
         if beta_scheduler_type == BetaSchedulerType.COSINE_ANNEALING:
-            self.beta_scheduler = CosineAnnealingBetaScheduler(**beta_scheduler_kwargs)
+            self.beta_scheduler = CosineAnnealingScheduler(
+                x_0=beta_scheduler_kwargs["beta_0"],
+                x_1=beta_scheduler_kwargs["beta_1"],
+                num_steps=beta_scheduler_kwargs["last_epoch"],
+            )
         elif beta_scheduler_type == BetaSchedulerType.LINEAR:
-            self.beta_scheduler = LinearBetaScheduler(**beta_scheduler_kwargs)
+            self.beta_scheduler = LinearScheduler(
+                x_0=beta_scheduler_kwargs["beta_0"],
+                x_1=beta_scheduler_kwargs["beta_1"],
+                num_steps=beta_scheduler_kwargs["last_epoch"],
+            )
         else:
             self.beta_scheduler = None
 
@@ -67,9 +75,7 @@ class DoublePoissonNN(DiscreteRegressionNN):
             loss_fn=partial(
                 double_poisson_nll,
                 beta=(
-                    self.beta_scheduler.current_value
-                    if self.beta_scheduler is not None
-                    else None
+                    self.beta_scheduler.current_value if self.beta_scheduler is not None else None
                 ),
             ),
             backbone_type=backbone_type,
@@ -144,9 +150,7 @@ class DoublePoissonNN(DiscreteRegressionNN):
         dist = DoublePoisson(mu, phi)
         return dist
 
-    def _point_prediction_impl(
-        self, y_hat: torch.Tensor, training: bool
-    ) -> torch.Tensor:
+    def _point_prediction_impl(self, y_hat: torch.Tensor, training: bool) -> torch.Tensor:
         dist = self.posterior_predictive(y_hat, training)
         mode = torch.argmax(dist.pmf_vals, axis=0)
         return mode
@@ -175,7 +179,5 @@ class DoublePoissonNN(DiscreteRegressionNN):
     def on_train_epoch_end(self):
         if self.beta_scheduler is not None:
             self.beta_scheduler.step()
-            self.loss_fn = partial(
-                double_poisson_nll, beta=self.beta_scheduler.current_value
-            )
+            self.loss_fn = partial(double_poisson_nll, beta=self.beta_scheduler.current_value)
         super().on_train_epoch_end()
