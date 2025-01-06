@@ -12,8 +12,8 @@ from probcal.enums import OptimizerType
 from probcal.evaluation.custom_torchmetrics import AverageNLL
 from probcal.models.backbones import Backbone
 from probcal.models.discrete_regression_nn import DiscreteRegressionNN
-from probcal.training.beta_schedulers import CosineAnnealingBetaScheduler
-from probcal.training.beta_schedulers import LinearBetaScheduler
+from probcal.training.hyperparam_schedulers import CosineAnnealingScheduler
+from probcal.training.hyperparam_schedulers import LinearScheduler
 from probcal.training.losses import gaussian_nll
 
 
@@ -55,9 +55,17 @@ class GaussianNN(DiscreteRegressionNN):
             beta_scheduler_kwargs (dict | None, optional): If specified, key-value argument specifications for the chosen beta scheduler, e.g. {"beta_0": 1.0, "beta_1": 0.5}. Defaults to None.
         """
         if beta_scheduler_type == BetaSchedulerType.COSINE_ANNEALING:
-            self.beta_scheduler = CosineAnnealingBetaScheduler(**beta_scheduler_kwargs)
+            self.beta_scheduler = CosineAnnealingScheduler(
+                x_0=beta_scheduler_kwargs["beta_0"],
+                x_1=beta_scheduler_kwargs["beta_1"],
+                num_steps=beta_scheduler_kwargs["last_epoch"],
+            )
         elif beta_scheduler_type == BetaSchedulerType.LINEAR:
-            self.beta_scheduler = LinearBetaScheduler(**beta_scheduler_kwargs)
+            self.beta_scheduler = LinearScheduler(
+                x_0=beta_scheduler_kwargs["beta_0"],
+                x_1=beta_scheduler_kwargs["beta_1"],
+                num_steps=beta_scheduler_kwargs["last_epoch"],
+            )
         else:
             self.beta_scheduler = None
 
@@ -65,9 +73,7 @@ class GaussianNN(DiscreteRegressionNN):
             loss_fn=partial(
                 gaussian_nll,
                 beta=(
-                    self.beta_scheduler.current_value
-                    if self.beta_scheduler is not None
-                    else None
+                    self.beta_scheduler.current_value if self.beta_scheduler is not None else None
                 ),
             ),
             backbone_type=backbone_type,
@@ -114,9 +120,7 @@ class GaussianNN(DiscreteRegressionNN):
         # Apply torch.exp to the logvar dimension.
         output_shape = y_hat.shape
         reshaped = y_hat.view(-1, 2)
-        y_hat = torch.stack([reshaped[:, 0], torch.exp(reshaped[:, 1])], dim=1).view(
-            *output_shape
-        )
+        y_hat = torch.stack([reshaped[:, 0], torch.exp(reshaped[:, 1])], dim=1).view(*output_shape)
 
         return y_hat
 
@@ -149,9 +153,7 @@ class GaussianNN(DiscreteRegressionNN):
         dist = torch.distributions.Normal(loc=mu.squeeze(), scale=var.sqrt().squeeze())
         return dist
 
-    def _point_prediction_impl(
-        self, y_hat: torch.Tensor, training: bool
-    ) -> torch.Tensor:
+    def _point_prediction_impl(self, y_hat: torch.Tensor, training: bool) -> torch.Tensor:
         mu, _ = torch.split(y_hat, [1, 1], dim=-1)
         return mu.round()
 

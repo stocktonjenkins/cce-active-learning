@@ -1,38 +1,20 @@
 from functools import partial
 from typing import Optional
 from typing import Type
-from typing import Callable
-
 
 import torch
 from torch import nn
 from torchmetrics import Metric
-import lightning as L
 
-from probcal.enums import BetaSchedulerType
 from probcal.enums import LRSchedulerType
 from probcal.enums import OptimizerType
-from probcal.evaluation.custom_torchmetrics import AverageNLL
 from probcal.models.backbones import Backbone
 from probcal.models.feed_forward_regression_nn import FFRegressionNN
-from probcal.training.beta_schedulers import CosineAnnealingBetaScheduler
-from probcal.training.beta_schedulers import LinearBetaScheduler
 from probcal.training.losses import mse_loss
 
 
 class FeedForwardNN(FFRegressionNN):
-    """A neural network for a regression target.
-
-    Attributes:
-        backbone (Backbone): Backbone to use for feature extraction.
-        loss_fn (Callable): The loss function to use for training this NN.
-        optim_type (OptimizerType): The type of optimizer to use for training the network, e.g. "adam", "sgd", etc.
-        optim_kwargs (dict): Key-value argument specifications for the chosen optimizer, e.g. {"lr": 1e-3, "weight_decay": 1e-5}.
-        lr_scheduler_type (LRSchedulerType | None): If specified, the type of learning rate scheduler to use during training, e.g. "cosine_annealing".
-        lr_scheduler_kwargs (dict | None): If specified, key-value argument specifications for the chosen lr scheduler, e.g. {"T_max": 500}.
-        beta_scheduler_type (BetaSchedulerType | None, optional): If specified, the type of beta scheduler to use for training loss (if applicable). Defaults to None.
-        beta_scheduler_kwargs (dict | None, optional): If specified, key-value argument specifications for the chosen beta scheduler, e.g. {"beta_0": 1.0, "beta_1": 0.5}. Defaults to None.
-    """
+    """A neural network for a regression target."""
 
     def __init__(
         self,
@@ -42,8 +24,6 @@ class FeedForwardNN(FFRegressionNN):
         optim_kwargs: Optional[dict] = None,
         lr_scheduler_type: Optional[LRSchedulerType] = None,
         lr_scheduler_kwargs: Optional[dict] = None,
-        beta_scheduler_type: BetaSchedulerType | None = None,
-        beta_scheduler_kwargs: dict | None = None,
     ):
         """Instantiate a FeedForwardNN.
 
@@ -54,16 +34,7 @@ class FeedForwardNN(FFRegressionNN):
             optim_kwargs (dict): Key-value argument specifications for the chosen optimizer, e.g. {"lr": 1e-3, "weight_decay": 1e-5}.
             lr_scheduler_type (LRSchedulerType | None): If specified, the type of learning rate scheduler to use during training, e.g. "cosine_annealing".
             lr_scheduler_kwargs (dict | None): If specified, key-value argument specifications for the chosen lr scheduler, e.g. {"T_max": 500}.
-            beta_scheduler_type (BetaSchedulerType | None, optional): If specified, the type of beta scheduler to use for training loss (if applicable). Defaults to None.
-            beta_scheduler_kwargs (dict | None, optional): If specified, key-value argument specifications for the chosen beta scheduler, e.g. {"beta_0": 1.0, "beta_1": 0.5}. Defaults to None.
         """
-        if beta_scheduler_type == BetaSchedulerType.COSINE_ANNEALING:
-            self.beta_scheduler = CosineAnnealingBetaScheduler(**beta_scheduler_kwargs)
-        elif beta_scheduler_type == BetaSchedulerType.LINEAR:
-            self.beta_scheduler = LinearBetaScheduler(**beta_scheduler_kwargs)
-        else:
-            self.beta_scheduler = None
-
         super(FeedForwardNN, self).__init__(
             loss_fn=partial(
                 mse_loss,
@@ -148,9 +119,7 @@ class FeedForwardNN(FFRegressionNN):
     #     dist = torch.distributions.Normal(loc=mu.squeeze(), scale=var.sqrt().squeeze())
     #     return dist
 
-    def _point_prediction_impl(
-        self, y_hat: torch.Tensor, training: bool
-    ) -> torch.Tensor:
+    def _point_prediction_impl(self, y_hat: torch.Tensor, training: bool) -> torch.Tensor:
         # mu, _ = torch.split(y_hat, [1, 1], dim=-1)
         return y_hat
 
