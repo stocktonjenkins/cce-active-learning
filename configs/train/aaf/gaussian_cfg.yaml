@@ -8,7 +8,7 @@ training:
   accelerator: gpu
   batch_size: 32
   chkp_dir: chkp
-  chkp_freq: 200
+  chkp_freq: 100
   num_epochs: 100
   precision: bf16-mixed
   optimizer:
@@ -19,7 +19,7 @@ training:
   lr_scheduler:
     type: cosine_annealing
     kwargs:
-      T_max: 200
+      T_max: 100
       eta_min: 0
       last_epoch: -1
 evaluation:
