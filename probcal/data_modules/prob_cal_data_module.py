@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import Sized, Union, Literal
 
@@ -40,6 +41,7 @@ class ProbCalDataModule(LightningDataModule):
         num_workers: int,
         persistent_workers: bool,
         train_val_split: tuple[float, float] = (0.7, 0.1),
+        indices_save_dir: str | Path | None = None,
         seed=1998,
     ):
         super(ProbCalDataModule, self).__init__()
@@ -48,6 +50,8 @@ class ProbCalDataModule(LightningDataModule):
         self.persistent_workers = persistent_workers
         self.full_dataset = full_dataset
         self.train_val_split = train_val_split
+        if indices_save_dir is not None:
+            self.indices_save_dir = Path(indices_save_dir)
         self._init_indices(seed)
         self._init_transforms()
 
@@ -61,6 +65,15 @@ class ProbCalDataModule(LightningDataModule):
         self.train_indices = self.shuffled_indices[:num_train]
         self.val_indices = self.shuffled_indices[num_train : num_train + num_val]
         self.test_indices = self.shuffled_indices[num_train + num_val :]
+        if self.indices_save_dir is not None:
+            if not self.indices_save_dir.exists():
+                os.makedirs(self.indices_save_dir)
+            np.savez(
+                file=self.indices_save_dir / "split_indices.npz",
+                train=self.train_indices,
+                val=self.val_indices,
+                test=self.test_indices,
+            )
 
     def _init_transforms(self):
         resize = Resize((self.IMG_SIZE, self.IMG_SIZE))
