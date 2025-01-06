@@ -50,8 +50,9 @@ class ProbCalDataModule(LightningDataModule):
         self.persistent_workers = persistent_workers
         self.full_dataset = full_dataset
         self.train_val_split = train_val_split
-        if indices_save_dir is not None:
-            self.indices_save_dir = Path(indices_save_dir)
+        self.indices_save_dir = (
+            Path(indices_save_dir) if indices_save_dir is not None else None
+        )
         self._init_indices(seed)
         self._init_transforms()
 
