@@ -119,7 +119,9 @@ class FeedForwardNN(FFRegressionNN):
     #     dist = torch.distributions.Normal(loc=mu.squeeze(), scale=var.sqrt().squeeze())
     #     return dist
 
-    def _point_prediction_impl(self, y_hat: torch.Tensor, training: bool) -> torch.Tensor:
+    def _point_prediction_impl(
+        self, y_hat: torch.Tensor, training: bool
+    ) -> torch.Tensor:
         # mu, _ = torch.split(y_hat, [1, 1], dim=-1)
         return y_hat
 

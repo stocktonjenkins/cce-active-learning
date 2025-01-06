@@ -130,6 +130,7 @@ class TrainingConfig(BaseConfig):
         random_seed: int | None = None,
         early_stopping: bool = False,
         wandb: bool = False,
+        devices: list[int] | str | int = "auto",
     ):
         super(TrainingConfig, self).__init__(
             experiment_name=experiment_name,
@@ -145,6 +146,7 @@ class TrainingConfig(BaseConfig):
         )
         self.early_stopping = early_stopping
         self.wandb = wandb
+        self.devices = devices
         self.chkp_dir = chkp_dir
         self.chkp_freq = chkp_freq
         self.num_epochs = num_epochs

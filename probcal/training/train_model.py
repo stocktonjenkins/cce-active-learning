@@ -63,7 +63,9 @@ def main(config: TrainingConfig):
                 log_model=False,
             )
             chkp_callbacks.append(
-                WandBLoggingCallback(exp_name=f"{config.experiment_name}:trial-{i+1}", logger=logger)
+                WandBLoggingCallback(
+                    exp_name=f"{config.experiment_name}:trial-{i+1}", logger=logger
+                )
             )
         else:
             logger = CSVLogger(save_dir=config.log_dir, name=config.experiment_name)
@@ -73,6 +75,7 @@ def main(config: TrainingConfig):
             config=config,
             callbacks=chkp_callbacks,
             logger=logger,
+            devices=config.devices,
         )
 
 
