@@ -170,7 +170,7 @@ class DiscreteRegressionNN(L.LightningModule):
             self.log("train_mae", self.train_mae, on_epoch=True)
         return loss
 
-    def validation_step(self, batch: torch.Tensor) -> torch.Tensor:
+    def validation_step(self, batch: torch.Tensor, epoch: int) -> torch.Tensor:
         x, y = batch
         y_hat = self(x)
         loss = self.loss_fn(y_hat, y.view(-1, 1).float())

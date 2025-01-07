@@ -1,7 +1,6 @@
 import torch
-from lightning import Callback, LightningModule
-from pytorch_lightning import Trainer
-from pytorch_lightning.loggers import WandbLogger
+from lightning import Callback, LightningModule, Trainer
+from lightning.pytorch.loggers import WandbLogger
 
 
 class WandBLoggingCallback(Callback):
