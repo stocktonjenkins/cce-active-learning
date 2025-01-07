@@ -213,6 +213,9 @@ class TrainingConfig(BaseConfig):
         input_dim = config_dict["dataset"].get("input_dim", 1)
         hidden_dim = config_dict.get("hidden_dim", 64)
         random_seed = config_dict.get("random_seed")
+        early_stopping = config_dict.get("early_stopping", False)
+        wandb = config_dict.get("wandb", False)
+        devices = config_dict.get("devices")
 
         return TrainingConfig(
             experiment_name=experiment_name,
@@ -237,6 +240,9 @@ class TrainingConfig(BaseConfig):
             hidden_dim=hidden_dim,
             precision=precision,
             random_seed=random_seed,
+            wandb=wandb,
+            devices=devices,
+            early_stopping=early_stopping,
         )
 
 
