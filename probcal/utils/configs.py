@@ -131,6 +131,7 @@ class TrainingConfig(BaseConfig):
         early_stopping: bool = False,
         wandb: bool = False,
         devices: list[int] | str | int = "auto",
+        backbone_type: str | None = None,
     ):
         super(TrainingConfig, self).__init__(
             experiment_name=experiment_name,
@@ -147,6 +148,7 @@ class TrainingConfig(BaseConfig):
         self.early_stopping = early_stopping
         self.wandb = wandb
         self.devices = devices
+        self.backbone_type = backbone_type
         self.chkp_dir = chkp_dir
         self.chkp_freq = chkp_freq
         self.num_epochs = num_epochs
@@ -216,6 +218,7 @@ class TrainingConfig(BaseConfig):
         early_stopping = config_dict.get("early_stopping", False)
         wandb = config_dict.get("wandb", False)
         devices = config_dict.get("devices")
+        backbone_type = config_dict.get("backbone_type")
 
         return TrainingConfig(
             experiment_name=experiment_name,
@@ -243,6 +246,7 @@ class TrainingConfig(BaseConfig):
             wandb=wandb,
             devices=devices,
             early_stopping=early_stopping,
+            backbone_type=backbone_type,
         )
 
 

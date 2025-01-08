@@ -33,7 +33,7 @@ from probcal.models import NaturalGaussianNN
 from probcal.models import NegBinomNN
 from probcal.models import PoissonNN
 from probcal.models import FeedForwardNN
-from probcal.models.backbones import DistilBert
+from probcal.models.backbones import DistilBert, Backbone
 from probcal.models.backbones import LargerMLP
 from probcal.models.backbones import MLP
 from probcal.models.backbones import MNISTCNN
@@ -47,9 +47,51 @@ from probcal.utils.generic_utils import partialclass
 GLOBAL_DATA_DIR = "data"
 
 
+def get_backbone_from_config(
+    config: TrainingConfig,
+) -> tuple[type[Backbone], dict[str, float]]:
+    backbone_type = config.backbone_type
+    subclasses = Backbone.__subclasses__()
+    Class = list(filter(lambda c: c.__name__ == backbone_type, subclasses))[0]
+    if Class is None:
+        raise ValueError(
+            f"{backbone_type} is not a valid backbone. Must be one of [{subclasses}]"
+        )
+    kwargs = {}
+    if config.dataset_type == DatasetType.TABULAR:
+        kwargs.update({"input_dim": config.input_dim})
+    return Class, kwargs
+
+
+def get_backbone_from_dataset(
+    config: TrainingConfig,
+) -> tuple[type[Backbone], dict[str, float]]:
+    backbone_kwargs = {}
+    if config.dataset_type == DatasetType.TABULAR:
+        if "collision" in str(config.dataset_path_or_spec):
+            backbone_type = LargerMLP
+        else:
+            backbone_type = MLP
+        backbone_kwargs.update({"input_dim": config.input_dim})
+    elif config.dataset_type == DatasetType.TEXT:
+        backbone_type = DistilBert
+    elif config.dataset_type == DatasetType.IMAGE:
+        if config.dataset_path_or_spec == ImageDatasetName.MNIST:
+            backbone_type = MNISTCNN
+        elif config.dataset_path_or_spec == ImageDatasetName.COCO_PEOPLE:
+            backbone_type = ViT
+        else:
+            backbone_type = MobileNetV3
+    else:
+        raise ValueError(
+            f"Unable to determine backbone from dataset_type: {config.dataset_type}"
+        )
+    return backbone_type, backbone_kwargs
+
+
 def get_model(
     config: TrainingConfig | EvaluationConfig, return_initializer: bool = False
-) -> DiscreteRegressionNN:
+) -> DiscreteRegressionNN | tuple[DiscreteRegressionNN, type[DiscreteRegressionNN]]:
     initializer: Type[DiscreteRegressionNN]
 
     if config.head_type == HeadType.GAUSSIAN:
@@ -79,28 +121,10 @@ def get_model(
     else:
         raise ValueError(f"Head type {config.head_type} not recognized.")
 
-    if config.dataset_type == DatasetType.TABULAR:
-        if "collision" in str(config.dataset_path_or_spec):
-            backbone_type = LargerMLP
-        else:
-            backbone_type = MLP
-        backbone_kwargs = {"input_dim": config.input_dim}
-    elif config.dataset_type == DatasetType.TEXT:
-        backbone_type = DistilBert
-        backbone_kwargs = {}
-    elif config.dataset_type == DatasetType.IMAGE:
-        if config.dataset_path_or_spec == ImageDatasetName.MNIST:
-            backbone_type = MNISTCNN
-        elif config.dataset_path_or_spec == ImageDatasetName.COCO_PEOPLE:
-            backbone_type = ViT
-        elif config.dataset_path_or_spec in (
-            ImageDatasetName.AAF,
-            ImageDatasetName.FG_NET,
-        ):
-            backbone_type = MobileNetV3
-        else:
-            backbone_type = MobileNetV3
-        backbone_kwargs = {}
+    if config.backbone_type:
+        backbone_type, backbone_kwargs = get_backbone_from_config(config)
+    else:
+        backbone_type, backbone_kwargs = get_backbone_from_dataset(config)
 
     backbone_kwargs["output_dim"] = config.hidden_dim
 
