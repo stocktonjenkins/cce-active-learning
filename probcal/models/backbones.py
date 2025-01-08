@@ -171,7 +171,7 @@ class ResNet18(Backbone):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        h = self.basemodel(x)
+        h = self.backbone(x)
         return h
 
 
@@ -196,7 +196,7 @@ class ResNet34(Backbone):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        h = self.basemodel(x)
+        h = self.backbone(x)
         return h
 
 
@@ -221,7 +221,7 @@ class ResNet50(Backbone):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        h = self.basemodel(x)
+        h = self.backbone(x)
         return h
 
 
