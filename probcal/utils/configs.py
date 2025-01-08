@@ -218,6 +218,7 @@ class TrainingConfig(BaseConfig):
         early_stopping = config_dict.get("early_stopping", False)
         wandb = config_dict.get("wandb", False)
         devices = config_dict.get("devices")
+        backbone_type = config_dict.get("backbone_type")
 
         return TrainingConfig(
             experiment_name=experiment_name,
@@ -245,6 +246,7 @@ class TrainingConfig(BaseConfig):
             wandb=wandb,
             devices=devices,
             early_stopping=early_stopping,
+            backbone_type=backbone_type,
         )
 
 
