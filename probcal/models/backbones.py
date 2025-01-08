@@ -1,7 +1,9 @@
 import torch
-from torch import nn
+import torch.nn as nn
 from torchvision.models.mobilenet import mobilenet_v3_large
 from torchvision.models.mobilenet import MobileNet_V3_Large_Weights
+import torchvision.models as tvmodels
+
 from transformers import BatchEncoding
 from transformers import DistilBertModel
 from transformers import ViTModel
@@ -145,6 +147,81 @@ class ViT(Backbone):
         h = outputs.pooler_output
         h = self.relu(self.projection_1(h))
         h = self.relu(self.projection_2(h))
+        return h
+
+
+class ResNet18(Backbone):
+    """A ResNet18 feature extractor for 3x224x224 image tensors.
+
+    Attributes:
+        output_dim (int): Dimension of output feature vectors.
+    """
+
+    def __init__(self, output_dim: int = 64):
+        """Initialize a ResNet18 feature extractor.
+
+        Args:
+            output_dim (int, optional): Dimension of output feature vectors. Defaults to 64.
+        """
+        super(ResNet18, self).__init__(output_dim=output_dim)
+
+        self.backbone = tvmodels.resnet18(pretrained=True)
+        self.backbone.fc = nn.Linear(
+            in_features=2048, out_features=output_dim, bias=True
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        h = self.basemodel(x)
+        return h
+
+
+class ResNet34(Backbone):
+    """A ResNet34 feature extractor for 3x224x224 image tensors.
+
+    Attributes:
+        output_dim (int): Dimension of output feature vectors.
+    """
+
+    def __init__(self, output_dim: int = 64):
+        """Initialize a ResNet34 feature extractor.
+
+        Args:
+            output_dim (int, optional): Dimension of output feature vectors. Defaults to 64.
+        """
+        super(ResNet34, self).__init__(output_dim=output_dim)
+
+        self.backbone = tvmodels.resnet34(pretrained=True)
+        self.backbone.fc = nn.Linear(
+            in_features=2048, out_features=output_dim, bias=True
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        h = self.basemodel(x)
+        return h
+
+
+class ResNet50(Backbone):
+    """A ResNet50 feature extractor for 3x224x224 image tensors.
+
+    Attributes:
+        output_dim (int): Dimension of output feature vectors.
+    """
+
+    def __init__(self, output_dim: int = 64):
+        """Initialize a ResNet50 feature extractor.
+
+        Args:
+            output_dim (int, optional): Dimension of output feature vectors. Defaults to 64.
+        """
+        super(ResNet50, self).__init__(output_dim=output_dim)
+
+        self.backbone = tvmodels.resnet50(pretrained=True)
+        self.backbone.fc = nn.Linear(
+            in_features=2048, out_features=output_dim, bias=True
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        h = self.basemodel(x)
         return h
 
 
