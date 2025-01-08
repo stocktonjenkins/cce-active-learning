@@ -167,11 +167,13 @@ class ResNet18(Backbone):
 
         self.backbone = tvmodels.resnet18(pretrained=True)
         self.backbone.fc = nn.Linear(
-            in_features=2048, out_features=output_dim, bias=True)
+            in_features=2048, out_features=output_dim, bias=True
+        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         h = self.basemodel(x)
         return h
+
 
 class ResNet34(Backbone):
     """A ResNet34 feature extractor for 3x224x224 image tensors.
@@ -190,11 +192,13 @@ class ResNet34(Backbone):
 
         self.backbone = tvmodels.resnet34(pretrained=True)
         self.backbone.fc = nn.Linear(
-            in_features=2048, out_features=output_dim, bias=True)
+            in_features=2048, out_features=output_dim, bias=True
+        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         h = self.basemodel(x)
         return h
+
 
 class ResNet50(Backbone):
     """A ResNet50 feature extractor for 3x224x224 image tensors.
@@ -213,11 +217,13 @@ class ResNet50(Backbone):
 
         self.backbone = tvmodels.resnet50(pretrained=True)
         self.backbone.fc = nn.Linear(
-            in_features=2048, out_features=output_dim, bias=True)
+            in_features=2048, out_features=output_dim, bias=True
+        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         h = self.basemodel(x)
         return h
+
 
 class MobileNetV3(Backbone):
     """A MobileNetV3 feature extractor for 3x224x224 image tensors.
