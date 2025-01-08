@@ -131,6 +131,7 @@ class TrainingConfig(BaseConfig):
         early_stopping: bool = False,
         wandb: bool = False,
         devices: list[int] | str | int = "auto",
+        backbone_type: str | None = None,
     ):
         super(TrainingConfig, self).__init__(
             experiment_name=experiment_name,
@@ -147,6 +148,7 @@ class TrainingConfig(BaseConfig):
         self.early_stopping = early_stopping
         self.wandb = wandb
         self.devices = devices
+        self.backbone_type = backbone_type
         self.chkp_dir = chkp_dir
         self.chkp_freq = chkp_freq
         self.num_epochs = num_epochs
