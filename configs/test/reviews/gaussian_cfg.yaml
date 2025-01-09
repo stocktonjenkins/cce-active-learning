@@ -1,0 +1,11 @@
+experiment_name: reviews_gaussian
+random_seed: 1998
+head_type: gaussian
+dataset:
+  type: text
+  path: data/reviews/dataset.json
+batch_size: 4
+accelerator: cpu
+log_dir: logs/eval/reviews_gaussian
+model_ckpt_path: chkp/cce__reviews_gaussian/al_iter_0/best_loss.ckpt
+mcmd_num_trials: 5
