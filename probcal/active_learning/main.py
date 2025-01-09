@@ -107,7 +107,6 @@ def parse_args() -> Namespace:
     parser.add_argument("--train-config", type=str)
     parser.add_argument("--procedure", type=ProcedureType)
     parser.add_argument("--logger", type=str, default="csv", help="csv|tboard")
-    parser.add_argument("--experiment-name", type=str)
     return parser.parse_args()
 
 
@@ -121,7 +120,7 @@ if __name__ == "__main__":
     _wandb_logger = WandbLogger(
         project="probcal",
         entity="gvpatil-uw",
-        name=args.experiment_name,
+        name=_train_config.experiment_name,
         log_model=False,
     )
     al_config.procedure_type = args.procedure
