@@ -49,7 +49,6 @@ def main(config: TrainingConfig):
         config.dataset_path_or_spec,
         config.batch_size,
     )
-    breakpoint()
     for i in range(config.num_trials):
         model = get_model(config)
         chkp_dir = config.chkp_dir / config.experiment_name / f"version_{i}"

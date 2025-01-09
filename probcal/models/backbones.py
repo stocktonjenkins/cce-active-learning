@@ -1,4 +1,4 @@
-import torch
+\import torch
 import torch.nn as nn
 from torchvision.models.mobilenet import mobilenet_v3_large
 from torchvision.models.mobilenet import MobileNet_V3_Large_Weights
@@ -167,7 +167,7 @@ class ResNet18(Backbone):
 
         self.backbone = tvmodels.resnet18(pretrained=True)
         self.backbone.fc = nn.Linear(
-            in_features=2048, out_features=output_dim, bias=True
+            in_features=512, out_features=output_dim, bias=True
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -192,7 +192,7 @@ class ResNet34(Backbone):
 
         self.backbone = tvmodels.resnet34(pretrained=True)
         self.backbone.fc = nn.Linear(
-            in_features=2048, out_features=output_dim, bias=True
+            in_features=512, out_features=output_dim, bias=True
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
