@@ -7,3 +7,4 @@ from .eva_datamodule import EVADataModule
 from .fg_net_datamodule import FGNetDataModule
 from .tabular_data_module import TabularDataModule
 from .wiki_datamodule import WikiDataModule
+from .reviews_datamodule import ReviewsDataModule
