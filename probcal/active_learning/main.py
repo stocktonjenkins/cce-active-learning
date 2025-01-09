@@ -93,7 +93,7 @@ def pipeline(
                 validation_rate=1,
             )
             active_learn.eval(
-                trainer, best_path=os.path.join(chkp_dir, "best_mae.ckpt")
+                trainer, best_path=os.path.join(chkp_dir, f"{al_config.chkp_type.value}.ckpt")
             )
             active_learn.step(model)
         try:
