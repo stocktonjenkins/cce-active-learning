@@ -58,6 +58,7 @@ class ActiveLearningConfig:
         init_num_labeled: int,
         chkp_type: str,
         settings: CalibrationEvaluatorSettings,
+        num_workers: int,
         measure_calibration: bool = False,
         update_validation_set: bool = False,
         wandb: bool = False,
@@ -73,3 +74,4 @@ class ActiveLearningConfig:
         self.update_validation_set = update_validation_set
         self.measure_calibration = measure_calibration
         self.wandb = wandb
+        self.num_workers = num_workers
