@@ -128,9 +128,12 @@ class ActiveLearningProcedure(
         Returns the embedding of the given model by extracting last layer representations
         """
         embedding = []
+        if torch.cuda.is_available():
+            model = model.to('cuda')
         model.eval()
         with torch.no_grad():
             for inputs, _ in tqdm(loader):
                 emb = model.get_last_layer_representation(inputs)
                 embedding.append(emb.data.cpu())
+        torch.cuda.empty_cache()
         return torch.cat(embedding, dim=0)
