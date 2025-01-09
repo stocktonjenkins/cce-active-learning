@@ -129,7 +129,7 @@ class ActiveLearningProcedure(
         """
         embedding = []
         if torch.cuda.is_available():
-            model = model.to('cuda')
+            model = model.to("cuda")
         model.eval()
         with torch.no_grad():
             for inputs, _ in tqdm(loader):

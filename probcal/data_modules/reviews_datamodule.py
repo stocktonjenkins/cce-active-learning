@@ -68,7 +68,9 @@ class ReviewsDataModule(L.LightningDataModule):
         )
 
     @staticmethod
-    def collate_fn(batch: Iterable[tuple[str, int]]) -> tuple[BatchEncoding, torch.LongTensor]:
+    def collate_fn(
+        batch: Iterable[tuple[str, int]],
+    ) -> tuple[BatchEncoding, torch.LongTensor]:
         all_text = []
         all_targets = []
         for x in batch:

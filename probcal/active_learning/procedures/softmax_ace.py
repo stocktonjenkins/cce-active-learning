@@ -14,7 +14,10 @@ from probcal.training.hyperparam_schedulers import CosineAnnealingScheduler
 
 
 class SoftmaxACEProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
-    """AL procedure where we select the next train batch using CCE values as the sampling logits (passed through a tempered softmax)."""
+    """
+    AL procedure where we select the next train batch using
+    CCE values as the sampling logits (passed through a tempered softmax).
+    """
 
     def __init__(
         self,

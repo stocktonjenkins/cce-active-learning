@@ -18,6 +18,8 @@ class DeterministicSettings:
 class ProcedureType(Enum):
     RANDOM = "random"
     CCE = "cce"
+    WEIGHTED_CCE = "weighted_cce"
+    SOFTMAX_CCE = "softmax_cce"
     BAIT = "bait"
     BADGE = "badge"
     REVERSE_CCE = "reverse_cce"
