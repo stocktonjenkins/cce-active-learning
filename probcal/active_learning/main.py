@@ -4,6 +4,8 @@ import shutil
 from argparse import Namespace, ArgumentParser
 from logging import Logger
 
+from lightning.pytorch.callbacks import EarlyStopping
+
 from probcal.active_learning.configs import (
     ActiveLearningConfig,
     ProcedureType,
@@ -23,7 +25,7 @@ from probcal.lib.logging import WandBActiveLearningCallback
 from probcal.training.train_model import train_procedure
 from probcal.utils.configs import TrainingConfig
 from probcal.utils.experiment_utils import get_model, get_datamodule, get_chkp_callbacks
-from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger, WandbLogger
+from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger, WandbLogger
 
 
 def get_logger(
@@ -78,13 +80,17 @@ def pipeline(
                 callbacks.append(
                     WandBActiveLearningCallback(wandb_logger, al_iter=al_iter)
                 )
-
+            if train_config.early_stopping:
+                callbacks.append(
+                    EarlyStopping(monitor="val_loss", patience=3, mode="min")
+                )
             trainer = train_procedure(
                 model,
                 datamodule=active_learn.dataset,
                 config=train_config,
                 callbacks=callbacks,
                 logger=logger,
+                validation_rate=1,
             )
             active_learn.eval(
                 trainer, best_path=os.path.join(chkp_dir, "best_mae.ckpt")
@@ -101,7 +107,6 @@ def parse_args() -> Namespace:
     parser.add_argument("--train-config", type=str)
     parser.add_argument("--procedure", type=ProcedureType)
     parser.add_argument("--logger", type=str, default="csv", help="csv|tboard")
-    parser.add_argument("--experiment-name", type=str)
     return parser.parse_args()
 
 
@@ -113,9 +118,9 @@ if __name__ == "__main__":
     _train_config = TrainingConfig.from_yaml(args.train_config)
     al_config = ActiveLearningConfig.from_yaml(config_path=config_path)
     _wandb_logger = WandbLogger(
-        project="probcal",
+        project="active-learning",
         entity="gvpatil-uw",
-        name=args.experiment_name,
+        name=_train_config.experiment_name,
         log_model=False,
     )
     al_config.procedure_type = args.procedure
