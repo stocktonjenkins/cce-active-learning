@@ -9,7 +9,7 @@ from probcal.active_learning.active_learning_types import (
 from probcal.lib.observer import IObserver, ISubject
 import csv
 import wandb
-from pytorch_lightning.loggers import WandbLogger
+from lightning.pytorch.loggers import WandbLogger
 
 
 class ActiveLearningModelAccuracyLogger(IObserver[ActiveLearningEvaluationResults]):

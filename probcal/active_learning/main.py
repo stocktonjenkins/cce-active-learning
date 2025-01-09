@@ -25,7 +25,7 @@ from probcal.lib.logging import WandBActiveLearningCallback
 from probcal.training.train_model import train_procedure
 from probcal.utils.configs import TrainingConfig
 from probcal.utils.experiment_utils import get_model, get_datamodule, get_chkp_callbacks
-from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger, WandbLogger
+from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger, WandbLogger
 
 
 def get_logger(

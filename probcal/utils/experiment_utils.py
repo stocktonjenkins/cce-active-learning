@@ -246,7 +246,7 @@ def get_chkp_callbacks(chkp_dir: Path, chkp_freq: int) -> list[Callback]:
         every_n_epochs=1,
         filename=CheckpointType.BEST_LOSS.value,
         save_top_k=1,
-        enable_version_counter=False,
+        #enable_version_counter=False,
     )
     best_mae_checkpoint_callback = ModelCheckpoint(
         dirpath=chkp_dir,
@@ -254,7 +254,7 @@ def get_chkp_callbacks(chkp_dir: Path, chkp_freq: int) -> list[Callback]:
         every_n_epochs=1,
         filename=CheckpointType.BEST_MAE.value,
         save_top_k=1,
-        enable_version_counter=False,
+        #enable_version_counter=False,
     )
     return [
         temporal_checkpoint_callback,

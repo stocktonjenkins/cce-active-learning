@@ -20,7 +20,7 @@ from probcal.models.feed_forward_regression_nn import FFRegressionNN
 from probcal.models.discrete_regression_nn import DiscreteRegressionNN
 from probcal.utils.experiment_utils import get_model, get_datamodule, get_chkp_callbacks
 from logging import Logger
-from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger, WandbLogger
+from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger, WandbLogger
 
 
 T = TypeVar("T")

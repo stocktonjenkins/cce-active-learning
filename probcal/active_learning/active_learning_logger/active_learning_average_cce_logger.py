@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from filelock import FileLock
-from pytorch_lightning.loggers import WandbLogger
+from lightning.pytorch.loggers import WandbLogger
 
 from probcal.active_learning.active_learning_types import (
     ActiveLearningEvaluationResults,

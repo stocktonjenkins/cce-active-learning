@@ -65,7 +65,7 @@ class ActiveLearningConfig:
         self.num_al_iter = num_al_iter
         self.label_k = label_k
         self.init_num_labeled = init_num_labeled
-        self.chkp_type = CheckpointType[chkp_type]
+        self.chkp_type = CheckpointType._value2member_map_[chkp_type]
         self.settings = settings
         self.settings.device = torch.device("cpu")
         self.update_validation_set = update_validation_set
