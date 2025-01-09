@@ -25,6 +25,8 @@ from probcal.active_learning.procedures.coreset_procedure import (
 from probcal.active_learning.procedures.batchbald_procedure import (
     BatchBALDProcedure,
 )
+from probcal.active_learning.procedures.softmax_ace import SoftmaxACEProcedure
+from probcal.active_learning.procedures.weighted_ace import WeightedACEProcedure
 
 
 def get_active_learning_procedure(config: ActiveLearningConfig):
@@ -32,6 +34,10 @@ def get_active_learning_procedure(config: ActiveLearningConfig):
         return RandomProcedure
     if config.procedure_type == ProcedureType.CCE:
         return CCEProcedure
+    if config.procedure_type == ProcedureType.WEIGHTED_CCE:
+        return WeightedACEProcedure
+    if config.procedure_type == ProcedureType.SOFTMAX_CCE:
+        return SoftmaxACEProcedure
     if config.procedure_type == ProcedureType.BAIT:
         return BAITProcedure
     if config.procedure_type == ProcedureType.CORESET:
