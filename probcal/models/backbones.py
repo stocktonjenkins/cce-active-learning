@@ -1,4 +1,4 @@
-\import torch
+import torch
 import torch.nn as nn
 from torchvision.models.mobilenet import mobilenet_v3_large
 from torchvision.models.mobilenet import MobileNet_V3_Large_Weights

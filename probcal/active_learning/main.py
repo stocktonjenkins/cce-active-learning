@@ -4,6 +4,8 @@ import shutil
 from argparse import Namespace, ArgumentParser
 from logging import Logger
 
+from lightning.pytorch.callbacks import EarlyStopping
+
 from probcal.active_learning.configs import (
     ActiveLearningConfig,
     ProcedureType,
@@ -78,13 +80,17 @@ def pipeline(
                 callbacks.append(
                     WandBActiveLearningCallback(wandb_logger, al_iter=al_iter)
                 )
-
+            if train_config.early_stopping:
+                callbacks.append(
+                    EarlyStopping(monitor="val_loss", patience=3, mode="min")
+                )
             trainer = train_procedure(
                 model,
                 datamodule=active_learn.dataset,
                 config=train_config,
                 callbacks=callbacks,
                 logger=logger,
+                validation_rate=1,
             )
             active_learn.eval(
                 trainer, best_path=os.path.join(chkp_dir, "best_mae.ckpt")
