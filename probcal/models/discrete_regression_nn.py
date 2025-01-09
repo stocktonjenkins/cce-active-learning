@@ -183,7 +183,7 @@ class DiscreteRegressionNN(L.LightningModule):
         self.log("val_mae", self.val_mae, on_epoch=True)
         return loss
 
-    def test_step(self, batch: torch.Tensor):
+    def test_step(self, batch: torch.Tensor, epoch: int) -> torch.Tensor:
         x, y = batch
         y_hat = self.predict(x)
         loss = self.loss_fn(y_hat, y.view(-1, 1).float())
