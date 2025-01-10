@@ -142,6 +142,7 @@ class ContinuousRankedProbabilityScore(Metric):
     """A custom `torchmetric` for computing the average CRPS of Gaussian predictive distributions."""
 
     def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.add_state("all_crps", default=[], dist_reduce_fx="cat")
 
     def update(self, mu: torch.Tensor, var: torch.Tensor, y: torch.Tensor):
@@ -171,6 +172,7 @@ class GaussianNLL(Metric):
     """Computes the average negative log Gaussian density assigned to the true target."""
 
     def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.add_state("all_nlls", default=[], dist_reduce_fx="cat")
 
     def update(self, mu: torch.Tensor, var: torch.Tensor, y: torch.Tensor):

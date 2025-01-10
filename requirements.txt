@@ -30,7 +30,7 @@ beautifulsoup4==4.12.3
     #   lightning
 blessed==1.20.0
     # via inquirer
-boto3==1.35.96
+boto3==1.35.93
     # via lightning-cloud
 botocore==1.35.93
     # via

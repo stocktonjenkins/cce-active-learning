@@ -3,7 +3,7 @@ random_seed: 1998
 head_type: gaussian
 dataset:
   type: text
-  path: data/reviews/dataset.json
+  spec: reviews
 training:
   accelerator: gpu
   batch_size: 32
