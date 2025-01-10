@@ -91,7 +91,8 @@ class TrainingConfig(BaseConfig):
         chkp_dir (Path): Directory to checkpoint model weights in.
         chkp_freq (int): Number of epochs to wait in between checkpointing model weights.
         batch_size (int): The batch size to train with.
-        num_epochs (int): The number of epochs through the data to complete during training.
+        max_epochs (int): The max number of epochs through the data to complete during training.
+        min_epochs (int): The min number of epochs through the data to complete during training.
         optim_type (OptimizerType): The type of optimizer to use for training the network, e.g. "adam", "sgd", etc.
         optim_kwargs (dict): Key-value argument specifications for the chosen optimizer, e.g. {"lr": 1e-3, "weight_decay": 1e-5}.
         lr_scheduler_type (LRSchedulerType | None): If specified, the type of learning rate scheduler to use during training, e.g. "cosine_annealing".
@@ -115,7 +116,6 @@ class TrainingConfig(BaseConfig):
         chkp_dir: Path,
         chkp_freq: int,
         batch_size: int,
-        num_epochs: int,
         optim_type: OptimizerType,
         optim_kwargs: dict,
         lr_scheduler_type: LRSchedulerType | None,
@@ -127,6 +127,8 @@ class TrainingConfig(BaseConfig):
         num_trials: int,
         log_dir: Path,
         source_dict: dict,
+        max_epochs: int,
+        min_epochs: int | None = None,
         input_dim: int = 1,
         hidden_dim: int = 64,
         precision: str | None = None,
@@ -154,7 +156,8 @@ class TrainingConfig(BaseConfig):
         self.backbone_type = backbone_type
         self.chkp_dir = chkp_dir
         self.chkp_freq = chkp_freq
-        self.num_epochs = num_epochs
+        self.max_epochs = max_epochs
+        self.min_epochs = min_epochs
         self.optim_type = optim_type
         self.optim_kwargs = optim_kwargs
         self.lr_scheduler_type = lr_scheduler_type
@@ -185,7 +188,8 @@ class TrainingConfig(BaseConfig):
         chkp_dir = Path(training_dict["chkp_dir"])
         chkp_freq = training_dict["chkp_freq"]
         batch_size = training_dict["batch_size"]
-        num_epochs = training_dict["num_epochs"]
+        max_epochs = training_dict["max_epochs"]
+        min_epochs = training_dict.get("min_epochs", None)
         precision = training_dict.get("precision")
         optim_type = OptimizerType(training_dict["optimizer"]["type"])
         optim_kwargs = training_dict["optimizer"]["kwargs"]
@@ -203,7 +207,7 @@ class TrainingConfig(BaseConfig):
             )
             beta_scheduler_kwargs = training_dict["beta_scheduler"]["kwargs"]
             if beta_scheduler_kwargs.get("last_epoch", None) == -1:
-                beta_scheduler_kwargs["last_epoch"] = num_epochs
+                beta_scheduler_kwargs["last_epoch"] = max_epochs
         else:
             beta_scheduler_type = None
             beta_scheduler_kwargs = None
@@ -230,7 +234,8 @@ class TrainingConfig(BaseConfig):
             chkp_dir=chkp_dir,
             chkp_freq=chkp_freq,
             batch_size=batch_size,
-            num_epochs=num_epochs,
+            max_epochs=max_epochs,
+            min_epochs=min_epochs,
             optim_type=optim_type,
             optim_kwargs=optim_kwargs,
             lr_scheduler_type=lr_scheduler_type,

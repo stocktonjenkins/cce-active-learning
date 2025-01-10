@@ -30,7 +30,8 @@ def train_procedure(
     trainer = L.Trainer(
         devices=devices,
         accelerator=config.accelerator_type.value,
-        max_epochs=config.num_epochs,
+        max_epochs=config.max_epochs,
+        min_epochs=config.min_epochs,
         log_every_n_steps=5,
         check_val_every_n_epoch=validation_rate,
         enable_model_summary=False,
@@ -55,7 +56,11 @@ def main(config: TrainingConfig):
         # chkp_callbacks = get_chkp_callbacks(chkp_dir, config.chkp_freq)
         chkp_callbacks = []
         if config.early_stopping:
-            chkp_callbacks.append(EarlyStopping(monitor="val_loss", mode="min"))
+            chkp_callbacks.append(
+                EarlyStopping(
+                    monitor="val_loss", mode="min", patience=5, min_delta=0.01
+                )
+            )
         if config.wandb:
             logger = WandbLogger(
                 project="probcal",

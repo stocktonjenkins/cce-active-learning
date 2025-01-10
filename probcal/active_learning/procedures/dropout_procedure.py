@@ -72,12 +72,12 @@ class DropoutProcedure(ActiveLearningProcedure[ActiveLearningProcedure]):
         trainer = L.Trainer(
             devices="auto",
             accelerator=_train_config.accelerator_type.value,
-            min_epochs=_train_config.num_epochs,
-            max_epochs=_train_config.num_epochs,
+            min_epochs=_train_config.min_epochs,
+            max_epochs=_train_config.max_epochs,
             log_every_n_steps=5,
             check_val_every_n_epoch=1,
             enable_model_summary=False,
-            callbacks=get_chkp_callbacks(ckpt, chkp_freq=_train_config.num_epochs),
+            callbacks=get_chkp_callbacks(ckpt, chkp_freq=_train_config.max_epochs),
             logger=logger,
             precision=_train_config.precision,
         )

@@ -68,7 +68,7 @@ def pipeline(
             callbacks = list(
                 filter(
                     lambda cb: cb.filename == active_learn.config.chkp_type.value,
-                    get_chkp_callbacks(chkp_dir, chkp_freq=train_config.num_epochs),
+                    get_chkp_callbacks(chkp_dir, chkp_freq=train_config.max_epochs),
                 )
             )
             if not wandb:
@@ -83,7 +83,7 @@ def pipeline(
             if train_config.early_stopping:
                 callbacks.append(
                     EarlyStopping(
-                        monitor="val_loss", patience=3, mode="min", min_delta=0.01
+                        monitor="val_loss", patience=5, mode="min", min_delta=0.01
                     )
                 )
             trainer = train_procedure(
