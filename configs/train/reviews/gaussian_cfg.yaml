@@ -25,3 +25,5 @@ training:
 evaluation:
   num_trials: 1
   log_dir: logs
+wandb: False
+early_stopping: True
