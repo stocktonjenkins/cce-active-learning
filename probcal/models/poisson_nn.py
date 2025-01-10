@@ -11,10 +11,10 @@ from probcal.enums import LRSchedulerType
 from probcal.enums import OptimizerType
 from probcal.evaluation.custom_torchmetrics import AverageNLL
 from probcal.models.backbones import Backbone
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
+from probcal.models.regression_nn import RegressionNN
 
 
-class PoissonNN(DiscreteRegressionNN):
+class PoissonNN(RegressionNN):
     """A neural network that learns the parameters of a Poisson distribution over each regression target (conditioned on the input).
 
     Attributes:
@@ -111,9 +111,7 @@ class PoissonNN(DiscreteRegressionNN):
         dist = torch.distributions.Poisson(lmbda.squeeze())
         return dist
 
-    def _point_prediction_impl(
-        self, y_hat: torch.Tensor, training: bool
-    ) -> torch.Tensor:
+    def _point_prediction_impl(self, y_hat: torch.Tensor, training: bool) -> torch.Tensor:
         lmbda = y_hat.exp() if training else y_hat
         return lmbda.floor()
 

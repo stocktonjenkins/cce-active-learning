@@ -1,15 +1,16 @@
-import math
 from argparse import ArgumentParser
 from argparse import Namespace
 
 import lightning as L
-from lightning import LightningDataModule, Callback
+from lightning import Callback
+from lightning import LightningDataModule
 from lightning.pytorch.callbacks import EarlyStopping
+from lightning.pytorch.loggers import CSVLogger
+from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.loggers.logger import Logger
-from lightning.pytorch.loggers import CSVLogger, WandbLogger
 
 from probcal.lib.logging import WandBLoggingCallback
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
+from probcal.models.regression_nn import RegressionNN
 from probcal.utils.configs import TrainingConfig
 from probcal.utils.experiment_utils import fix_random_seed
 from probcal.utils.experiment_utils import get_chkp_callbacks
@@ -18,7 +19,7 @@ from probcal.utils.experiment_utils import get_model
 
 
 def train_procedure(
-    model: DiscreteRegressionNN,
+    model: RegressionNN,
     datamodule: LightningDataModule,
     config: TrainingConfig,
     callbacks: list[Callback] | None,

@@ -1,19 +1,14 @@
+import gc
+
 import numpy as np
 import torch
-from torch.utils.data import DataLoader, TensorDataset
-import numpy as np
-import gc
 from tqdm import tqdm
-from copy import copy as copy
-from copy import deepcopy as deepcopy
-from torch.autograd import Variable
-from torch.nn import functional as F
-import numpy as np
-from probcal.active_learning.procedures.base import ActiveLearningProcedure
+
 from probcal.active_learning.active_learning_types import (
     ActiveLearningEvaluationResults,
 )
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
+from probcal.active_learning.procedures.base import ActiveLearningProcedure
+from probcal.models.regression_nn import RegressionNN
 
 
 class BAITProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
@@ -34,13 +29,13 @@ class BAITProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
         self,
         unlabeled_indices: np.ndarray,
         k: int,
-        model: DiscreteRegressionNN,
+        model: RegressionNN,
     ) -> np.ndarray:
         """
         Choose the next set of indices to add to the label set based on Fisher Information.
 
         Args:
-            model: DiscreteRegressionNN
+            model: RegressionNN
             unlabeled_indices: np.ndarray
             k: int
 
@@ -62,11 +57,7 @@ class BAITProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
         fisher = torch.zeros(xt.shape[-1], xt.shape[-1])
         for i in range(int(np.ceil(xt.shape[0] / batchSize))):
             xt_ = xt[i * batchSize : (i + 1) * batchSize].cuda()
-            op = (
-                torch.sum(torch.matmul(xt_.transpose(1, 2), xt_) / (len(xt)), 0)
-                .detach()
-                .cpu()
-            )
+            op = torch.sum(torch.matmul(xt_.transpose(1, 2), xt_) / (len(xt)), 0).detach().cpu()
             fisher = fisher + op
             xt_ = xt_.cpu()
             del xt_, op
@@ -79,11 +70,7 @@ class BAITProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
         xt2 = xt_labeled
         for i in range(int(np.ceil(len(xt2) / batchSize))):
             xt_ = xt2[i * batchSize : (i + 1) * batchSize].cuda()
-            op = (
-                torch.sum(torch.matmul(xt_.transpose(1, 2), xt_) / (len(xt2)), 0)
-                .detach()
-                .cpu()
-            )
+            op = torch.sum(torch.matmul(xt_.transpose(1, 2), xt_) / (len(xt2)), 0).detach().cpu()
             init = init + op
             xt_ = xt_.cpu()
             del xt_, op
@@ -96,7 +83,6 @@ class BAITProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
         return unlabeled_indices[chosen]
 
     def select(self, X, K, fisher, iterates, lamb=1, nLabeled=0):
-        numEmbs = len(X)
         indsAll = []
         dim = X.shape[-1]
         rank = X.shape[-2]
@@ -117,8 +103,7 @@ class BAITProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
                 torch.eye(rank).cuda() + xt_ @ currentInv @ xt_.transpose(1, 2)
             ).detach()
             innerInv[torch.where(torch.isinf(innerInv))] = (
-                torch.sign(innerInv[torch.where(torch.isinf(innerInv))])
-                * np.finfo("float32").max
+                torch.sign(innerInv[torch.where(torch.isinf(innerInv))]) * np.finfo("float32").max
             )
             traceEst = torch.diagonal(
                 xt_ @ currentInv @ fisher @ currentInv @ xt_.transpose(1, 2) @ innerInv,
@@ -150,8 +135,7 @@ class BAITProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
                 torch.eye(rank).cuda() + xt_ @ currentInv @ xt_.transpose(1, 2)
             ).detach()
             currentInv = (
-                currentInv
-                - currentInv @ xt_.transpose(1, 2) @ innerInv @ xt_ @ currentInv
+                currentInv - currentInv @ xt_.transpose(1, 2) @ innerInv @ xt_ @ currentInv
             ).detach()[0]
 
         # backward pruning
@@ -176,8 +160,7 @@ class BAITProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
                 -1 * torch.eye(rank).cuda() + xt_ @ currentInv @ xt_.transpose(1, 2)
             ).detach()
             currentInv = (
-                currentInv
-                - currentInv @ xt_.transpose(1, 2) @ innerInv @ xt_ @ currentInv
+                currentInv - currentInv @ xt_.transpose(1, 2) @ innerInv @ xt_ @ currentInv
             ).detach()[0]
 
             del indsAll[delInd]

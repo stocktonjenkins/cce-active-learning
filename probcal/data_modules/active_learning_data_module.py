@@ -1,17 +1,18 @@
-from pathlib import Path
-from typing import Union, Sized
+from typing import Sized
+from typing import Union
 
 import numpy as np
 from numpy import ndarray
-from torch.utils.data import Dataset, Subset
-from torchvision.transforms import Compose
 from torch.utils.data import DataLoader
+from torch.utils.data import Dataset
+from torch.utils.data import Subset
+from torchvision.transforms import Compose
 
 from probcal.active_learning.configs import ActiveLearningConfig
 from probcal.active_learning.procedures.base import IActiveLearningDataModuleDelegate
 from probcal.custom_datasets import ImageDatasetWrapper
 from probcal.data_modules.prob_cal_data_module import ProbCalDataModule
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
+from probcal.models.regression_nn import RegressionNN
 
 
 class ActiveLearningDataModule(ProbCalDataModule):
@@ -40,9 +41,7 @@ class ActiveLearningDataModule(ProbCalDataModule):
             seed=seed,
         )
 
-    def step(
-        self, delegate: IActiveLearningDataModuleDelegate, model: DiscreteRegressionNN
-    ):
+    def step(self, delegate: IActiveLearningDataModuleDelegate, model: RegressionNN):
         # The delegate will tell me how to get my next labeled set
         # i.e. random, CCEActiveLearning, etc.
         unlabeled_indices_to_label = delegate.get_next_label_set(
@@ -60,12 +59,8 @@ class ActiveLearningDataModule(ProbCalDataModule):
             self.train_indices = np.union1d(self.train_indices, new_train_indices)
             self.val_indices = np.union1d(self.val_indices, new_val_indices)
         else:
-            self.train_indices = np.union1d(
-                self.train_indices, unlabeled_indices_to_label
-            )
-        self.unlabeled_indices = np.setdiff1d(
-            self.unlabeled_indices, unlabeled_indices_to_label
-        )
+            self.train_indices = np.union1d(self.train_indices, unlabeled_indices_to_label)
+        self.unlabeled_indices = np.setdiff1d(self.unlabeled_indices, unlabeled_indices_to_label)
 
     def _init_indices(self, seed=1998):
         num_instances = len(self.full_dataset)

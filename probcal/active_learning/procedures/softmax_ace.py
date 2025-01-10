@@ -9,7 +9,7 @@ from probcal.active_learning.procedures.base import (
     ActiveLearningProcedure,
 )
 from probcal.data_modules.active_learning_data_module import ActiveLearningDataModule
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
+from probcal.models.regression_nn import RegressionNN
 from probcal.training.hyperparam_schedulers import CosineAnnealingScheduler
 
 
@@ -35,7 +35,7 @@ class SoftmaxACEProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResult
         self,
         unlabeled_indices: np.ndarray,
         k: int,
-        model: DiscreteRegressionNN,
+        model: RegressionNN,
     ) -> np.ndarray:
         model = model.to("cpu")
         train_dataloader = self.dataset.train_dataloader()
@@ -51,9 +51,7 @@ class SoftmaxACEProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResult
         tau = self.tau_scheduler.current_value
         sampling_probs = torch.softmax(cce_unlabeled / tau, dim=-1)
         num_samples = min(k, n)
-        sampling_indices = (
-            torch.multinomial(sampling_probs, num_samples).detach().cpu().numpy()
-        )
+        sampling_indices = torch.multinomial(sampling_probs, num_samples).detach().cpu().numpy()
         self.tau_scheduler.step()
 
         return unlabeled_indices[sampling_indices]

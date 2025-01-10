@@ -1,13 +1,13 @@
 from typing import Callable
 from typing import Optional
 from typing import Type
-import wandb
+
 import lightning as L
 import torch
+from torch.utils.data import DataLoader
 from torchmetrics import MeanAbsoluteError
 from torchmetrics import MeanSquaredError
 from torchmetrics import Metric
-from torch.utils.data import DataLoader
 
 from probcal.enums import LRSchedulerType
 from probcal.enums import OptimizerType
@@ -15,8 +15,8 @@ from probcal.models.backbones import Backbone
 from probcal.random_variables.discrete_random_variable import DiscreteRandomVariable
 
 
-class DiscreteRegressionNN(L.LightningModule):
-    """Base class for discrete regression neural networks. Should not actually be used for prediction (needs to define `training_step` and whatnot).
+class RegressionNN(L.LightningModule):
+    """Base class for regression neural networks. Should not actually be used for prediction (needs to define `training_step` and whatnot).
 
     Attributes:
         backbone (Backbone): The backbone to use for feature extraction (before applying the regression head).
@@ -36,7 +36,7 @@ class DiscreteRegressionNN(L.LightningModule):
         optim_kwargs: Optional[dict] = None,
         lr_scheduler_type: Optional[LRSchedulerType] = None,
         lr_scheduler_kwargs: Optional[dict] = None,
-        project_name: str = "discrete-regression",  # WandB project name
+        project_name: str = "regression",  # WandB project name
         experiment_name: Optional[str] = None,
         log_model: bool = True,
     ):
@@ -51,7 +51,7 @@ class DiscreteRegressionNN(L.LightningModule):
             lr_scheduler_type (LRSchedulerType | None): If specified, the type of learning rate scheduler to use during training, e.g. "cosine_annealing".
             lr_scheduler_kwargs (dict | None): If specified, key-value argument specifications for the chosen lr scheduler, e.g. {"T_max": 500}.
         """
-        super(DiscreteRegressionNN, self).__init__()
+        super(RegressionNN, self).__init__()
 
         self.backbone = backbone_type(**backbone_kwargs)
         self.optim_type = optim_type
@@ -143,10 +143,10 @@ class DiscreteRegressionNN(L.LightningModule):
         return self._posterior_predictive_impl(y_hat, training)
 
     def point_prediction(self, y_hat: torch.Tensor, training: bool) -> torch.Tensor:
-        """Transform the network's output into a single discrete point prediction.
+        """Transform the network's output into a single point prediction.
 
         This method will vary depending on the type of regression head (probabilistic vs. deterministic).
-        For example, a gaussian regressor will return the `mean` portion of its output as its point prediction, rounded to the nearest integer.
+        For example, a gaussian regressor will return the `mean` portion of its output as its point prediction.
 
         Args:
             y_hat (torch.Tensor): Output tensor from a regression network, with shape (N, ...).
@@ -220,9 +220,7 @@ class DiscreteRegressionNN(L.LightningModule):
     ) -> torch.distributions.Distribution | DiscreteRandomVariable:
         raise NotImplementedError("Should be implemented by subclass.")
 
-    def _point_prediction_impl(
-        self, y_hat: torch.Tensor, training: bool
-    ) -> torch.Tensor:
+    def _point_prediction_impl(self, y_hat: torch.Tensor, training: bool) -> torch.Tensor:
         raise NotImplementedError("Should be implemented by subclass.")
 
     def _addl_test_metrics_dict(self) -> dict[str, Metric]:

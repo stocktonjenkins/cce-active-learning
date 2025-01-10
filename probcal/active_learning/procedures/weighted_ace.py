@@ -7,7 +7,7 @@ from probcal.active_learning.active_learning_types import (
 from probcal.active_learning.procedures.base import (
     ActiveLearningProcedure,
 )
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
+from probcal.models.regression_nn import RegressionNN
 
 
 class WeightedACEProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
@@ -17,7 +17,7 @@ class WeightedACEProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResul
         self,
         unlabeled_indices: np.ndarray,
         k: int,
-        model: DiscreteRegressionNN,
+        model: RegressionNN,
     ) -> np.ndarray:
         model = model.to("cpu")
         train_dataloader = self.dataset.train_dataloader()
@@ -32,8 +32,6 @@ class WeightedACEProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResul
 
         sampling_probs = cce_unlabeled / cce_unlabeled.sum()
         num_samples = min(k, n)
-        sampling_indices = (
-            torch.multinomial(sampling_probs, num_samples).detach().cpu().numpy()
-        )
+        sampling_indices = torch.multinomial(sampling_probs, num_samples).detach().cpu().numpy()
 
         return unlabeled_indices[sampling_indices]

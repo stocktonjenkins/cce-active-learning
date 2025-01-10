@@ -1,26 +1,23 @@
-import numpy as np
-import torch
-from tqdm import tqdm
-from torch.utils.data import DataLoader
-from typing import TypeVar, Union, Any
-from probcal.training.train_model import train_procedure
-from probcal.utils.configs import TrainingConfig
+from logging import Logger
+from typing import TypeVar
+from typing import Union
 
 import lightning as L
+import numpy as np
+import torch
+from pytorch_lightning.loggers import CSVLogger
+from pytorch_lightning.loggers import TensorBoardLogger
+from torch.utils.data import DataLoader
+from tqdm import tqdm
 
-from probcal.active_learning.active_learning_types import (
-    ActiveLearningEvaluationResults,
-    IActiveLearningDataModuleDelegate,
-    ModelAccuracyResults,
-)
+from probcal.active_learning.active_learning_types import ActiveLearningEvaluationResults
 from probcal.active_learning.procedures.base import (
     ActiveLearningProcedure,
 )
 from probcal.models.feed_forward_regression_nn import FFRegressionNN
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
-from probcal.utils.experiment_utils import get_model, get_datamodule, get_chkp_callbacks
-from logging import Logger
-from pytorch_lightning.loggers import CSVLogger, TensorBoardLogger, WandbLogger
+from probcal.utils.configs import TrainingConfig
+from probcal.utils.experiment_utils import get_chkp_callbacks
+from probcal.utils.experiment_utils import get_model
 
 
 T = TypeVar("T")
@@ -56,16 +53,14 @@ class DropoutProcedure(ActiveLearningProcedure[ActiveLearningProcedure]):
         Args:
             unlabeled_indices: np.ndarray
             k: int
-            model: DiscreteRegressionNN
+            model: RegressionNN
 
         Returns:
             A random subset of unlabeled indices.
         """
         print("training selection model")
 
-        _train_config = TrainingConfig.from_yaml(
-            "configs/train/aaf/feed_forward_cfg.yaml"
-        )
+        _train_config = TrainingConfig.from_yaml("configs/train/aaf/feed_forward_cfg.yaml")
         ff_model = get_model(_train_config)
 
         ckpt = _train_config.chkp_dir / "selection_model"
@@ -103,9 +98,7 @@ class DropoutProcedure(ActiveLearningProcedure[ActiveLearningProcedure]):
             data_loader=unlabeled_dataloader,
         )
         assert confidence.shape[0] == len(unlabeled_indices)
-        _, sampling_indices = torch.topk(
-            confidence, k=min(k, unlabeled_indices.shape[0])
-        )
+        _, sampling_indices = torch.topk(confidence, k=min(k, unlabeled_indices.shape[0]))
 
         return unlabeled_indices[sampling_indices]
 
@@ -115,9 +108,7 @@ class DropoutProcedure(ActiveLearningProcedure[ActiveLearningProcedure]):
     ) -> torch.Tensor:
         with torch.no_grad():
             conf = []
-            for inputs, _ in tqdm(
-                data_loader, desc="doing forward pass to compute confidence..."
-            ):
+            for inputs, _ in tqdm(data_loader, desc="doing forward pass to compute confidence..."):
                 print(model.device)
                 y_hat = model.sample(inputs.to(model.device), num_samples=10)
                 var = torch.var(y_hat, dim=1, correction=1)
