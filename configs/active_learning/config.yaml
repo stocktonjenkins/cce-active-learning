@@ -13,3 +13,4 @@ deterministic_settings:
   cudnn_benchmark : False
   disable_debug_apis: True
 wandb: False
+num_workers: 48

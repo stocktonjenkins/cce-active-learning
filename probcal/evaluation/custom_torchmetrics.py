@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from matplotlib.figure import Figure
+from properscoring import crps_gaussian
 from torchmetrics import Metric
 
 from probcal.evaluation.metrics import compute_regression_ece
@@ -134,3 +135,32 @@ class MedianPrecision(Metric):
         ax.set_ylabel("Density")
 
         return fig
+
+
+class ContinuousRankedProbabilityScore(Metric):
+    """A custom `torchmetric` for computing the average CRPS of Gaussian predictive distributions."""
+
+    def __init__(self, **kwargs):
+        self.add_state("all_crps", default=[], dist_reduce_fx="cat")
+
+    def update(self, mu: torch.Tensor, var: torch.Tensor, y: torch.Tensor):
+        """Update the internal state of this metric.
+
+        Args:
+            mu (torch.Tensor): A (N,) tensor of predictive means.
+            var (torch.Tensor): A (N,) tensor of predictive variances.
+            y (torch.Tensor): Regression targets that `mu` and `phi` form a prediction for. Shape: (N,).
+        """
+        assert y.ndim == 1
+        n = len(y)
+        assert mu.shape == var.shape == (n,)
+
+        mu = mu.detach().cpu().numpy()
+        sigma = var.sqrt().detach().cpu().numpy()
+        crps = crps_gaussian(y.detach().cpu().numpy(), mu, sigma)
+        crps = torch.tensor(crps, device=self.device)
+        self.all_crps.append(crps)
+
+    def compute(self) -> torch.Tensor:
+        all_crps = torch.cat(self.all_crps).flatten()
+        return torch.mean(all_crps)
