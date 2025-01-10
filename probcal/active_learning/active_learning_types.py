@@ -20,6 +20,7 @@ class ModelAccuracyResults:
     test_mae: float
     test_rmse: float
     nll: float | None = None
+    crps: float | None = None
 
 
 @dataclass

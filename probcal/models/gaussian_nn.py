@@ -10,6 +10,7 @@ from probcal.enums import BetaSchedulerType
 from probcal.enums import LRSchedulerType
 from probcal.enums import OptimizerType
 from probcal.evaluation.custom_torchmetrics import AverageNLL
+from probcal.evaluation.custom_torchmetrics import ContinuousRankedProbabilityScore
 from probcal.models.backbones import Backbone
 from probcal.models.discrete_regression_nn import DiscreteRegressionNN
 from probcal.training.hyperparam_schedulers import CosineAnnealingScheduler
@@ -87,6 +88,7 @@ class GaussianNN(DiscreteRegressionNN):
         )
         self.head = nn.Linear(self.backbone.output_dim, 2)
         self.nll = AverageNLL()
+        self.crps = ContinuousRankedProbabilityScore()
         self.save_hyperparameters()
 
     def _forward_impl(self, x: torch.Tensor) -> torch.Tensor:
@@ -164,7 +166,7 @@ class GaussianNN(DiscreteRegressionNN):
         return mu.round()
 
     def _addl_test_metrics_dict(self) -> dict[str, Metric]:
-        return {"nll": self.nll}
+        return {"nll": self.nll, "crps": self.crps}
 
     def _update_addl_test_metrics_batch(
         self, x: torch.Tensor, y_hat: torch.Tensor, y: torch.Tensor
@@ -174,6 +176,8 @@ class GaussianNN(DiscreteRegressionNN):
         var = var.flatten()
         std = torch.sqrt(var)
         targets = y.flatten()
+
+        self.crps.update(mu=mu, var=var, y=targets)
 
         # We compute "probability" with the continuity correction (probability of +- 0.5 of the value).
         dist = torch.distributions.Normal(loc=mu, scale=std)
