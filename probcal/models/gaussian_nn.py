@@ -10,6 +10,7 @@ from probcal.enums import BetaSchedulerType
 from probcal.enums import LRSchedulerType
 from probcal.enums import OptimizerType
 from probcal.evaluation.custom_torchmetrics import AverageNLL
+from probcal.evaluation.custom_torchmetrics import ContinuousRankedProbabilityScore
 from probcal.models.backbones import Backbone
 from probcal.models.discrete_regression_nn import DiscreteRegressionNN
 from probcal.training.hyperparam_schedulers import CosineAnnealingScheduler
@@ -73,9 +74,7 @@ class GaussianNN(DiscreteRegressionNN):
             loss_fn=partial(
                 gaussian_nll,
                 beta=(
-                    self.beta_scheduler.current_value
-                    if self.beta_scheduler is not None
-                    else None
+                    self.beta_scheduler.current_value if self.beta_scheduler is not None else None
                 ),
             ),
             backbone_type=backbone_type,
@@ -87,6 +86,7 @@ class GaussianNN(DiscreteRegressionNN):
         )
         self.head = nn.Linear(self.backbone.output_dim, 2)
         self.nll = AverageNLL()
+        self.crps = ContinuousRankedProbabilityScore()
         self.save_hyperparameters()
 
     def _forward_impl(self, x: torch.Tensor) -> torch.Tensor:
@@ -122,9 +122,7 @@ class GaussianNN(DiscreteRegressionNN):
         # Apply torch.exp to the logvar dimension.
         output_shape = y_hat.shape
         reshaped = y_hat.view(-1, 2)
-        y_hat = torch.stack([reshaped[:, 0], torch.exp(reshaped[:, 1])], dim=1).view(
-            *output_shape
-        )
+        y_hat = torch.stack([reshaped[:, 0], torch.exp(reshaped[:, 1])], dim=1).view(*output_shape)
 
         return y_hat
 
@@ -157,14 +155,12 @@ class GaussianNN(DiscreteRegressionNN):
         dist = torch.distributions.Normal(loc=mu.squeeze(), scale=var.sqrt().squeeze())
         return dist
 
-    def _point_prediction_impl(
-        self, y_hat: torch.Tensor, training: bool
-    ) -> torch.Tensor:
+    def _point_prediction_impl(self, y_hat: torch.Tensor, training: bool) -> torch.Tensor:
         mu, _ = torch.split(y_hat, [1, 1], dim=-1)
         return mu.round()
 
     def _addl_test_metrics_dict(self) -> dict[str, Metric]:
-        return {"nll": self.nll}
+        return {"nll": self.nll, "crps": self.crps}
 
     def _update_addl_test_metrics_batch(
         self, x: torch.Tensor, y_hat: torch.Tensor, y: torch.Tensor
@@ -174,6 +170,8 @@ class GaussianNN(DiscreteRegressionNN):
         var = var.flatten()
         std = torch.sqrt(var)
         targets = y.flatten()
+
+        self.crps.update(mu=mu, var=var, y=targets)
 
         # We compute "probability" with the continuity correction (probability of +- 0.5 of the value).
         dist = torch.distributions.Normal(loc=mu, scale=std)

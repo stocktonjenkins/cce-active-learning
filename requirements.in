@@ -7,6 +7,7 @@ lightning==2.4.0
 open_clip_torch==2.26.1
 pip-tools==7.4.1
 pre-commit==3.8.0
+properscoring==0.1
 pycocotools==2.0.8
 torch==2.4.0
 torchmetrics==1.4.0
