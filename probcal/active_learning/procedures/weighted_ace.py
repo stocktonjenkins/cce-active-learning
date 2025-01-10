@@ -32,6 +32,8 @@ class WeightedACEProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResul
 
         sampling_probs = cce_unlabeled / cce_unlabeled.sum()
         num_samples = min(k, n)
-        sampling_indices = torch.multinomial(sampling_probs, num_samples).detach().cpu().numpy()
+        sampling_indices = (
+            torch.multinomial(sampling_probs, num_samples).detach().cpu().numpy()
+        )
 
         return unlabeled_indices[sampling_indices]

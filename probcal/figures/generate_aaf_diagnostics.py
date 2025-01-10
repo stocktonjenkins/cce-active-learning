@@ -87,7 +87,9 @@ def draw_mcmd_samples_and_compute_losses(
     return x, y, x_prime, y_prime, losses
 
 
-def create_training_data_density_plot(train_embeddings_2d: torch.Tensor, save_path: Path):
+def create_training_data_density_plot(
+    train_embeddings_2d: torch.Tensor, save_path: Path
+):
     min_x, max_x = (
         train_embeddings_2d[:, 0].detach().numpy().min(),
         train_embeddings_2d[:, 0].detach().numpy().max(),
@@ -101,7 +103,9 @@ def create_training_data_density_plot(train_embeddings_2d: torch.Tensor, save_pa
     ax.set_title("Training Data Density")
     kde = gaussian_kde(train_embeddings_2d.T)
     grid_x, grid_y = np.mgrid[min_x:max_x:300j, min_y:max_y:300j]
-    grid_densities = kde(np.vstack([grid_x.flatten(), grid_y.flatten()])).reshape(grid_x.shape)
+    grid_densities = kde(np.vstack([grid_x.flatten(), grid_y.flatten()])).reshape(
+        grid_x.shape
+    )
     ax.contourf(grid_x, grid_y, grid_densities, levels=10, cmap="viridis")
     fig.savefig(save_path, dpi=150)
 
@@ -117,7 +121,9 @@ def get_meshgrid_test_embeddings(
         test_embeddings_2d[:, 1].detach().numpy().min(),
         test_embeddings_2d[:, 1].detach().numpy().max(),
     )
-    grid_x, grid_y = np.mgrid[min_x : max_x : granularity * 1j, min_y : max_y : granularity * 1j]
+    grid_x, grid_y = np.mgrid[
+        min_x : max_x : granularity * 1j, min_y : max_y : granularity * 1j
+    ]
     return grid_x, grid_y
 
 
@@ -130,7 +136,9 @@ def create_test_target_plot(
     fig, ax = plt.subplots(1, 1, figsize=(5, 4))
     ax: plt.Axes
     ax.set_title("Test Data (projected to 2d)")
-    grid_data = griddata(test_embeddings_2d, targets.detach().numpy(), meshgrid, method="linear")
+    grid_data = griddata(
+        test_embeddings_2d, targets.detach().numpy(), meshgrid, method="linear"
+    )
     mappable = ax.contourf(*meshgrid, grid_data, levels=5, cmap="viridis")
     fig.colorbar(mappable, ax=ax)
     fig.savefig(save_path, dpi=150)
@@ -219,9 +227,13 @@ def main(
     datamodule.prepare_data()
     datamodule.setup("fit")
 
-    train_embeddings = torch.load(embeddings_dir / "train_embeddings.pt", weights_only=True)
+    train_embeddings = torch.load(
+        embeddings_dir / "train_embeddings.pt", weights_only=True
+    )
     val_embeddings = torch.load(embeddings_dir / "val_embeddings.pt", weights_only=True)
-    test_embeddings = torch.load(embeddings_dir / "test_embeddings.pt", weights_only=True)
+    test_embeddings = torch.load(
+        embeddings_dir / "test_embeddings.pt", weights_only=True
+    )
 
     print("Running TSNE to project data to 2d...")
     train_embeddings_2d, test_embeddings_2d = embed_data_in_2d(
@@ -264,7 +276,9 @@ def main(
     create_mcmd_plot(
         test_embeddings_2d, meshgrid, mcmd_vals, save_path=save_folder / "test_mcmd.pdf"
     )
-    create_loss_plot(test_embeddings_2d, meshgrid, losses, save_path=save_folder / "test_loss.pdf")
+    create_loss_plot(
+        test_embeddings_2d, meshgrid, losses, save_path=save_folder / "test_loss.pdf"
+    )
     create_mcmd_best_worst_plot(
         datamodule,
         mcmd_vals,

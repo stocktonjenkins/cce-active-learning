@@ -74,7 +74,9 @@ class GaussianNN(RegressionNN):
             loss_fn=partial(
                 gaussian_nll,
                 beta=(
-                    self.beta_scheduler.current_value if self.beta_scheduler is not None else None
+                    self.beta_scheduler.current_value
+                    if self.beta_scheduler is not None
+                    else None
                 ),
             ),
             backbone_type=backbone_type,
@@ -122,7 +124,9 @@ class GaussianNN(RegressionNN):
         # Apply torch.exp to the logvar dimension.
         output_shape = y_hat.shape
         reshaped = y_hat.view(-1, 2)
-        y_hat = torch.stack([reshaped[:, 0], torch.exp(reshaped[:, 1])], dim=1).view(*output_shape)
+        y_hat = torch.stack([reshaped[:, 0], torch.exp(reshaped[:, 1])], dim=1).view(
+            *output_shape
+        )
 
         return y_hat
 
@@ -155,7 +159,9 @@ class GaussianNN(RegressionNN):
         dist = torch.distributions.Normal(loc=mu.squeeze(), scale=var.sqrt().squeeze())
         return dist
 
-    def _point_prediction_impl(self, y_hat: torch.Tensor, training: bool) -> torch.Tensor:
+    def _point_prediction_impl(
+        self, y_hat: torch.Tensor, training: bool
+    ) -> torch.Tensor:
         mu, _ = torch.split(y_hat, [1, 1], dim=-1)
         return mu
 

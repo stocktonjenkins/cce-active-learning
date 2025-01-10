@@ -26,6 +26,8 @@ class CCEProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
             data_loader=train_dataloader,
         )
         assert cce_unlabeled.shape[0] == len(unlabeled_indices)
-        _, sampling_indices = torch.topk(cce_unlabeled, k=min(k, unlabeled_indices.shape[0]))
+        _, sampling_indices = torch.topk(
+            cce_unlabeled, k=min(k, unlabeled_indices.shape[0])
+        )
 
         return unlabeled_indices[sampling_indices]

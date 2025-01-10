@@ -20,8 +20,12 @@ class LCMDProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
         self, unlabeled_indices: np.ndarray, k: int, model: RegressionNN
     ) -> np.ndarray:
         feature_data = self.get_tensor_features(model)
-        feature_map = IdentityFeatureMap(n_features=feature_data["train"].get_tensor(0).shape[-1])
-        features = {key: Features(feature_map, data) for key, data in feature_data.items()}
+        feature_map = IdentityFeatureMap(
+            n_features=feature_data["train"].get_tensor(0).shape[-1]
+        )
+        features = {
+            key: Features(feature_map, data) for key, data in feature_data.items()
+        }
         alg = LargestClusterMaxDistSelectionMethod(
             pool_features=features["pool"],
             train_features=features["train"],

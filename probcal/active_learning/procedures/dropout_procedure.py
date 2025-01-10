@@ -10,7 +10,9 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from probcal.active_learning.active_learning_types import ActiveLearningEvaluationResults
+from probcal.active_learning.active_learning_types import (
+    ActiveLearningEvaluationResults,
+)
 from probcal.active_learning.procedures.base import (
     ActiveLearningProcedure,
 )
@@ -60,7 +62,9 @@ class DropoutProcedure(ActiveLearningProcedure[ActiveLearningProcedure]):
         """
         print("training selection model")
 
-        _train_config = TrainingConfig.from_yaml("configs/train/aaf/feed_forward_cfg.yaml")
+        _train_config = TrainingConfig.from_yaml(
+            "configs/train/aaf/feed_forward_cfg.yaml"
+        )
         ff_model = get_model(_train_config)
 
         ckpt = _train_config.chkp_dir / "selection_model"
@@ -98,7 +102,9 @@ class DropoutProcedure(ActiveLearningProcedure[ActiveLearningProcedure]):
             data_loader=unlabeled_dataloader,
         )
         assert confidence.shape[0] == len(unlabeled_indices)
-        _, sampling_indices = torch.topk(confidence, k=min(k, unlabeled_indices.shape[0]))
+        _, sampling_indices = torch.topk(
+            confidence, k=min(k, unlabeled_indices.shape[0])
+        )
 
         return unlabeled_indices[sampling_indices]
 
@@ -108,7 +114,9 @@ class DropoutProcedure(ActiveLearningProcedure[ActiveLearningProcedure]):
     ) -> torch.Tensor:
         with torch.no_grad():
             conf = []
-            for inputs, _ in tqdm(data_loader, desc="doing forward pass to compute confidence..."):
+            for inputs, _ in tqdm(
+                data_loader, desc="doing forward pass to compute confidence..."
+            ):
                 print(model.device)
                 y_hat = model.sample(inputs.to(model.device), num_samples=10)
                 var = torch.var(y_hat, dim=1, correction=1)

@@ -51,7 +51,9 @@ class SoftmaxACEProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResult
         tau = self.tau_scheduler.current_value
         sampling_probs = torch.softmax(cce_unlabeled / tau, dim=-1)
         num_samples = min(k, n)
-        sampling_indices = torch.multinomial(sampling_probs, num_samples).detach().cpu().numpy()
+        sampling_indices = (
+            torch.multinomial(sampling_probs, num_samples).detach().cpu().numpy()
+        )
         self.tau_scheduler.step()
 
         return unlabeled_indices[sampling_indices]

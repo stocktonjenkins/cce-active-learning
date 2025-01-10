@@ -56,7 +56,9 @@ def get_backbone_from_config(
     subclasses = Backbone.__subclasses__()
     Class = list(filter(lambda c: c.__name__ == backbone_type, subclasses))[0]
     if Class is None:
-        raise ValueError(f"{backbone_type} is not a valid backbone. Must be one of [{subclasses}]")
+        raise ValueError(
+            f"{backbone_type} is not a valid backbone. Must be one of [{subclasses}]"
+        )
     kwargs = {}
     if config.dataset_type == DatasetType.TABULAR:
         kwargs.update({"input_dim": config.input_dim})
@@ -83,7 +85,9 @@ def get_backbone_from_dataset(
         else:
             backbone_type = MobileNetV3
     else:
-        raise ValueError(f"Unable to determine backbone from dataset_type: {config.dataset_type}")
+        raise ValueError(
+            f"Unable to determine backbone from dataset_type: {config.dataset_type}"
+        )
     return backbone_type, backbone_kwargs
 
 
@@ -93,7 +97,10 @@ def get_model(
     initializer: Type[RegressionNN]
 
     if config.head_type == HeadType.GAUSSIAN:
-        if hasattr(config, "beta_scheduler_type") and config.beta_scheduler_type is not None:
+        if (
+            hasattr(config, "beta_scheduler_type")
+            and config.beta_scheduler_type is not None
+        ):
             initializer = partialclass(
                 GaussianNN,
                 beta_scheduler_type=config.beta_scheduler_type,

@@ -29,7 +29,9 @@ class ConfidenceProcedure(ActiveLearningProcedure[ActiveLearningProcedure]):
             data_loader=unlabeled_dataloader,
         )
         assert confidence.shape[0] == len(unlabeled_indices)
-        _, sampling_indices = torch.topk(confidence, k=min(k, unlabeled_indices.shape[0]))
+        _, sampling_indices = torch.topk(
+            confidence, k=min(k, unlabeled_indices.shape[0])
+        )
 
         return unlabeled_indices[sampling_indices]
 
@@ -39,7 +41,9 @@ class ConfidenceProcedure(ActiveLearningProcedure[ActiveLearningProcedure]):
     ) -> torch.Tensor:
         with torch.no_grad():
             conf = []
-            for inputs, _ in tqdm(data_loader, desc="doing forward pass to compute confidence..."):
+            for inputs, _ in tqdm(
+                data_loader, desc="doing forward pass to compute confidence..."
+            ):
                 y_hat = model.predict(inputs.to(model.device))
                 (mu, var) = torch.split(y_hat, [1, 1], dim=-1)
                 conf.append(var.flatten())

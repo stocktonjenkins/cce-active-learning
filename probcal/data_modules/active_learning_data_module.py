@@ -59,8 +59,12 @@ class ActiveLearningDataModule(ProbCalDataModule):
             self.train_indices = np.union1d(self.train_indices, new_train_indices)
             self.val_indices = np.union1d(self.val_indices, new_val_indices)
         else:
-            self.train_indices = np.union1d(self.train_indices, unlabeled_indices_to_label)
-        self.unlabeled_indices = np.setdiff1d(self.unlabeled_indices, unlabeled_indices_to_label)
+            self.train_indices = np.union1d(
+                self.train_indices, unlabeled_indices_to_label
+            )
+        self.unlabeled_indices = np.setdiff1d(
+            self.unlabeled_indices, unlabeled_indices_to_label
+        )
 
     def _init_indices(self, seed=1998):
         num_instances = len(self.full_dataset)

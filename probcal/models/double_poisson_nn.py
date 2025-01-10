@@ -75,7 +75,9 @@ class DoublePoissonNN(RegressionNN):
             loss_fn=partial(
                 double_poisson_nll,
                 beta=(
-                    self.beta_scheduler.current_value if self.beta_scheduler is not None else None
+                    self.beta_scheduler.current_value
+                    if self.beta_scheduler is not None
+                    else None
                 ),
             ),
             backbone_type=backbone_type,
@@ -150,7 +152,9 @@ class DoublePoissonNN(RegressionNN):
         dist = DoublePoisson(mu, phi)
         return dist
 
-    def _point_prediction_impl(self, y_hat: torch.Tensor, training: bool) -> torch.Tensor:
+    def _point_prediction_impl(
+        self, y_hat: torch.Tensor, training: bool
+    ) -> torch.Tensor:
         dist = self.posterior_predictive(y_hat, training)
         mode = torch.argmax(dist.pmf_vals, axis=0)
         return mode
@@ -179,5 +183,7 @@ class DoublePoissonNN(RegressionNN):
     def on_train_epoch_end(self):
         if self.beta_scheduler is not None:
             self.beta_scheduler.step()
-            self.loss_fn = partial(double_poisson_nll, beta=self.beta_scheduler.current_value)
+            self.loss_fn = partial(
+                double_poisson_nll, beta=self.beta_scheduler.current_value
+            )
         super().on_train_epoch_end()

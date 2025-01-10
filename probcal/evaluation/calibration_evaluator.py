@@ -68,7 +68,9 @@ class CalibrationResults:
     def load(filepath: str | Path) -> CalibrationResults:
         data: dict[str, np.ndarray] = np.load(filepath)
         num_trials = max(
-            int(k.split("mean_mcmd_")[-1]) + 1 for k in data.keys() if k.startswith("mean_mcmd_")
+            int(k.split("mean_mcmd_")[-1]) + 1
+            for k in data.keys()
+            if k.startswith("mean_mcmd_")
         )
         mcmd_results = [
             MCMDResult(
@@ -315,12 +317,18 @@ class CalibrationEvaluator:
             (grid_x, grid_y),
             method="linear",
         )
-        mappable_0 = axs[0].contourf(grid_x, grid_y, grid_data, levels=5, cmap="viridis")
+        mappable_0 = axs[0].contourf(
+            grid_x, grid_y, grid_data, levels=5, cmap="viridis"
+        )
         fig.colorbar(mappable_0, ax=axs[0])
 
         axs[1].set_title(f"Mean MCMD: {mean_mcmd:.4f}")
-        grid_mcmd = griddata(input_grid_2d, mcmd_vals, (grid_x, grid_y), method="linear")
-        mappable_1 = axs[1].contourf(grid_x, grid_y, grid_mcmd, levels=5, cmap="viridis")
+        grid_mcmd = griddata(
+            input_grid_2d, mcmd_vals, (grid_x, grid_y), method="linear"
+        )
+        mappable_1 = axs[1].contourf(
+            grid_x, grid_y, grid_mcmd, levels=5, cmap="viridis"
+        )
         fig.colorbar(mappable_1, ax=axs[1])
 
         fig.tight_layout()
@@ -337,20 +345,34 @@ class CalibrationEvaluator:
             y = []
             x_prime = []
             y_prime = []
-            for inputs, targets in tqdm(data_loader, desc="Sampling from posteriors for MCMD..."):
+            for inputs, targets in tqdm(
+                data_loader, desc="Sampling from posteriors for MCMD..."
+            ):
                 if self.settings.dataset_type == DatasetType.TABULAR:
                     x.append(inputs)
                 elif self.settings.dataset_type == DatasetType.IMAGE:
-                    x.append(self.clip_model.encode_image(inputs.to(self.device), normalize=False))
+                    x.append(
+                        self.clip_model.encode_image(
+                            inputs.to(self.device), normalize=False
+                        )
+                    )
                 elif self.settings.dataset_type == DatasetType.TEXT:
-                    x.append(self.clip_model.encode_text(inputs.to(self.device), normalize=False))
+                    x.append(
+                        self.clip_model.encode_text(
+                            inputs.to(self.device), normalize=False
+                        )
+                    )
                 y.append(targets.to(self.device))
                 y_hat = model.predict(inputs.to(self.device))
                 x_prime.append(
-                    torch.repeat_interleave(x[-1], repeats=self.settings.mcmd_num_samples, dim=0)
+                    torch.repeat_interleave(
+                        x[-1], repeats=self.settings.mcmd_num_samples, dim=0
+                    )
                 )
                 y_prime.append(
-                    model.sample(y_hat, num_samples=self.settings.mcmd_num_samples).flatten()
+                    model.sample(
+                        y_hat, num_samples=self.settings.mcmd_num_samples
+                    ).flatten()
                 )
 
             x = torch.cat(x, dim=0)
@@ -367,12 +389,22 @@ class CalibrationEvaluator:
                 if self.settings.dataset_type == DatasetType.TABULAR:
                     x.append(inputs)
                 elif self.settings.dataset_type == DatasetType.IMAGE:
-                    x.append(self.clip_model.encode_image(inputs.to(self.device), normalize=False))
+                    x.append(
+                        self.clip_model.encode_image(
+                            inputs.to(self.device), normalize=False
+                        )
+                    )
                 elif self.settings.dataset_type == DatasetType.TEXT:
-                    x.append(self.clip_model.encode_text(inputs.to(self.device), normalize=False))
+                    x.append(
+                        self.clip_model.encode_text(
+                            inputs.to(self.device), normalize=False
+                        )
+                    )
             return torch.cat(x, dim=0)
 
-    def _get_kernel_functions(self, y: torch.Tensor) -> tuple[KernelFunction, KernelFunction]:
+    def _get_kernel_functions(
+        self, y: torch.Tensor
+    ) -> tuple[KernelFunction, KernelFunction]:
         if self.settings.mcmd_input_kernel == "polynomial":
             x_kernel = polynomial_kernel
         else:
@@ -381,14 +413,20 @@ class CalibrationEvaluator:
         if self.settings.mcmd_output_kernel == "rbf":
             y_kernel = partial(rbf_kernel, gamma=(1 / (2 * y.float().var())).item())
         elif self.settings.mcmd_output_kernel == "laplacian":
-            y_kernel = partial(laplacian_kernel, gamma=(1 / (2 * y.float().var())).item())
+            y_kernel = partial(
+                laplacian_kernel, gamma=(1 / (2 * y.float().var())).item()
+            )
 
         return x_kernel, y_kernel
 
     @property
     def clip_model(self) -> CLIP:
         if self._clip_model is None:
-            (self._clip_model, _, self._image_preprocess,) = open_clip.create_model_and_transforms(
+            (
+                self._clip_model,
+                _,
+                self._image_preprocess,
+            ) = open_clip.create_model_and_transforms(
                 model_name="ViT-B-32",
                 pretrained="laion2b_s34b_b79k",
                 device=self.device,
@@ -398,7 +436,11 @@ class CalibrationEvaluator:
     @property
     def image_preprocess(self) -> Compose:
         if self._image_preprocess is None:
-            (self._clip_model, _, self._image_preprocess,) = open_clip.create_model_and_transforms(
+            (
+                self._clip_model,
+                _,
+                self._image_preprocess,
+            ) = open_clip.create_model_and_transforms(
                 model_name="ViT-B-32",
                 pretrained="laion2b_s34b_b79k",
                 device=self.device,

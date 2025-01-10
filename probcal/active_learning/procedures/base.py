@@ -9,8 +9,12 @@ from torch import Tensor
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from probcal.active_learning.active_learning_types import ActiveLearningEvaluationResults
-from probcal.active_learning.active_learning_types import IActiveLearningDataModuleDelegate
+from probcal.active_learning.active_learning_types import (
+    ActiveLearningEvaluationResults,
+)
+from probcal.active_learning.active_learning_types import (
+    IActiveLearningDataModuleDelegate,
+)
 from probcal.active_learning.active_learning_types import ModelAccuracyResults
 from probcal.active_learning.configs import ActiveLearningConfig
 from probcal.active_learning.procedures.utils import seed_torch
@@ -62,7 +66,9 @@ class ActiveLearningProcedure(
         assert (
             model is not None or best_path is not None
         ), "`model` or `best_path` must be defined."
-        results = trainer.test(model=model, ckpt_path=best_path, datamodule=self.dataset)
+        results = trainer.test(
+            model=model, ckpt_path=best_path, datamodule=self.dataset
+        )
         model_accuracy_results = ModelAccuracyResults(**results[0])
         eval_dict = {
             "kth_trial": self._k,
