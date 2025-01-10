@@ -5,6 +5,7 @@ import numpy as np
 import torch
 from matplotlib.figure import Figure
 from properscoring import crps_gaussian
+from torch.nn.functional import gaussian_nll_loss
 from torchmetrics import Metric
 
 from probcal.evaluation.metrics import compute_regression_ece
@@ -149,7 +150,7 @@ class ContinuousRankedProbabilityScore(Metric):
         Args:
             mu (torch.Tensor): A (N,) tensor of predictive means.
             var (torch.Tensor): A (N,) tensor of predictive variances.
-            y (torch.Tensor): Regression targets that `mu` and `phi` form a prediction for. Shape: (N,).
+            y (torch.Tensor): Regression targets that `mu` and `var` form a prediction for. Shape: (N,).
         """
         assert y.ndim == 1
         n = len(y)
@@ -164,3 +165,29 @@ class ContinuousRankedProbabilityScore(Metric):
     def compute(self) -> torch.Tensor:
         all_crps = torch.cat(self.all_crps).flatten()
         return torch.mean(all_crps)
+
+
+class GaussianNLL(Metric):
+    """Computes the average negative log Gaussian density assigned to the true target."""
+
+    def __init__(self, **kwargs):
+        self.add_state("all_nlls", default=[], dist_reduce_fx="cat")
+
+    def update(self, mu: torch.Tensor, var: torch.Tensor, y: torch.Tensor):
+        """Update the internal state of this metric.
+
+        Args:
+            mu (torch.Tensor): A (N,) tensor of predictive means.
+            var (torch.Tensor): A (N,) tensor of predictive variances.
+            y (torch.Tensor): Regression targets that `mu` and `var` form a prediction for. Shape: (N,).
+        """
+        assert y.ndim == 1
+        n = len(y)
+        assert mu.shape == var.shape == (n,)
+
+        nlls = gaussian_nll_loss(mu, y, var, full=True, reduction="none")
+        self.all_nlls.append(nlls)
+
+    def compute(self) -> torch.Tensor:
+        all_nlls = torch.cat(self.all_nlls).flatten()
+        return torch.mean(all_nlls)

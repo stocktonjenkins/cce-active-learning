@@ -1,10 +1,11 @@
 import numpy as np
 from sklearn.metrics import pairwise_distances
-from probcal.active_learning.procedures.base import ActiveLearningProcedure
+
 from probcal.active_learning.active_learning_types import (
     ActiveLearningEvaluationResults,
 )
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
+from probcal.active_learning.procedures.base import ActiveLearningProcedure
+from probcal.models.regression_nn import RegressionNN
 
 
 class BadgeProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
@@ -16,13 +17,13 @@ class BadgeProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
         self,
         unlabeled_indices: np.ndarray,
         k: int,
-        model: DiscreteRegressionNN,
+        model: RegressionNN,
     ) -> np.ndarray:
         """
         Choose the next set of indices to add to the label set based on Badge sampling.
 
         Args:
-            model: DiscreteRegressionNN
+            model: RegressionNN
             unlabeled_indices: np.ndarray
             k: int
 

@@ -1,19 +1,14 @@
+import gc
+
 import numpy as np
 import torch
-from torch.utils.data import DataLoader, TensorDataset
-import numpy as np
-import gc
 from tqdm import tqdm
-from copy import copy as copy
-from copy import deepcopy as deepcopy
-from torch.autograd import Variable
-from torch.nn import functional as F
-import numpy as np
-from probcal.active_learning.procedures.base import ActiveLearningProcedure
+
 from probcal.active_learning.active_learning_types import (
     ActiveLearningEvaluationResults,
 )
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
+from probcal.active_learning.procedures.base import ActiveLearningProcedure
+from probcal.models.regression_nn import RegressionNN
 
 
 class BAITProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
@@ -34,13 +29,13 @@ class BAITProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
         self,
         unlabeled_indices: np.ndarray,
         k: int,
-        model: DiscreteRegressionNN,
+        model: RegressionNN,
     ) -> np.ndarray:
         """
         Choose the next set of indices to add to the label set based on Fisher Information.
 
         Args:
-            model: DiscreteRegressionNN
+            model: RegressionNN
             unlabeled_indices: np.ndarray
             k: int
 
@@ -96,7 +91,6 @@ class BAITProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
         return unlabeled_indices[chosen]
 
     def select(self, X, K, fisher, iterates, lamb=1, nLabeled=0):
-        numEmbs = len(X)
         indsAll = []
         dim = X.shape[-1]
         rank = X.shape[-2]

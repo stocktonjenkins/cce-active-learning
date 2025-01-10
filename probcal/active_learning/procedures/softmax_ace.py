@@ -9,7 +9,7 @@ from probcal.active_learning.procedures.base import (
     ActiveLearningProcedure,
 )
 from probcal.data_modules.active_learning_data_module import ActiveLearningDataModule
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
+from probcal.models.regression_nn import RegressionNN
 from probcal.training.hyperparam_schedulers import CosineAnnealingScheduler
 
 
@@ -35,7 +35,7 @@ class SoftmaxACEProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResult
         self,
         unlabeled_indices: np.ndarray,
         k: int,
-        model: DiscreteRegressionNN,
+        model: RegressionNN,
     ) -> np.ndarray:
         model = model.to("cpu")
         train_dataloader = self.dataset.train_dataloader()

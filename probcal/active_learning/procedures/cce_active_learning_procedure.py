@@ -7,7 +7,7 @@ from probcal.active_learning.active_learning_types import (
 from probcal.active_learning.procedures.base import (
     ActiveLearningProcedure,
 )
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
+from probcal.models.regression_nn import RegressionNN
 
 
 class CCEProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
@@ -15,7 +15,7 @@ class CCEProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
         self,
         unlabeled_indices: np.ndarray,
         k: int,
-        model: DiscreteRegressionNN,
+        model: RegressionNN,
     ) -> np.ndarray:
         model = model.to("cpu")
         train_dataloader = self.dataset.train_dataloader()

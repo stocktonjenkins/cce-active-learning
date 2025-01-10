@@ -1,24 +1,24 @@
 import numpy as np
 import torch
-from tqdm import tqdm
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 from probcal.active_learning.procedures.base import (
     ActiveLearningProcedure,
 )
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
+from probcal.models.regression_nn import RegressionNN
 
 
 class ConfidenceProcedure(ActiveLearningProcedure[ActiveLearningProcedure]):
     def get_next_label_set(
-        self, unlabeled_indices: np.ndarray, k: int, model: DiscreteRegressionNN
+        self, unlabeled_indices: np.ndarray, k: int, model: RegressionNN
     ) -> np.ndarray:
         """
         Randomly choose the next set of indices to add to label set
         Args:
             unlabeled_indices: np.ndarray
             k: int
-            model: DiscreteRegressionNN
+            model: RegressionNN
 
         Returns:
             A random subset of unlabeled indices.
@@ -37,7 +37,7 @@ class ConfidenceProcedure(ActiveLearningProcedure[ActiveLearningProcedure]):
 
     @staticmethod
     def get_confidence_score_from_model(
-        model: DiscreteRegressionNN, data_loader: DataLoader
+        model: RegressionNN, data_loader: DataLoader
     ) -> torch.Tensor:
         with torch.no_grad():
             conf = []

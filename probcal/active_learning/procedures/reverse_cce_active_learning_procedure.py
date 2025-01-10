@@ -7,7 +7,7 @@ from probcal.active_learning.active_learning_types import (
 from probcal.active_learning.procedures.base import (
     ActiveLearningProcedure,
 )
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
+from probcal.models.regression_nn import RegressionNN
 
 
 class ReverseCCEProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
@@ -15,7 +15,7 @@ class ReverseCCEProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResult
         self,
         unlabeled_indices: np.ndarray,
         k: int,
-        model: DiscreteRegressionNN,
+        model: RegressionNN,
     ) -> np.ndarray:
         """
         Randomly choose the next set of indices to add to label set

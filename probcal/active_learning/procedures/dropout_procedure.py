@@ -1,26 +1,24 @@
-import numpy as np
-import torch
-from tqdm import tqdm
-from torch.utils.data import DataLoader
-from typing import TypeVar, Union, Any
-from probcal.training.train_model import train_procedure
-from probcal.utils.configs import TrainingConfig
+from logging import Logger
+from typing import TypeVar
+from typing import Union
 
 import lightning as L
+import numpy as np
+import torch
+from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger, WandbLogger
+from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 from probcal.active_learning.active_learning_types import (
     ActiveLearningEvaluationResults,
-    IActiveLearningDataModuleDelegate,
-    ModelAccuracyResults,
 )
 from probcal.active_learning.procedures.base import (
     ActiveLearningProcedure,
 )
 from probcal.models.feed_forward_regression_nn import FFRegressionNN
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
-from probcal.utils.experiment_utils import get_model, get_datamodule, get_chkp_callbacks
-from logging import Logger
-from lightning.pytorch.loggers import CSVLogger, TensorBoardLogger, WandbLogger
+from probcal.utils.configs import TrainingConfig
+from probcal.utils.experiment_utils import get_chkp_callbacks
+from probcal.utils.experiment_utils import get_model
 
 
 T = TypeVar("T")
@@ -56,7 +54,7 @@ class DropoutProcedure(ActiveLearningProcedure[ActiveLearningProcedure]):
         Args:
             unlabeled_indices: np.ndarray
             k: int
-            model: DiscreteRegressionNN
+            model: RegressionNN
 
         Returns:
             A random subset of unlabeled indices.

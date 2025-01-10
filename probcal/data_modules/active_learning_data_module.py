@@ -1,17 +1,18 @@
-from pathlib import Path
-from typing import Union, Sized
+from typing import Sized
+from typing import Union
 
 import numpy as np
 from numpy import ndarray
-from torch.utils.data import Dataset, Subset
-from torchvision.transforms import Compose
 from torch.utils.data import DataLoader
+from torch.utils.data import Dataset
+from torch.utils.data import Subset
+from torchvision.transforms import Compose
 
 from probcal.active_learning.configs import ActiveLearningConfig
 from probcal.active_learning.procedures.base import IActiveLearningDataModuleDelegate
 from probcal.custom_datasets import ImageDatasetWrapper
 from probcal.data_modules.prob_cal_data_module import ProbCalDataModule
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
+from probcal.models.regression_nn import RegressionNN
 
 
 class ActiveLearningDataModule(ProbCalDataModule):
@@ -40,9 +41,7 @@ class ActiveLearningDataModule(ProbCalDataModule):
             seed=seed,
         )
 
-    def step(
-        self, delegate: IActiveLearningDataModuleDelegate, model: DiscreteRegressionNN
-    ):
+    def step(self, delegate: IActiveLearningDataModuleDelegate, model: RegressionNN):
         # The delegate will tell me how to get my next labeled set
         # i.e. random, CCEActiveLearning, etc.
         unlabeled_indices_to_label = delegate.get_next_label_set(
