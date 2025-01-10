@@ -8,11 +8,11 @@ from probcal.enums import LRSchedulerType
 from probcal.enums import OptimizerType
 from probcal.evaluation.custom_torchmetrics import AverageNLL
 from probcal.models.backbones import Backbone
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
+from probcal.models.regression_nn import RegressionNN
 from probcal.training.losses import faithful_gaussian_nll
 
 
-class FaithfulGaussianNN(DiscreteRegressionNN):
+class FaithfulGaussianNN(RegressionNN):
     """Implementation of https://arxiv.org/abs/2212.09184.
 
     Attributes:
@@ -94,9 +94,7 @@ class FaithfulGaussianNN(DiscreteRegressionNN):
         # Apply torch.exp to the logvar dimension.
         output_shape = y_hat.shape
         reshaped = y_hat.view(-1, 2)
-        y_hat = torch.stack([reshaped[:, 0], torch.exp(reshaped[:, 1])], dim=1).view(
-            *output_shape
-        )
+        y_hat = torch.stack([reshaped[:, 0], torch.exp(reshaped[:, 1])], dim=1).view(*output_shape)
 
         return y_hat
 
@@ -129,11 +127,9 @@ class FaithfulGaussianNN(DiscreteRegressionNN):
         dist = torch.distributions.Normal(loc=mu.squeeze(), scale=var.sqrt().squeeze())
         return dist
 
-    def _point_prediction_impl(
-        self, y_hat: torch.Tensor, training: bool
-    ) -> torch.Tensor:
+    def _point_prediction_impl(self, y_hat: torch.Tensor, training: bool) -> torch.Tensor:
         mu, _ = torch.split(y_hat, [1, 1], dim=-1)
-        return mu.round()
+        return mu
 
     def _addl_test_metrics_dict(self) -> dict[str, Metric]:
         return {"nll": self.nll}

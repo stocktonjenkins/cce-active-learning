@@ -12,14 +12,14 @@ from probcal.enums import OptimizerType
 from probcal.evaluation.custom_torchmetrics import AverageNLL
 from probcal.evaluation.custom_torchmetrics import MedianPrecision
 from probcal.models.backbones import Backbone
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
+from probcal.models.regression_nn import RegressionNN
 from probcal.random_variables import DoublePoisson
 from probcal.training.hyperparam_schedulers import CosineAnnealingScheduler
 from probcal.training.hyperparam_schedulers import LinearScheduler
 from probcal.training.losses import double_poisson_nll
 
 
-class DoublePoissonNN(DiscreteRegressionNN):
+class DoublePoissonNN(RegressionNN):
     """A neural network that learns the parameters of a Double Poisson distribution over each regression target (conditioned on the input).
 
     Attributes:
@@ -75,9 +75,7 @@ class DoublePoissonNN(DiscreteRegressionNN):
             loss_fn=partial(
                 double_poisson_nll,
                 beta=(
-                    self.beta_scheduler.current_value
-                    if self.beta_scheduler is not None
-                    else None
+                    self.beta_scheduler.current_value if self.beta_scheduler is not None else None
                 ),
             ),
             backbone_type=backbone_type,
@@ -152,9 +150,7 @@ class DoublePoissonNN(DiscreteRegressionNN):
         dist = DoublePoisson(mu, phi)
         return dist
 
-    def _point_prediction_impl(
-        self, y_hat: torch.Tensor, training: bool
-    ) -> torch.Tensor:
+    def _point_prediction_impl(self, y_hat: torch.Tensor, training: bool) -> torch.Tensor:
         dist = self.posterior_predictive(y_hat, training)
         mode = torch.argmax(dist.pmf_vals, axis=0)
         return mode
@@ -183,7 +179,5 @@ class DoublePoissonNN(DiscreteRegressionNN):
     def on_train_epoch_end(self):
         if self.beta_scheduler is not None:
             self.beta_scheduler.step()
-            self.loss_fn = partial(
-                double_poisson_nll, beta=self.beta_scheduler.current_value
-            )
+            self.loss_fn = partial(double_poisson_nll, beta=self.beta_scheduler.current_value)
         super().on_train_epoch_end()

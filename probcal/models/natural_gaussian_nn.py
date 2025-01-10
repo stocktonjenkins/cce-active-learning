@@ -9,11 +9,11 @@ from probcal.enums import LRSchedulerType
 from probcal.enums import OptimizerType
 from probcal.evaluation.custom_torchmetrics import AverageNLL
 from probcal.models.backbones import Backbone
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
+from probcal.models.regression_nn import RegressionNN
 from probcal.training.losses import natural_gaussian_nll
 
 
-class NaturalGaussianNN(DiscreteRegressionNN):
+class NaturalGaussianNN(RegressionNN):
     """A neural network that learns the natural parameters of a Gaussian distribution over each regression target (conditioned on the input).
 
     Attributes:
@@ -118,12 +118,10 @@ class NaturalGaussianNN(DiscreteRegressionNN):
         dist = torch.distributions.Normal(loc=mu, scale=std)
         return dist
 
-    def _point_prediction_impl(
-        self, y_hat: torch.Tensor, training: bool
-    ) -> torch.Tensor:
+    def _point_prediction_impl(self, y_hat: torch.Tensor, training: bool) -> torch.Tensor:
         eta_1, eta_2 = torch.split(y_hat, [1, 1], dim=-1)
         mu = self._natural_to_mu(eta_1, eta_2)
-        return mu.round()
+        return mu
 
     def _addl_test_metrics_dict(self) -> dict[str, Metric]:
         return {"nll": self.nll}

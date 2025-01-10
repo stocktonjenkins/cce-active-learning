@@ -2,14 +2,15 @@ import abc
 from dataclasses import dataclass
 
 import numpy as np
+
 from probcal.evaluation.calibration_evaluator import CalibrationResults
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
+from probcal.models.regression_nn import RegressionNN
 
 
 class IActiveLearningDataModuleDelegate(abc.ABC):
     @abc.abstractmethod
     def get_next_label_set(
-        self, unlabeled_indices: np.ndarray, k: int, model: DiscreteRegressionNN
+        self, unlabeled_indices: np.ndarray, k: int, model: RegressionNN
     ) -> np.ndarray:
         pass
 

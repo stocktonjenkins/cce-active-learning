@@ -1,18 +1,11 @@
 import numpy as np
-import torch
-from torch.utils.data import DataLoader, TensorDataset
-import gc
-from tqdm import tqdm
-from copy import copy as copy
-from copy import deepcopy as deepcopy
-from torch.autograd import Variable
-from torch.nn import functional as F
-from probcal.active_learning.procedures.base import ActiveLearningProcedure
+from sklearn.metrics import pairwise_distances
+
 from probcal.active_learning.active_learning_types import (
     ActiveLearningEvaluationResults,
 )
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
-from sklearn.metrics import pairwise_distances
+from probcal.active_learning.procedures.base import ActiveLearningProcedure
+from probcal.models.regression_nn import RegressionNN
 
 
 class BatchBALDProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
@@ -25,13 +18,13 @@ class BatchBALDProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults
         self,
         unlabeled_indices: np.ndarray,
         k: int,
-        model: DiscreteRegressionNN,
+        model: RegressionNN,
     ) -> np.ndarray:
         """
         Choose the next set of indices to add to the label set based on MaxDet.
 
         Args:
-            model: DiscreteRegressionNN
+            model: RegressionNN
             unlabeled_indices: np.ndarray
             k: int
 
