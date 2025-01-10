@@ -10,6 +10,7 @@ from probcal.enums import BetaSchedulerType
 from probcal.enums import DatasetType
 from probcal.enums import HeadType
 from probcal.enums import ImageDatasetName
+from probcal.enums import TextDatasetName
 from probcal.enums import LRSchedulerType
 from probcal.enums import OptimizerType
 from probcal.utils.generic_utils import get_yaml
@@ -75,6 +76,8 @@ class BaseConfig(object):
                 return Path(dataset_cfg["path"])
             if type == DatasetType.IMAGE:
                 return ImageDatasetName(spec)
+            if type == DatasetType.TEXT:
+                return TextDatasetName(spec)
             else:
                 return Path(spec)
 

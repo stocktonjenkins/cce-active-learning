@@ -23,6 +23,7 @@ from probcal.data_modules import (
     OodMixupCocoPeopleDataModule,
     TabularDataModule,
     WikiDataModule,
+    ReviewsDataModule,
 )
 from probcal.data_modules.prob_cal_data_module import ProbCalDataModule
 from probcal.enums import DatasetType, HeadType, ImageDatasetName, TextDatasetName
@@ -222,7 +223,12 @@ def get_datamodule(
             )
     elif dataset_type == DatasetType.TEXT:
         if dataset_path_or_spec == TextDatasetName.REVIEWS:
-            return ValueError("Reviews not supported.")
+            return ReviewsDataModule(
+                root_dir=os.path.join(GLOBAL_DATA_DIR, "reviews"),
+                batch_size=batch_size,
+                num_workers=num_workers,
+                persistent_workers=True if num_workers > 0 else False,
+            )
 
 
 def fix_random_seed(random_seed: int | None):
