@@ -35,7 +35,7 @@ class ActiveLearningModelAccuracyLogger(IObserver[ActiveLearningEvaluationResult
                         "MAE",
                         "RMSE",
                         "LOSS",
-                        "NLL",
+                        "CRPS",
                     ]
                 )
 
@@ -52,7 +52,7 @@ class ActiveLearningModelAccuracyLogger(IObserver[ActiveLearningEvaluationResult
                 "metrics/mae": state.model_accuracy_results.test_mae,
                 "metrics/rmse": state.model_accuracy_results.test_rmse,
                 "metrics/loss": state.model_accuracy_results.test_loss,
-                "metrics/nll": state.model_accuracy_results.nll,
+                "metrics/crps": state.model_accuracy_results.crps,
             }
 
             # Log to WandB using the parent logger
@@ -71,7 +71,7 @@ class ActiveLearningModelAccuracyLogger(IObserver[ActiveLearningEvaluationResult
                 state.model_accuracy_results.test_mae,
                 state.model_accuracy_results.test_rmse,
                 state.model_accuracy_results.test_loss,
-                state.model_accuracy_results.nll,
+                state.model_accuracy_results.crps,
             ]
             df = df.round(
                 {col: 4 for col in df.select_dtypes(include=["float"]).columns}

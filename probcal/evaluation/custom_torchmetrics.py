@@ -56,7 +56,11 @@ class RegressionECE(Metric):
 
     def compute(self) -> torch.Tensor:
         param_dict = {
-            param_name: torch.cat(getattr(self, param_name)).flatten().detach().cpu().numpy()
+            param_name: torch.cat(getattr(self, param_name))
+            .flatten()
+            .detach()
+            .cpu()
+            .numpy()
             for param_name in self.param_list
         }
         self.posterior_predictive = self.rv_class_type(**param_dict)
