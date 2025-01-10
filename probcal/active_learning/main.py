@@ -82,7 +82,9 @@ def pipeline(
                 )
             if train_config.early_stopping:
                 callbacks.append(
-                    EarlyStopping(monitor="val_loss", patience=3, mode="min")
+                    EarlyStopping(
+                        monitor="val_loss", patience=3, mode="min", min_delta=0.01
+                    )
                 )
             trainer = train_procedure(
                 model,
