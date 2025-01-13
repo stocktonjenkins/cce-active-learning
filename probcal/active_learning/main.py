@@ -63,7 +63,7 @@ def pipeline(
     for k in range(len(active_learn.config.seeds)):
         for al_iter in range(active_learn.config.num_al_iter):
             al_iter_name = f"{k}.{al_iter+1}"
-            model = get_model(_train_config)
+            model = get_model(train_config)
             chkp_dir = train_config.chkp_dir / log_dirname / al_iter_name
             callbacks = list(
                 filter(

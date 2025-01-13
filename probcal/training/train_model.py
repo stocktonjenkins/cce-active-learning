@@ -13,7 +13,6 @@ from probcal.lib.logging import WandBLoggingCallback
 from probcal.models.regression_nn import RegressionNN
 from probcal.utils.configs import TrainingConfig
 from probcal.utils.experiment_utils import fix_random_seed
-from probcal.utils.experiment_utils import get_chkp_callbacks
 from probcal.utils.experiment_utils import get_datamodule
 from probcal.utils.experiment_utils import get_model
 
@@ -52,8 +51,6 @@ def main(config: TrainingConfig):
     )
     for i in range(config.num_trials):
         model = get_model(config)
-        chkp_dir = config.chkp_dir / config.experiment_name / f"version_{i}"
-        # chkp_callbacks = get_chkp_callbacks(chkp_dir, config.chkp_freq)
         chkp_callbacks = []
         if config.early_stopping:
             chkp_callbacks.append(
