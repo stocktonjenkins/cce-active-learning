@@ -24,7 +24,7 @@ from probcal.models import GaussianNN
 from probcal.models import NaturalGaussianNN
 from probcal.models import NegBinomNN
 from probcal.models import PoissonNN
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
+from probcal.models.regression_nn import RegressionNN
 from probcal.training.losses import double_poisson_nll
 from probcal.training.losses import faithful_gaussian_nll
 from probcal.training.losses import gaussian_nll
@@ -47,7 +47,7 @@ def embed_data_in_2d(
 
 
 def draw_mcmd_samples_and_compute_losses(
-    model: DiscreteRegressionNN,
+    model: RegressionNN,
     datamodule: L.LightningDataModule,
     test_embeddings: torch.Tensor,
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -213,7 +213,7 @@ def create_mcmd_best_worst_plot(
 
 @torch.inference_mode()
 def main(
-    model: DiscreteRegressionNN,
+    model: RegressionNN,
     embeddings_dir: Path,
     save_folder: Path,
     num_highest_lowest_mcmd: int = 5,

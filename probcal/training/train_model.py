@@ -1,24 +1,24 @@
-import math
 from argparse import ArgumentParser
 from argparse import Namespace
 
 import lightning as L
-from lightning import LightningDataModule, Callback
+from lightning import Callback
+from lightning import LightningDataModule
 from lightning.pytorch.callbacks import EarlyStopping
+from lightning.pytorch.loggers import CSVLogger
+from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.loggers.logger import Logger
-from lightning.pytorch.loggers import CSVLogger, WandbLogger
 
 from probcal.lib.logging import WandBLoggingCallback
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
+from probcal.models.regression_nn import RegressionNN
 from probcal.utils.configs import TrainingConfig
 from probcal.utils.experiment_utils import fix_random_seed
-from probcal.utils.experiment_utils import get_chkp_callbacks
 from probcal.utils.experiment_utils import get_datamodule
 from probcal.utils.experiment_utils import get_model
 
 
 def train_procedure(
-    model: DiscreteRegressionNN,
+    model: RegressionNN,
     datamodule: LightningDataModule,
     config: TrainingConfig,
     callbacks: list[Callback] | None,
@@ -29,7 +29,8 @@ def train_procedure(
     trainer = L.Trainer(
         devices=devices,
         accelerator=config.accelerator_type.value,
-        max_epochs=config.num_epochs,
+        max_epochs=config.max_epochs,
+        min_epochs=config.min_epochs,
         log_every_n_steps=5,
         check_val_every_n_epoch=validation_rate,
         enable_model_summary=False,
@@ -50,11 +51,13 @@ def main(config: TrainingConfig):
     )
     for i in range(config.num_trials):
         model = get_model(config)
-        chkp_dir = config.chkp_dir / config.experiment_name / f"version_{i}"
-        # chkp_callbacks = get_chkp_callbacks(chkp_dir, config.chkp_freq)
         chkp_callbacks = []
         if config.early_stopping:
-            chkp_callbacks.append(EarlyStopping(monitor="val_loss", mode="min"))
+            chkp_callbacks.append(
+                EarlyStopping(
+                    monitor="val_loss", mode="min", patience=5, min_delta=0.01
+                )
+            )
         if config.wandb:
             logger = WandbLogger(
                 project="probcal",

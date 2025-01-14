@@ -159,6 +159,7 @@ numpy==1.26.4
     #   contourpy
     #   lightning
     #   matplotlib
+    #   properscoring
     #   pycocotools
     #   scikit-learn
     #   scipy
@@ -204,6 +205,8 @@ propcache==0.2.1
     # via
     #   aiohttp
     #   yarl
+properscoring==0.1
+    # via -r requirements.in
 protobuf==4.25.5
     # via
     #   lightning-cloud
@@ -278,6 +281,7 @@ scikit-learn==1.5.0
 scipy==1.13.1
     # via
     #   -r requirements.in
+    #   properscoring
     #   scikit-learn
 sentry-sdk==2.19.2
     # via wandb
@@ -378,10 +382,7 @@ websocket-client==1.8.0
 wget==3.2
     # via -r requirements.in
 wheel==0.45.1
-    # via
-    #   nvidia-cublas-cu11
-    #   nvidia-cuda-runtime-cu11
-    #   pip-tools
+    # via pip-tools
 xmod==1.8.1
     # via
     #   editor

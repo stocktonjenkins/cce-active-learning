@@ -1,5 +1,7 @@
 from abc import ABC
-from typing import TypeVar, Union, Any
+from typing import Any
+from typing import TypeVar
+from typing import Union
 
 import lightning
 import torch
@@ -7,17 +9,19 @@ from torch import Tensor
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from probcal.active_learning.configs import ActiveLearningConfig
 from probcal.active_learning.active_learning_types import (
     ActiveLearningEvaluationResults,
-    IActiveLearningDataModuleDelegate,
-    ModelAccuracyResults,
 )
+from probcal.active_learning.active_learning_types import (
+    IActiveLearningDataModuleDelegate,
+)
+from probcal.active_learning.active_learning_types import ModelAccuracyResults
+from probcal.active_learning.configs import ActiveLearningConfig
 from probcal.active_learning.procedures.utils import seed_torch
 from probcal.data_modules.active_learning_data_module import ActiveLearningDataModule
 from probcal.evaluation import CalibrationEvaluator
 from probcal.lib.observer import Subject
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
+from probcal.models.regression_nn import RegressionNN
 
 
 T = TypeVar("T")
@@ -43,7 +47,7 @@ class ActiveLearningProcedure(
     def eval(
         self,
         trainer: lightning.Trainer,
-        model: DiscreteRegressionNN | None = None,
+        model: RegressionNN | None = None,
         best_path: str | None = None,
     ):
         """
@@ -85,7 +89,7 @@ class ActiveLearningProcedure(
     def _eval_ext(
         self,
         trainer: lightning.Trainer,
-        model: DiscreteRegressionNN | None = None,
+        model: RegressionNN | None = None,
         best_path: str | None = None,
     ) -> tuple[type[EvalState], dict[str, Any]]:
         """
@@ -94,7 +98,7 @@ class ActiveLearningProcedure(
         """
         return ActiveLearningEvaluationResults, {}
 
-    def step(self, model: DiscreteRegressionNN):
+    def step(self, model: RegressionNN):
         """
         Update `self.dataset` to include pool the unlabeled samples
         from AL into the training pool
@@ -123,7 +127,7 @@ class ActiveLearningProcedure(
         self._state = evaluation
 
     @staticmethod
-    def get_embedding(model: DiscreteRegressionNN, loader: DataLoader) -> Tensor:
+    def get_embedding(model: RegressionNN, loader: DataLoader) -> Tensor:
         """
         Returns the embedding of the given model by extracting last layer representations
         """

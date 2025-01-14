@@ -1,4 +1,4 @@
-experiment_name: aaf_config_enhancements
+experiment_name: aaf_exp_100_epoch_256_batch_resnet18_beta_nll
 random_seed: 1998
 head_type: gaussian
 dataset:
@@ -6,10 +6,11 @@ dataset:
   spec: aaf
 training:
   accelerator: gpu
-  batch_size: 128
+  batch_size: 256
   chkp_dir: chkp
-  chkp_freq: 10
-  num_epochs: 10
+  chkp_freq: 100
+  max_epochs: 100
+  min_epochs: 30
   precision: 16
   optimizer:
     type: adam_w
@@ -19,12 +20,19 @@ training:
   lr_scheduler:
     type: cosine_annealing
     kwargs:
-      T_max: 10
+      T_max: 100
       eta_min: 0
+      last_epoch: -1
+  beta_scheduler:
+    type: cosine_annealing
+    kwargs:
+      beta_0: 0.5
+      beta_1: 0.5
       last_epoch: -1
 evaluation:
   num_trials: 1
   log_dir: logs
 wandb: True
-devices: [1]
 num_trials: 1
+backbone_type: ResNet18
+early_stopping: False

@@ -48,7 +48,7 @@ If fitting a model on tabular data, the training script assumes the dataset will
 
 ### Adding New Models
 
-All regression models should inherit from the `DiscreteRegressionNN` class (found [here](probcal/models/discrete_regression_nn.py)). This base class is a `lightning` module, which allows for a lot of typical NN boilerplate code to be abstracted away. Beyond setting a few class attributes like `loss_fn` while calling the super-initializer, the only methods you need to actually write to make a new module are:
+All regression models should inherit from the `RegressionNN` class (found [here](probcal/models/regression_nn.py)). This base class is a `lightning` module, which allows for a lot of typical NN boilerplate code to be abstracted away. Beyond setting a few class attributes like `loss_fn` while calling the super-initializer, the only methods you need to actually write to make a new module are:
 
 - `_forward_impl` (defines a forward pass through the network)
 - `_predict_impl` (defines how to make predictions with the network, including any transformations on the output of the forward pass)
@@ -76,7 +76,7 @@ Two results files will be saved to the `log_dir` you specify in your config:
 
 ## Measuring Calibration
 
-Once a `DiscreteRegressionNN` subclass is trained, its calibration can be measured on a dataset via the `CalibrationEvaluator`. Example usage:
+Once a `RegressionNN` subclass is trained, its calibration can be measured on a dataset via the `CalibrationEvaluator`. Example usage:
 
 ```python
 from probcal.data_modules import COCOPeopleDataModule

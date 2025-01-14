@@ -12,12 +12,12 @@ from probcal.active_learning.procedures.lcmd.features import Features
 from probcal.active_learning.procedures.lcmd.selection import (
     LargestClusterMaxDistSelectionMethod,
 )
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
+from probcal.models.regression_nn import RegressionNN
 
 
 class LCMDProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
     def get_next_label_set(
-        self, unlabeled_indices: np.ndarray, k: int, model: DiscreteRegressionNN
+        self, unlabeled_indices: np.ndarray, k: int, model: RegressionNN
     ) -> np.ndarray:
         feature_data = self.get_tensor_features(model)
         feature_map = IdentityFeatureMap(
@@ -39,9 +39,7 @@ class LCMDProcedure(ActiveLearningProcedure[ActiveLearningEvaluationResults]):
         )
         return unlabeled_indices[selected_indices]
 
-    def get_tensor_features(
-        self, model: DiscreteRegressionNN
-    ) -> dict[str, TensorFeatureData]:
+    def get_tensor_features(self, model: RegressionNN) -> dict[str, TensorFeatureData]:
         train = self.get_embedding(model, loader=self.dataset.train_dataloader())
         pool = self.get_embedding(model, loader=self.dataset.unlabeled_dataloader())
         return {

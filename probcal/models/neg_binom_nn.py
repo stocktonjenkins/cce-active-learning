@@ -8,11 +8,11 @@ from probcal.enums import LRSchedulerType
 from probcal.enums import OptimizerType
 from probcal.evaluation.custom_torchmetrics import AverageNLL
 from probcal.models.backbones import Backbone
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
+from probcal.models.regression_nn import RegressionNN
 from probcal.training.losses import neg_binom_nll
 
 
-class NegBinomNN(DiscreteRegressionNN):
+class NegBinomNN(RegressionNN):
     """A neural network that learns the parameters of a Negative Binomial distribution over each regression target (conditioned on the input).
 
     The mean-scale (mu, alpha) parametrization of the Negative Binomial is used for this network.

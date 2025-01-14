@@ -47,7 +47,7 @@ class ActiveLearningConfig:
         config_dict["deterministic_settings"] = DeterministicSettings(
             **{**config_dict["deterministic_settings"]}
         )
-        return ActiveLearningConfig(**config_dict, num_workers=48)
+        return ActiveLearningConfig(**config_dict)
 
     def __init__(
         self,

@@ -9,38 +9,39 @@ import numpy as np
 import torch
 import yaml
 from lightning import Callback
-
 from lightning.pytorch.callbacks import ModelCheckpoint
 
 from probcal.active_learning.configs import CheckpointType
-from probcal.data_modules import (
-    AAFDataModule,
-    COCOPeopleDataModule,
-    EVADataModule,
-    FGNetDataModule,
-    OodBlurCocoPeopleDataModule,
-    OodLabelNoiseCocoPeopleDataModule,
-    OodMixupCocoPeopleDataModule,
-    TabularDataModule,
-    WikiDataModule,
-    ReviewsDataModule,
-)
+from probcal.data_modules import AAFDataModule
+from probcal.data_modules import COCOPeopleDataModule
+from probcal.data_modules import EVADataModule
+from probcal.data_modules import FGNetDataModule
+from probcal.data_modules import OodBlurCocoPeopleDataModule
+from probcal.data_modules import OodLabelNoiseCocoPeopleDataModule
+from probcal.data_modules import OodMixupCocoPeopleDataModule
+from probcal.data_modules import ReviewsDataModule
+from probcal.data_modules import TabularDataModule
+from probcal.data_modules import WikiDataModule
 from probcal.data_modules.prob_cal_data_module import ProbCalDataModule
-from probcal.enums import DatasetType, HeadType, ImageDatasetName, TextDatasetName
+from probcal.enums import DatasetType
+from probcal.enums import HeadType
+from probcal.enums import ImageDatasetName
+from probcal.enums import TextDatasetName
 from probcal.models import DoublePoissonNN
 from probcal.models import FaithfulGaussianNN
+from probcal.models import FeedForwardNN
 from probcal.models import GaussianNN
 from probcal.models import NaturalGaussianNN
 from probcal.models import NegBinomNN
 from probcal.models import PoissonNN
-from probcal.models import FeedForwardNN
-from probcal.models.backbones import DistilBert, Backbone
+from probcal.models.backbones import Backbone
+from probcal.models.backbones import DistilBert
 from probcal.models.backbones import LargerMLP
 from probcal.models.backbones import MLP
 from probcal.models.backbones import MNISTCNN
 from probcal.models.backbones import MobileNetV3
 from probcal.models.backbones import ViT
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
+from probcal.models.regression_nn import RegressionNN
 from probcal.utils.configs import EvaluationConfig
 from probcal.utils.configs import TrainingConfig
 from probcal.utils.generic_utils import partialclass
@@ -92,8 +93,8 @@ def get_backbone_from_dataset(
 
 def get_model(
     config: TrainingConfig | EvaluationConfig, return_initializer: bool = False
-) -> DiscreteRegressionNN | tuple[DiscreteRegressionNN, type[DiscreteRegressionNN]]:
-    initializer: Type[DiscreteRegressionNN]
+) -> RegressionNN | tuple[RegressionNN, type[RegressionNN]]:
+    initializer: Type[RegressionNN]
 
     if config.head_type == HeadType.GAUSSIAN:
         if (

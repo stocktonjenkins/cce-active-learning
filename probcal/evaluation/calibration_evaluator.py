@@ -26,7 +26,7 @@ from probcal.evaluation.kernels import polynomial_kernel
 from probcal.evaluation.kernels import rbf_kernel
 from probcal.evaluation.metrics import compute_mcmd_torch
 from probcal.evaluation.metrics import compute_regression_ece
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
+from probcal.models.regression_nn import RegressionNN
 
 
 @dataclass
@@ -117,7 +117,7 @@ class CalibrationEvaluator:
 
     @torch.inference_mode()
     def __call__(
-        self, model: DiscreteRegressionNN, data_module: L.LightningDataModule
+        self, model: RegressionNN, data_module: L.LightningDataModule
     ) -> CalibrationResults:
         model.to(self.device)
         data_module.prepare_data()
@@ -159,7 +159,7 @@ class CalibrationEvaluator:
 
     def compute_mcmd(
         self,
-        model: DiscreteRegressionNN,
+        model: RegressionNN,
         data_loader: DataLoader,
         return_grid: bool = False,
         return_targets: bool = False,
@@ -171,7 +171,7 @@ class CalibrationEvaluator:
         """Compute the MCMD between samples drawn from the given model and the data spanned by the data loader.
 
         Args:
-            model (DiscreteRegressionNN): Probabilistic regression model to compute the MCMD for.
+            model (RegressionNN): Probabilistic regression model to compute the MCMD for.
             data_loader (DataLoader): DataLoader with the test data to compute MCMD over.
             return_grid (bool, optional): Whether/not to return the grid of values the MCMD was computed over. Defaults to False.
             return_targets (bool, optional): Whether/not to return the regression targets the MCMD was computed against. Defaults to False.
@@ -203,7 +203,7 @@ class CalibrationEvaluator:
 
     def compute_mcmd_unlabeled(
         self,
-        model: DiscreteRegressionNN,
+        model: RegressionNN,
         unlabeled_data_loader: DataLoader,
         data_loader: DataLoader,
         return_grid: bool = False,
@@ -216,7 +216,7 @@ class CalibrationEvaluator:
         """Compute the MCMD between samples drawn from the given model and the data spanned by the data loader.
 
         Args:
-            model (DiscreteRegressionNN): Probabilistic regression model to compute the MCMD for.
+            model (RegressionNN): Probabilistic regression model to compute the MCMD for.
             unlabeled_data_loader (DataLoader): DataLoader of unlabeled data to compute MCMD over.
             data_loader (DataLoader): DataLoader with the test data to compute MCMD over.
             return_grid (bool, optional): Whether/not to return the grid of values the MCMD was computed over. Defaults to False.
@@ -249,13 +249,11 @@ class CalibrationEvaluator:
         else:
             return tuple(return_obj)
 
-    def compute_ece(
-        self, model: DiscreteRegressionNN, data_loader: DataLoader
-    ) -> float:
+    def compute_ece(self, model: RegressionNN, data_loader: DataLoader) -> float:
         """Compute the regression ECE of the given model over the dataset spanned by the data loader.
 
         Args:
-            model (DiscreteRegressionNN): Probabilistic regression model to compute the ECE for.
+            model (RegressionNN): Probabilistic regression model to compute the ECE for.
             data_loader (DataLoader): DataLoader with the test data to compute ECE over.
 
         Returns:
@@ -340,7 +338,7 @@ class CalibrationEvaluator:
         return fig
 
     def _get_samples_for_mcmd(
-        self, model: DiscreteRegressionNN, data_loader: DataLoader
+        self, model: RegressionNN, data_loader: DataLoader
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         with torch.no_grad():
             x = []

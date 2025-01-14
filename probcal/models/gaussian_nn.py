@@ -9,15 +9,16 @@ from torchmetrics import Metric
 from probcal.enums import BetaSchedulerType
 from probcal.enums import LRSchedulerType
 from probcal.enums import OptimizerType
-from probcal.evaluation.custom_torchmetrics import AverageNLL
+from probcal.evaluation.custom_torchmetrics import ContinuousRankedProbabilityScore
+from probcal.evaluation.custom_torchmetrics import GaussianNLL
 from probcal.models.backbones import Backbone
-from probcal.models.discrete_regression_nn import DiscreteRegressionNN
+from probcal.models.regression_nn import RegressionNN
 from probcal.training.hyperparam_schedulers import CosineAnnealingScheduler
 from probcal.training.hyperparam_schedulers import LinearScheduler
 from probcal.training.losses import gaussian_nll
 
 
-class GaussianNN(DiscreteRegressionNN):
+class GaussianNN(RegressionNN):
     """A neural network that learns the parameters of a Gaussian distribution over each regression target (conditioned on the input).
 
     Attributes:
@@ -86,7 +87,8 @@ class GaussianNN(DiscreteRegressionNN):
             lr_scheduler_kwargs=lr_scheduler_kwargs,
         )
         self.head = nn.Linear(self.backbone.output_dim, 2)
-        self.nll = AverageNLL()
+        self.nll = GaussianNLL()
+        self.crps = ContinuousRankedProbabilityScore()
         self.save_hyperparameters()
 
     def _forward_impl(self, x: torch.Tensor) -> torch.Tensor:
@@ -161,10 +163,10 @@ class GaussianNN(DiscreteRegressionNN):
         self, y_hat: torch.Tensor, training: bool
     ) -> torch.Tensor:
         mu, _ = torch.split(y_hat, [1, 1], dim=-1)
-        return mu.round()
+        return mu
 
     def _addl_test_metrics_dict(self) -> dict[str, Metric]:
-        return {"nll": self.nll}
+        return {"nll": self.nll, "crps": self.crps}
 
     def _update_addl_test_metrics_batch(
         self, x: torch.Tensor, y_hat: torch.Tensor, y: torch.Tensor
@@ -172,13 +174,10 @@ class GaussianNN(DiscreteRegressionNN):
         mu, var = torch.split(y_hat, [1, 1], dim=-1)
         mu = mu.flatten()
         var = var.flatten()
-        std = torch.sqrt(var)
         targets = y.flatten()
 
-        # We compute "probability" with the continuity correction (probability of +- 0.5 of the value).
-        dist = torch.distributions.Normal(loc=mu, scale=std)
-        target_probs = dist.cdf(targets + 0.5) - dist.cdf(targets - 0.5)
-        self.nll.update(target_probs)
+        self.crps.update(mu=mu, var=var, y=targets)
+        self.nll.update(mu=mu, var=var, y=targets)
 
     def on_train_epoch_end(self):
         if self.beta_scheduler is not None:
