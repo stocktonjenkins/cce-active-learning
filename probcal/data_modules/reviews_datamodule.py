@@ -8,12 +8,13 @@ from transformers import BatchEncoding
 from transformers import DistilBertTokenizer
 
 from probcal.custom_datasets import ReviewsDataset
+from .prob_cal_data_module import ProbCalDataModule
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-cased")
 
 
-class ReviewsDataModule(L.LightningDataModule):
+class ReviewsDataModule(ProbCalDataModule):
     def __init__(
         self,
         root_dir: str,
