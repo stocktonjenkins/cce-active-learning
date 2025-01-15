@@ -7,3 +7,4 @@ from .image_dataset_wrapper import LabelNoiseImageDatasetWrapper
 from .image_dataset_wrapper import MixupImageDatasetWrapper
 from .wiki_dataset import WikiDataset
 from .reviews_dataset import ReviewsDataset
+from .text_data_module_helper import collate_fn

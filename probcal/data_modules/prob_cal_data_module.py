@@ -12,9 +12,8 @@ from torchvision.transforms import Compose, AutoAugment
 from torchvision.transforms import Normalize
 from torchvision.transforms import Resize
 from torchvision.transforms import ToTensor
-
-from probcal.custom_datasets import ImageDatasetWrapper
-
+from probcal.enums import DatasetType
+from probcal.custom_datasets import ImageDatasetWrapper, collate_fn
 
 class ProbCalDataModule(LightningDataModule):
     full_dataset: Union[Dataset, Sized]
@@ -40,11 +39,13 @@ class ProbCalDataModule(LightningDataModule):
         batch_size: int,
         num_workers: int,
         persistent_workers: bool,
+        dataset_type: DatasetType = DatasetType.IMAGE,
         train_val_split: tuple[float, float] = (0.7, 0.1),
         indices_save_dir: str | Path | None = None,
         seed=1998,
     ):
         super(ProbCalDataModule, self).__init__()
+        self.dataset_type = dataset_type
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.persistent_workers = persistent_workers
@@ -85,20 +86,36 @@ class ProbCalDataModule(LightningDataModule):
         self.inference_transforms = [resize, to_tensor, normalize]
 
     def setup(self, stage: Literal["fit", "validate", "test", "predict"]) -> None:
-        self.train = ImageDatasetWrapper(
-            base_dataset=Subset(self.full_dataset, self.train_indices),
-            transforms=Compose(self.train_transforms),
-        )
-        self.val = ImageDatasetWrapper(
-            base_dataset=Subset(self.full_dataset, self.val_indices),
-            transforms=Compose(self.inference_transforms),
-        )
-        self.test = ImageDatasetWrapper(
-            base_dataset=Subset(self.full_dataset, self.test_indices),
-            transforms=Compose(self.inference_transforms),
-        )
+        if self.dataset_type == DatasetType.IMAGE:
+            self.train = ImageDatasetWrapper(
+                base_dataset=Subset(self.full_dataset, self.train_indices),
+                transforms=Compose(self.train_transforms),
+            )
+            self.val = ImageDatasetWrapper(
+                base_dataset=Subset(self.full_dataset, self.val_indices),
+                transforms=Compose(self.inference_transforms),
+            )
+            self.test = ImageDatasetWrapper(
+                base_dataset=Subset(self.full_dataset, self.test_indices),
+                transforms=Compose(self.inference_transforms),
+            )
+        else:
+            self.train = Subset(self.full_dataset, self.train_indices)
+            self.val = Subset(self.full_dataset, self.val_indices)
+            self.test = Subset(self.full_dataset, self.test_indices)
 
     def train_dataloader(self) -> DataLoader:
+        if self.dataset_type == DatasetType.TEXT:
+            return DataLoader(
+            self.train,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            shuffle=True,
+            collate_fn=collate_fn,
+            persistent_workers=self.persistent_workers,
+            drop_last=True,
+            )
+
         return DataLoader(
             self.train,
             batch_size=self.batch_size,
@@ -108,6 +125,17 @@ class ProbCalDataModule(LightningDataModule):
         )
 
     def val_dataloader(self) -> DataLoader:
+        if self.dataset_type == DatasetType.TEXT:
+            return DataLoader(
+            self.val,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            shuffle=False,
+            collate_fn=collate_fn,
+            persistent_workers=self.persistent_workers,
+            drop_last=True,
+            )
+        
         return DataLoader(
             self.val,
             batch_size=self.batch_size,
@@ -117,6 +145,17 @@ class ProbCalDataModule(LightningDataModule):
         )
 
     def test_dataloader(self) -> DataLoader:
+        if self.dataset_type == DatasetType.TEXT:
+            return DataLoader(
+            self.test,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            shuffle=False,
+            collate_fn=collate_fn,
+            persistent_workers=self.persistent_workers,
+            drop_last=True,
+            )
+        
         return DataLoader(
             self.test,
             batch_size=self.batch_size,

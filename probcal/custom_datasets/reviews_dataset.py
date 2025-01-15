@@ -11,7 +11,6 @@ class ReviewsDataset(Dataset):
     def __init__(
         self,
         root_dir: str | Path,
-        split: Literal["train", "val", "test"],
     ):
         """Create an instance of the Reviews dataset.
 
@@ -20,7 +19,6 @@ class ReviewsDataset(Dataset):
             split (str): Dataset split to load. Must be "train", "val", or "test".
         """
         self.root_dir = Path(root_dir)
-        self.split = split
 
         if not self._already_downloaded():
             raise Exception(
@@ -34,8 +32,7 @@ class ReviewsDataset(Dataset):
 
     def _get_instances_df(self) -> pd.DataFrame:
         full_instances = pd.read_json(self.root_dir / "dataset.json", orient="records")
-        mask = full_instances["split"] == self.split
-        return full_instances[mask][["review_text", "rating"]]
+        return full_instances[["review_text", "rating"]]
 
     def __getitem__(self, idx: int) -> tuple[str, int]:
         row = self.instances.iloc[idx]

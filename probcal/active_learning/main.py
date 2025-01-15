@@ -140,7 +140,8 @@ if __name__ == "__main__":
         "batch_size": _train_config.batch_size,
         "seed": al_config.seeds[0],
         "num_workers": al_config.num_workers,
-        "config": al_config,  # Assuming config is part of TrainingConfig
+        "config": al_config,
+        "dataset_type": _train_config.dataset_type,  # Assuming config is part of TrainingConfig
         # "persistent_workers": _train_config.persistent_workers,  # Add this field to TrainingConfig if not present
     }
 

@@ -8,10 +8,12 @@ from torch.utils.data import Dataset
 from torch.utils.data import Subset
 from torchvision.transforms import Compose
 
+from probcal.enums import DatasetType
 from probcal.active_learning.configs import ActiveLearningConfig
 from probcal.active_learning.procedures.base import IActiveLearningDataModuleDelegate
 from probcal.custom_datasets import ImageDatasetWrapper
 from probcal.data_modules.prob_cal_data_module import ProbCalDataModule
+from probcal.custom_datasets import collate_fn
 from probcal.models.regression_nn import RegressionNN
 
 
@@ -25,6 +27,7 @@ class ActiveLearningDataModule(ProbCalDataModule):
         full_dataset: Union[Sized, Dataset],
         config: ActiveLearningConfig,
         batch_size: int,
+        dataset_type: DatasetType = DatasetType.IMAGE,
         num_workers: int = 0,
         persistent_workers: bool = False,
         train_val_split: tuple[float, float] = (0.70, 0.1),
@@ -34,6 +37,7 @@ class ActiveLearningDataModule(ProbCalDataModule):
         self.train_val_split = train_val_split
         super(ActiveLearningDataModule, self).__init__(
             full_dataset=full_dataset,
+            dataset_type = dataset_type,
             batch_size=batch_size,
             num_workers=num_workers,
             persistent_workers=persistent_workers,
@@ -90,12 +94,26 @@ class ActiveLearningDataModule(ProbCalDataModule):
 
     def setup(self, stage):
         super().setup(stage)
-        self.unlabeled = ImageDatasetWrapper(
-            base_dataset=Subset(self.full_dataset, self.unlabeled_indices),
-            transforms=Compose(self.inference_transforms),
-        )
+        if self.dataset_type == DatasetType.IMAGE:
+            self.unlabeled = ImageDatasetWrapper(
+                base_dataset=Subset(self.full_dataset, self.unlabeled_indices),
+                transforms=Compose(self.inference_transforms),
+            )
+        else:
+            self.unlabeled = Subset(self.full_dataset, self.unlabeled_indices)
 
     def unlabeled_dataloader(self) -> DataLoader:
+        if self.dataset_type == DatasetType.TEXT:
+            return DataLoader(
+            self.unlabeled,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            shuffle=False,
+            collate_fn=collate_fn,
+            persistent_workers=self.persistent_workers,
+            drop_last=True,
+            )
+        
         return DataLoader(
             self.unlabeled,
             batch_size=self.batch_size,

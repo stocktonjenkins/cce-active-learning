@@ -1,9 +1,11 @@
 import os
 from typing import Iterable
+from typing import Sized, Union, Literal
 
 import lightning as L
 import torch
 from torch.utils.data import DataLoader
+from torch.utils.data import Dataset, Subset
 from transformers import BatchEncoding
 from transformers import DistilBertTokenizer
 
@@ -22,20 +24,24 @@ class ReviewsDataModule(ProbCalDataModule):
         num_workers: int,
         persistent_workers: bool,
     ):
-        super().__init__()
-        self.root_dir = root_dir
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-        self.persistent_workers = persistent_workers
+        super().__init__(
+            full_dataset = ReviewsDataset(
+                root_dir,
+            ),
+            batch_size = batch_size,
+            num_workers = num_workers,
+            persistent_workers = persistent_workers,
+        )
 
     def prepare_data(self) -> None:
         # Force check if reviews are already downloaded.
-        ReviewsDataset(self.root_dir, split="train")
+        ReviewsDataset(self.root_dir)
 
-    def setup(self, stage):
-        self.train = ReviewsDataset(self.root_dir, split="train")
-        self.val = ReviewsDataset(self.root_dir, split="val")
-        self.test = ReviewsDataset(self.root_dir, split="test")
+    def setup(self, stage: Literal["fit", "validate", "test", "predict"]) -> None:
+        print('new implementation')
+        self.train = Subset(self.full_dataset, self.train_indices)
+        self.val = Subset(self.full_dataset, self.val_indices)
+        self.test = Subset(self.full_dataset, self.test_indices)
 
     def train_dataloader(self) -> DataLoader:
         return DataLoader(
