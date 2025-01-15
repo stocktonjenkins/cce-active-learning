@@ -82,7 +82,7 @@ def gaussian_nll(
 
     var = logvar.exp().clone()
     with torch.no_grad():
-        var.clamp_(min=eps)
+        var.clamp_(min=eps, max=1e2)
 
     losses = 0.5 * (torch.log(var) + (targets - mu) ** 2 / var)
 
