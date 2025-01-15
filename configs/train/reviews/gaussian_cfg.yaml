@@ -1,4 +1,4 @@
-experiment_name: reviews_gaussian
+experiment_name: random_procedure_reviews_gaussian_last2layer
 random_seed: 1998
 head_type: gaussian
 dataset:
@@ -26,5 +26,5 @@ training:
 evaluation:
   num_trials: 1
   log_dir: logs
-wandb: False
+wandb: True
 early_stopping: True

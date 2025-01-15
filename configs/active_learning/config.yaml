@@ -1,6 +1,6 @@
 num_al_iter: 10
-label_k: 1000
-init_num_labeled: 1429
+label_k: 50000
+init_num_labeled: 50000
 update_validation_set: false
 seeds: [1998, 2024, 1776, 33, 2022]
 measure_calibration: false
@@ -12,5 +12,5 @@ deterministic_settings:
   cudnn_deterministic : True
   cudnn_benchmark : False
   disable_debug_apis: True
-wandb: False
+wandb: True
 num_workers: 48
