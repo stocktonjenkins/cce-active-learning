@@ -1,4 +1,4 @@
-experiment_name: aaf_exp_100_epoch_256_batch_resnet18_beta_nll
+experiment_name: clamping
 random_seed: 1998
 head_type: gaussian
 dataset:
@@ -10,7 +10,7 @@ training:
   chkp_dir: chkp
   chkp_freq: 100
   max_epochs: 100
-  min_epochs: 30
+  min_epochs: 40
   precision: 16
   optimizer:
     type: adam_w
@@ -35,4 +35,4 @@ evaluation:
 wandb: True
 num_trials: 1
 backbone_type: ResNet18
-early_stopping: False
+early_stopping: True
