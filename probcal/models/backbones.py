@@ -280,3 +280,34 @@ class DistilBert(Backbone):
         h = self.relu(self.projection_1(h))
         h = self.relu(self.projection_2(h))
         return h
+
+class DistilBertFrozen(Backbone):
+    """A Frozen DistilBert feature extractor for text sequences.
+
+    Attributes:
+        output_dim (int): Dimension of output feature vectors.
+    """
+
+    def __init__(self, output_dim: int = 64):
+
+        """Initialize a DistilBert text feature extractor.
+
+        Args:
+            output_dim (int, optional): Dimension of output feature vectors. Defaults to 64.
+        """
+        super(DistilBertFrozen, self).__init__(output_dim=output_dim)
+        self.backbone = DistilBertModel.from_pretrained("distilbert-base-cased")
+        #freezing model parameters
+        for param in self.backbone.parameters():
+            param.requires_grad = False
+        self.projection_1 = nn.Linear(768, 384)
+        self.projection_2 = nn.Linear(384, self.output_dim)
+        self.relu = nn.ReLU()
+        breakpoint()
+
+    def forward(self, x: BatchEncoding) -> torch.Tensor:
+        outputs: BaseModelOutput = self.backbone(**x)
+        h = outputs.last_hidden_state[:, 0]
+        h = self.relu(self.projection_1(h))
+        h = self.relu(self.projection_2(h))
+        return h

@@ -35,7 +35,7 @@ from probcal.models import NaturalGaussianNN
 from probcal.models import NegBinomNN
 from probcal.models import PoissonNN
 from probcal.models.backbones import Backbone
-from probcal.models.backbones import DistilBert
+from probcal.models.backbones import DistilBert, DistilBertFrozen
 from probcal.models.backbones import LargerMLP
 from probcal.models.backbones import MLP
 from probcal.models.backbones import MNISTCNN

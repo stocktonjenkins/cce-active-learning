@@ -27,4 +27,5 @@ evaluation:
   num_trials: 1
   log_dir: logs
 wandb: True
+backbone_type: DistilBertFrozen
 early_stopping: True
