@@ -303,7 +303,6 @@ class DistilBertFrozen(Backbone):
         self.projection_1 = nn.Linear(768, 384)
         self.projection_2 = nn.Linear(384, self.output_dim)
         self.relu = nn.ReLU()
-        breakpoint()
 
     def forward(self, x: BatchEncoding) -> torch.Tensor:
         outputs: BaseModelOutput = self.backbone(**x)
