@@ -11,7 +11,7 @@ training:
   chkp_freq: 5
   max_epochs: 20
   min_epochs: 5
-  precision: bf16-mixed
+  precision: 16
   optimizer:
     type: adam_w
     kwargs:
