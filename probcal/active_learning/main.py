@@ -169,7 +169,9 @@ if __name__ == "__main__":
             ),
         )
     shutil.copy(config_path, os.path.join("logs", _log_dirname, "config.yaml"))
-    shutil.copy(args.train_config, os.path.join("logs", _log_dirname, "training-config.yaml"))
+    shutil.copy(
+        args.train_config, os.path.join("logs", _log_dirname, "training-config.yaml")
+    )
     pipeline(
         train_config=_train_config,
         active_learn=_active_learn,

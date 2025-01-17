@@ -3,6 +3,8 @@ from math import log
 from math import pi
 
 import torch
+from torch.nn import GaussianNLLLoss
+from torch.functional import F
 
 
 def double_poisson_nll(
@@ -49,6 +51,13 @@ def double_poisson_nll(
         losses = torch.pow(phi.detach(), -beta) * losses
 
     return losses.mean()
+
+
+def gaussian_nll_pytorch(
+    outputs: torch.Tensor, targets: torch.Tensor, beta: float | None = None
+):
+    mu, logvar = torch.split(outputs, [1, 1], dim=-1)
+    return F.gaussian_nll_loss(mu, targets, var=logvar.exp(), reduction="mean")
 
 
 def gaussian_nll(

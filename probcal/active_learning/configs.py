@@ -30,7 +30,7 @@ class ProcedureType(Enum):
     BATCHBALD = "batchbald"
 
 
-class   CheckpointType(Enum):
+class CheckpointType(Enum):
     BEST_LOSS = "best_loss"
     BEST_MAE = "best_mae"
 
