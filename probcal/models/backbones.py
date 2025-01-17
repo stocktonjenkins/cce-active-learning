@@ -300,6 +300,9 @@ class DistilBertFrozen(Backbone):
         #freezing model parameters
         for param in self.backbone.parameters():
             param.requires_grad = False
+        for param in self.backbone.transformer.layer[-1].parameters():
+            param.requires_grad = True
+
         self.projection_1 = nn.Linear(768, 384)
         self.projection_2 = nn.Linear(384, self.output_dim)
         self.relu = nn.ReLU()

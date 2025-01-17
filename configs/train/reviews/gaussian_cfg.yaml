@@ -1,4 +1,4 @@
-experiment_name: random_procedure_reviews_gaussian_last2layer
+experiment_name: random_procedure_reviews_gaussian_l2lwtransformerblock
 random_seed: 1998
 head_type: gaussian
 dataset:
@@ -6,16 +6,16 @@ dataset:
   spec: reviews
 training:
   accelerator: gpu
-  batch_size: 32
-  chkp_dir: chkp
-  chkp_freq: 5
+  batch_size: 256
+  chkp_dir: chkp/reviews
+  chkp_freq: 10
   max_epochs: 20
   min_epochs: 5
   precision: 16
   optimizer:
     type: adam_w
     kwargs:
-      lr: 0.001
+      lr: 0.0001
       weight_decay: 0.00001
   lr_scheduler:
     type: cosine_annealing
