@@ -77,20 +77,14 @@ def gaussian_nll(
                 f"Invalid value of beta specified. Must be in [0, 1]. Got {beta}"
             )
 
-    eps = torch.tensor(1e-6, device=outputs.device)
     mu, logvar = torch.split(outputs, [1, 1], dim=-1)
-
-    var = logvar.exp().clone()
-    with torch.no_grad():
-        var.clamp_(min=eps, max=1e2)
-
-    losses = 0.5 * (torch.log(var) + (targets - mu) ** 2 / var)
+    losses = 0.5 * (torch.exp(-logvar) * (targets - mu) ** 2 + logvar)
 
     if beta is not None and beta != 0:
+        var = torch.exp(logvar)
         losses = torch.pow(var.detach(), beta) * losses
 
     return losses.mean()
-
 
 def mse_loss(
     outputs: torch.Tensor, targets: torch.Tensor | None = None
