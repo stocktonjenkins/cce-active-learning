@@ -9,10 +9,11 @@ from lightning.pytorch.loggers import CSVLogger
 from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.loggers.logger import Logger
 
+from probcal.active_learning.configs import CheckpointType
 from probcal.lib.logging import WandBLoggingCallback
 from probcal.models.regression_nn import RegressionNN
 from probcal.utils.configs import TrainingConfig
-from probcal.utils.experiment_utils import fix_random_seed
+from probcal.utils.experiment_utils import fix_random_seed, get_chkp_callbacks
 from probcal.utils.experiment_utils import get_datamodule
 from probcal.utils.experiment_utils import get_model
 
@@ -42,16 +43,22 @@ def train_procedure(
     return trainer
 
 
-def main(config: TrainingConfig):
+def main(config: TrainingConfig, chkp_type: CheckpointType):
     fix_random_seed(config.random_seed)
     datamodule = get_datamodule(
         config.dataset_type,
         config.dataset_path_or_spec,
         config.batch_size,
     )
+    chkp_dir = config.chkp_dir / config.experiment_name
     for i in range(config.num_trials):
         model = get_model(config)
-        chkp_callbacks = []
+        chkp_callbacks = list(
+            filter(
+                lambda cb: cb.filename == chkp_type.value,
+                get_chkp_callbacks(chkp_dir, chkp_freq=1),
+            )
+        )
         if config.early_stopping:
             chkp_callbacks.append(
                 EarlyStopping(
@@ -85,9 +92,10 @@ def main(config: TrainingConfig):
 def parse_args() -> Namespace:
     parser = ArgumentParser()
     parser.add_argument("--config", type=str)
+    parser.add_argument("--chkp-type", type=CheckpointType)
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
-    main(TrainingConfig.from_yaml(args.config))
+    main(TrainingConfig.from_yaml(args.config), chkp_type=args.chkp_type)
