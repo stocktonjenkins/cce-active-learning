@@ -57,7 +57,7 @@ def gaussian_nll(
     """Compute the mean Gaussian negative log likelihood over the given targets.
 
     Args:
-        output (torch.Tensor): The (n, 2) output from a GaussianNN. Dims along last axis are assumed to be (mu, logvar).
+        outputs (torch.Tensor): The (n, 2) output from a GaussianNN. Dims along last axis are assumed to be (mu, logvar).
         targets (torch.Tensor): Regression targets for the GaussianNN. Shape: (n, 1).
         beta (float | None, optional): If specified, the power to raise (`var`) to for re-scaling the final loss (for gradient disentanglement). Must be between 0 and 1. Defaults to None (no re-scaling).
 
@@ -85,6 +85,48 @@ def gaussian_nll(
         losses = torch.pow(var.detach(), beta) * losses
 
     return losses.mean()
+
+
+def gaussian_nll_with_clamp(
+    outputs: torch.Tensor, targets: torch.Tensor, beta: float | None = None
+) -> torch.Tensor:
+    """Compute the mean Gaussian negative log likelihood over the given targets.
+
+    Args:
+        outputs (torch.Tensor): The (n, 2) output from a GaussianNN. Dims along last axis are assumed to be (mu, logvar).
+        targets (torch.Tensor): Regression targets for the GaussianNN. Shape: (n, 1).
+        beta (float | None, optional): If specified, the power to raise (`var`) to for re-scaling the final loss (for gradient disentanglement). Must be between 0 and 1. Defaults to None (no re-scaling).
+
+    Returns:
+        torch.Tensor: Avg. loss across all targets. Zero-dimensional tensor (torch.Size([])).
+    """
+    if targets.dim() == 1:
+        targets = targets.unsqueeze(1)  # Ensure targets have the correct dimensions
+
+    if targets.size(1) != 1:
+        warnings.warn(
+            f"Targets tensor for `gaussian_nll` expected to be of shape (n, 1) but got shape {targets.shape}. This may result in unexpected training behavior."
+        )
+    if beta is not None:
+        if beta < 0 or beta > 1:
+            raise ValueError(
+                f"Invalid value of beta specified. Must be in [0, 1]. Got {beta}"
+            )
+
+    eps = torch.tensor(1e-6, device=outputs.device)
+    mu, logvar = torch.split(outputs, [1, 1], dim=-1)
+
+    var = logvar.exp().clone()
+    with torch.no_grad():
+        var.clamp_(min=eps, max=1e2)
+
+    losses = 0.5 * (torch.log(var) + (targets - mu) ** 2 / var)
+
+    if beta is not None and beta != 0:
+        losses = torch.pow(var.detach(), beta) * losses
+
+    return losses.mean()
+
 
 def mse_loss(
     outputs: torch.Tensor, targets: torch.Tensor | None = None

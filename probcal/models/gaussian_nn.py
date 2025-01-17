@@ -15,7 +15,7 @@ from probcal.models.backbones import Backbone
 from probcal.models.regression_nn import RegressionNN
 from probcal.training.hyperparam_schedulers import CosineAnnealingScheduler
 from probcal.training.hyperparam_schedulers import LinearScheduler
-from probcal.training.losses import gaussian_nll
+from probcal.training.losses import gaussian_nll, gaussian_nll_with_clamp
 
 
 class GaussianNN(RegressionNN):
@@ -72,7 +72,7 @@ class GaussianNN(RegressionNN):
 
         super(GaussianNN, self).__init__(
             loss_fn=partial(
-                gaussian_nll,
+                gaussian_nll_with_clamp,
                 beta=(
                     self.beta_scheduler.current_value
                     if self.beta_scheduler is not None
@@ -182,5 +182,5 @@ class GaussianNN(RegressionNN):
     def on_train_epoch_end(self):
         if self.beta_scheduler is not None:
             self.beta_scheduler.step()
-            self.loss_fn = partial(gaussian_nll, beta=self.beta_scheduler.current_value)
+            self.loss_fn = partial(gaussian_nll_with_clamp, beta=self.beta_scheduler.current_value)
         super().on_train_epoch_end()
