@@ -8,6 +8,11 @@ class AcceleratorType(Enum):
     auto = "auto"
 
 
+class GradientClipType(Enum):
+    VALUE = "value"
+    NORM = "norm"
+
+
 class HeadType(Enum):
     GAUSSIAN = "gaussian"
     FAITHFUL_GAUSSIAN = "faithful_gaussian"

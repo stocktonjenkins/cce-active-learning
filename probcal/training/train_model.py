@@ -38,6 +38,11 @@ def train_procedure(
         callbacks=callbacks,
         logger=logger,
         precision=config.precision,
+        gradient_clip_algorithm=(
+            config.gradient_clip_algorithm.value
+            if config.gradient_clip_algorithm is not None
+            else None
+        ),
     )
     trainer.fit(model=model, datamodule=datamodule)
     return trainer

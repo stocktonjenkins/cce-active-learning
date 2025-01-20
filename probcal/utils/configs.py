@@ -5,7 +5,7 @@ from typing import Literal
 
 import yaml
 
-from probcal.enums import AcceleratorType
+from probcal.enums import AcceleratorType, GradientClipType
 from probcal.enums import BetaSchedulerType
 from probcal.enums import DatasetType
 from probcal.enums import HeadType
@@ -137,6 +137,7 @@ class TrainingConfig(BaseConfig):
         wandb: bool = False,
         devices: list[int] | str | int = "auto",
         backbone_type: str | None = None,
+        gradient_clip_algorithm: GradientClipType | None = None,
     ):
         super(TrainingConfig, self).__init__(
             experiment_name=experiment_name,
@@ -167,6 +168,7 @@ class TrainingConfig(BaseConfig):
         self.num_trials = num_trials
         self.precision = precision
         self.random_seed = random_seed
+        self.gradient_clip_algorithm = gradient_clip_algorithm
 
     @staticmethod
     def from_yaml(config_path: str | Path) -> TrainingConfig:
@@ -226,6 +228,7 @@ class TrainingConfig(BaseConfig):
         wandb = config_dict.get("wandb", False)
         devices = config_dict.get("devices")
         backbone_type = config_dict.get("backbone_type")
+        gradient_clip_algorithm = config_dict.get("gradient_clip_algorithm")
 
         return TrainingConfig(
             experiment_name=experiment_name,
@@ -255,6 +258,7 @@ class TrainingConfig(BaseConfig):
             devices=devices,
             early_stopping=early_stopping,
             backbone_type=backbone_type,
+            gradient_clip_algorithm=gradient_clip_algorithm,
         )
 
 
