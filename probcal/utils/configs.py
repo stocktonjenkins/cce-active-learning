@@ -168,7 +168,7 @@ class TrainingConfig(BaseConfig):
         self.num_trials = num_trials
         self.precision = precision
         self.random_seed = random_seed
-        self.gradient_clip_algorithm = gradient_clip_algorithm
+        self.gradient_clip_algorithm = GradientClipType._value2member_map_[gradient_clip_algorithm]
 
     @staticmethod
     def from_yaml(config_path: str | Path) -> TrainingConfig:
