@@ -77,6 +77,7 @@ def pipeline(
                 )
             else:
                 logger = wandb_logger
+                logger.watch(model, log="gradients", log_freq=1)
                 callbacks.append(
                     WandBActiveLearningCallback(wandb_logger, al_iter=al_iter)
                 )

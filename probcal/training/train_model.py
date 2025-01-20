@@ -72,6 +72,7 @@ def main(config: TrainingConfig, chkp_type: CheckpointType):
                 name=config.experiment_name,
                 log_model=False,
             )
+            logger.watch(model, log="gradients", log_freq=1)
             chkp_callbacks.append(
                 WandBLoggingCallback(
                     exp_name=f"{config.experiment_name}:trial-{i+1}", logger=logger
