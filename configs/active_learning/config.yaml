@@ -8,6 +8,7 @@ chkp_type: best_loss  # best_loss or best_mae
 settings:
   device: cuda
   mcmd_num_trials: 5
+  dataset_type: text
 deterministic_settings:
   cudnn_deterministic : True
   cudnn_benchmark : False
