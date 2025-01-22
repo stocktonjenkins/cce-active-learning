@@ -1,6 +1,6 @@
 from enum import Enum
 from pathlib import Path
-
+from probcal.enums import DatasetType
 import torch
 from dataclasses import dataclass
 
@@ -71,6 +71,7 @@ class ActiveLearningConfig:
         self.chkp_type = CheckpointType._value2member_map_[chkp_type]
         self.settings = settings
         self.settings.device = torch.device("cpu")
+        self.settings.dataset_type = DatasetType(self.settings.dataset_type)
         self.update_validation_set = update_validation_set
         self.measure_calibration = measure_calibration
         self.wandb = wandb
