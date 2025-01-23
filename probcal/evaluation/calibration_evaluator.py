@@ -27,6 +27,7 @@ from probcal.evaluation.kernels import rbf_kernel
 from probcal.evaluation.metrics import compute_mcmd_torch
 from probcal.evaluation.metrics import compute_regression_ece
 from probcal.models.regression_nn import RegressionNN
+from transformers import DistilBertModel
 
 
 @dataclass
@@ -383,6 +384,8 @@ class CalibrationEvaluator:
             return x, y, x_prime, y_prime
 
     def _get_unlabelled_samples_for_mcmd(self, data_loader: DataLoader) -> torch.Tensor:
+        enc_model = DistilBertModel.from_pretrained("distilbert-base-cased")
+        enc_model = enc_model.to(self.device)
         with torch.no_grad():
             x = []
             for inputs, _ in tqdm(data_loader):
@@ -396,9 +399,7 @@ class CalibrationEvaluator:
                     )
                 elif self.settings.dataset_type == DatasetType.TEXT:
                     x.append(
-                        self.clip_model.encode_text(
-                            inputs.to(self.device), normalize=False
-                        )
+                        enc_model(**inputs.to(self.device)).last_hidden_state[:, 0]
                     )
             return torch.cat(x, dim=0)
 
