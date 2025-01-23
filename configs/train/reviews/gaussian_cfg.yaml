@@ -1,4 +1,4 @@
-experiment_name: cce_procedure_reviews_gaussian_l2lwtransformerblock
+experiment_name: bait_procedure_reviews_gaussian_l2lwtransformerblock
 random_seed: 1998
 head_type: gaussian
 dataset:
