@@ -1,4 +1,4 @@
-experiment_name: bait_procedure_reviews
+experiment_name: cce_procedure_reviews
 random_seed: 1998
 head_type: gaussian
 dataset:
